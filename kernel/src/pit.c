@@ -1,0 +1,34 @@
+#include "pit.h"
+#include "graphics.h"
+
+volatile double TimeSinceBoot = 0;
+uint16_t Divisor = 65535;
+const uint64_t BaseFrequency = 1193182;
+#define min(a,b) (((a)<(b))?(a):(b))
+#define max(a,b) (((a)>(b))?(a):(b))
+
+void SET_PIT_DIVISOR(uint16_t divisor){
+	//if (divisor < 100) divisor = 100;
+	divisor=max(divisor,100);
+	Divisor = divisor;
+	outb(0x40, (uint8_t)(divisor & 0x00ff));
+	outb(0x40, (uint8_t)(divisor >> 8));
+}
+void SET_PIT_FREQUENCY(uint64_t Frequency){
+	SET_PIT_DIVISOR(BaseFrequency/Frequency);
+}
+double GET_PIT_FREQUENCY(){
+	return (double)BaseFrequency / (double)Divisor;
+}
+void PIT_TICK(){
+	TimeSinceBoot+=1.0/GET_PIT_FREQUENCY();
+	//printchar('t');
+}
+
+void sleep(uint64_t miliseconds){
+	volatile double end=TimeSinceBoot+((double)miliseconds)/1000;
+	//volatile double time_to_sleep=;
+	while(TimeSinceBoot<end){
+		asm("hlt");
+	}
+}

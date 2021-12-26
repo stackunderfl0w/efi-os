@@ -1,0 +1,9 @@
+fat.img
+virtual_disk.vdi
+*.efi
+*.efi.debug
+*.o
+*.a
+*.tar.*
+*.tar
+*.elf

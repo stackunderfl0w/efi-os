@@ -1,0 +1,6 @@
+#resolution
+1280
+720
+#font
+resources/ter-powerline-v28n.psf
+#end
