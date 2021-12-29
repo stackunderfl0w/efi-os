@@ -23,7 +23,7 @@ void IDT_Set_Offset(IDT_ENTRY *entry, size_t adr){
         entry->Offset_2 = (uint32_t)(((adr>>32)&0xffffffff));
     }
 size_t IDT_Get_Offset(IDT_ENTRY *entry){
-    return (size_t)entry->Offset_2<<32|
+    return  (size_t)entry->Offset_2<<32|
             (size_t)entry->Offset_1<<16|
             (size_t)entry->Offset_0;
 }
@@ -50,8 +50,7 @@ void create_idt_entry(void* handler, uint8_t entryOffset, uint8_t type_attr, uin
 }
 
 void create_interrupts(){
-    for (uint32_t i = 0; i < sizeof(IDT_ENTRY)*slots; ++i)
-    {
+    for (uint32_t i = 0; i < sizeof(IDT_ENTRY)*slots; ++i){
         *(((char*)idt_entries)+i)=0;
     }
     create_idt_entry((void*)PageFault_Handler, 0x0E, INTERRUPT_GATE, 0x08);

@@ -110,6 +110,22 @@ char* to_string_double(double x, uint64_t precision){
 
 	return string_buf;
 }
+long atoi(const char* buf){
+    unsigned long long output=0;
+    int index=0;
+    int sign =1;
+    if(buf[index]=='-'){
+        sign=-1;
+        index++;
+    }
+    while(buf[index]>='0'&&buf[index]<='9'&&index<20){
+        printf("index %c \n",buf[index]);
+
+        output*=10;
+        output+=buf[index++]-'0';
+    }
+    return output*sign;
+}
 void putchar(UINT32 x, UINT32 y, CHAR8 chr){
 	clear_mouse();
 	uint32_t x_vis=MIN(console_font->width,globalBuf->Width-x);
@@ -169,14 +185,12 @@ char* temp;
 void printf(const char* str, ...){
 	memset(printf_buf,0,512);
 	int output_index=0;
-	int input_index=0;
 	int ti=0;
 
 	va_list ap;
 	va_start(ap,str);
 
-	for (int i = 0; str[i]; ++i)
-	{
+	for (int i = 0; str[i]; ++i){
 		if(str[i]=='%'){
 			switch(str[++i]){
 				case 'x':
@@ -229,8 +243,7 @@ void clrscr(uint32_t color){
 		asm volatile("cli");
 	}
 	uint64_t end=globalBuf->BufferSize/4;
-	for (int i = 0; i < end; ++i)
-	{
+	for (int i = 0; i < end; ++i){
 		((uint32_t*)globalBuf->BaseAddress)[i]=color;
 	}
 	asm volatile("sti");

@@ -28,6 +28,8 @@ wmemset (wchar_t *s, wchar_t c, size_t n);
 void* intset(uint32_t *s, const uint32_t c, size_t n);
 //char * strstr (const char *haystack, const char *needle);
 char *strstr(char* string, char* substring);
+char* strrstr(char* haystack, char* needle);
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
+uint32_t crc32b(const void* data, size_t length);

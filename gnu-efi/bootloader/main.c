@@ -95,7 +95,7 @@ UINT8* Load_File(EFI_FILE_HANDLE Volume, CHAR16* FileName, UINT64 *ReadSize){
 Framebuffer framebuffer;
 EFI_GUID gopGuid = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
 EFI_GRAPHICS_OUTPUT_PROTOCOL *gop;
-Framebuffer* setup_graphics(){
+Framebuffer* setup_graphics(uint32_t pref_width, uint32_t pref_height){
 	
 	EFI_STATUS status;
 
@@ -123,6 +123,11 @@ Framebuffer* setup_graphics(){
 		nativeMode = gop->Mode->Mode;
 		numModes = gop->Mode->MaxMode;
 	}
+
+	int mode = -1;
+	uint32_t greatest_dif=1000000;
+
+
 	for (unsigned int i = 0; i < numModes; i++) {
   		status = uefi_call_wrapper(gop->QueryMode, 4, gop, i, &SizeOfInfo, &info);
   		Print(L"mode %03d width %d height %d format %x%s",
@@ -133,8 +138,19 @@ Framebuffer* setup_graphics(){
     		i == nativeMode ? "(current)" : ""
   			,"\r\n");
   		Print(L"\r\n");
+  		if(info->HorizontalResolution==pref_width&&info->VerticalResolution==pref_height){
+  			mode=i;
+  		}
+  		else{
+  			if((info->HorizontalResolution-pref_width)*(info->VerticalResolution-pref_height)<greatest_dif){
+
+  			}
+  		}
 	}
-	//status = uefi_call_wrapper(gop->SetMode, 2, gop, 0);
+	if(mode>=0){
+		status = uefi_call_wrapper(gop->SetMode, 2, gop, mode);
+
+	}
 	//22 is 1080p 9 is 720p//1
 
   	if(EFI_ERROR(status)) {
@@ -227,6 +243,55 @@ CHAR8* to_string(int x){
 	string_buf[size+1]=0x00;
 	return string_buf;
 }
+int strcmp(const CHAR8* str1, const CHAR8* str2){
+	int index=0;
+	while(str1[index]==str2[index]&&str1[index]!=0){
+		index++;
+	}
+	return str1[index]-str2[index];
+}
+CHAR8* strstr(CHAR8* string, CHAR8* substring){
+  CHAR8 *a, *b;
+
+
+  b = substring;
+  if (*b == 0) {
+    return string;
+  }
+  for ( ; *string != 0; string += 1) {
+    if (*string != *b) {
+      continue;
+    }
+    a = string;
+    while (1) {
+      if (*b == 0) {
+        return string;
+      }
+      if (*a++ != *b++) {
+        break;
+      }
+    }
+  b = substring;
+  }
+    return NULL;
+}
+int atoi(const char* buf){
+    unsigned long long output=0;
+    int index=0;
+    int sign =1;
+    if(buf[index]=='-'){
+        sign=-1;
+        index++;
+    }
+    while(buf[index]>='0'&&buf[index]<='9'&&index<20){
+        //printf("index %c \n",buf[index]);
+
+        output*=10;
+        output+=buf[index++]-'0';
+    }
+    return output*sign;
+}
+
 
 EFI_STATUS
 efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
@@ -255,30 +320,89 @@ efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 
 	Print(L"%a\n",Buffer);
 
-	CHAR8* buf = Load_Text_File(Volume,L"resources\\config.txt");
+	CHAR8* conf_buf = Load_Text_File(Volume,L"resources\\config.txt");
 
-	Print(L"%a\n",buf);
+    CHAR8 names[16*256];
+    for (int i = 0; i < 16*256; ++i)
+    {
+    	*names=0;
+    }
+    //memset(names,0,256);
+    CHAR16 font_name[256]={0};
+    uint32_t width=0,height=0;
+
+    int index=0;
+    int n_index=0;
+    int w_index=0;
+
+	Print(L"HELLO\n");
+
+	while(conf_buf[index]){
+        names[n_index*256+w_index++]=conf_buf[index++];
+        if(conf_buf[index]=='\n'){
+        	index++;
+            names[n_index*256+w_index]=0;
+            n_index++;
+            w_index=0;
+        }
+    }
+    for(int i =0; i<=n_index;i++){
+        //print(names[0]+256*i);
+        //printchar('\n');
+    }
+
+    for(int i =0; i<=n_index;i++){
+    	if(strstr(&names[256*i],(CHAR8*)"#font")){
+    		Print(L"FOUND");
+    		i++;
+    		for (int y = 0; names[i*256+y]; ++y){
+    			font_name[y]=(CHAR16)names[i*256+y];
+    			Print(L"%u",(uint32_t)names[i*256+y]);
+    			//printchar(names[i][y]);
+    		}
+    	}
+    	else if(strstr(&names[256*i],(CHAR8*)"#resolution")){
+    		Print(L"FOUND");
+			i++;
+    		width=atoi((char*)&names[i*256]);
+    		i++;
+    		height=atoi((char*)&names[i*256]);
+    	}
+    }
+    Print(L"Width %u Height %u",width,height);
+    //print((CHAR8*)"endnio");
+    Print(font_name);
+
+    for (int i = 0; i < 64; ++i)
+    {
+    	printchar(((char*)font_name)[i]);
+    }
+
+    //print((CHAR8*)"endnio");
+
+
+	Print(L"%a\n",conf_buf);
+	Print(L"Loading file");
+    Print(font_name+1);
+	Print(L"Loading file");
 
 
 	UINT64 FileSize2=0;
 
 	//CHAR8* font =  Load_File(Volume,L"resources\\zap-light16.psf", &FileSize2);
 	//CHAR8* font =  Load_File(Volume,L"resources\\zap-light20.psf", &FileSize2);
-	CHAR8* font =  Load_File(Volume,L"resources\\ter-powerline-v28n.psf", &FileSize2);
+	//CHAR8* font =  Load_File(Volume,L"resources\\ter-powerline-v28n.psf", &FileSize2);
+	CHAR8* font =  Load_File(Volume,font_name, &FileSize2);
 
 	Print(L"Font file size! %u \n",FileSize2);
 
 
 
-	Framebuffer* newBuffer = setup_graphics();
-	//for (int i = 0; i < 400; ++i)
-	//{
-	//	PlotPixel_32bpp(i%20,i/20,0xffffffff);
-	//}
+	Framebuffer* newBuffer = setup_graphics(width,height);
+
 	bitmap_font bmf=load_font(font);
 
 	init_text_overlay(newBuffer, &bmf);
-
 	
 
 	//uint32_t x, y;
@@ -390,9 +514,9 @@ efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 					&EfiDescriptorVersion
 					);
 	ASSERT (Status == EFI_BUFFER_TOO_SMALL);
-	Print(L"Size: %u\n",EfiMemoryMapSize);
-	Print(L"Size: %u\n",EfiMemoryMapSize + 2 * EfiDescriptorSize);
-	Print(L"Size: %u\n",EfiMemoryMapSize *4);
+	//Print(L"Size: %u\n",EfiMemoryMapSize);
+	//Print(L"Size: %u\n",EfiMemoryMapSize + 2 * EfiDescriptorSize);
+	//Print(L"Size: %u\n",EfiMemoryMapSize *4);
 
 	//
 	// Use size returned for the AllocatePool.
@@ -421,15 +545,6 @@ efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
     printchar('8');
     for (UINTN i = 0; i < EfiMemoryMapSize/EfiDescriptorSize; ++i){
         EFI_MEMORY_DESCRIPTOR* desc = (EFI_MEMORY_DESCRIPTOR*)((uint64_t)EfiMemoryMap + (i * EfiDescriptorSize));
-        //print(efi_memory_types[desc->Type]);
-        //printchar(' ');
-        //print(to_string(desc->NumberOfPages*4));
-        //print("kb");
-        //print(to_string(desc->Type));
-        //printchar(' ');
-
-        //print(to_string(desc->NumberOfPages));
-        //printchar(' ');
 
         Print(L"%x %u %lu  ",desc->PhysicalStart,desc->Type,desc->NumberOfPages);
 
@@ -446,10 +561,6 @@ efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
     Print(L"Mem size: %lu\n",mem_size);
     Print(L"Mem size_0: %lu\n",mem_size_0);
 
-//#define CONCAT(a, b) CONCAT_INNER(a, b)
-//#define CONCAT_INNER(a, b) a ## b
-//__COUNTER__
-//#define print("base") CHAR8 CONCAT(temp_, __LINE__)[]=base; print(CONCAT(temp_, __LINE__))
 
 	CHAR8 x[]="Exiting boot services";
 	print(x); 

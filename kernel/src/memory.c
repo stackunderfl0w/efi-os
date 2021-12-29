@@ -30,7 +30,7 @@ void JOIN_HEAP_NEXT_SEGMENT(HEAP_SEG_HEADER* seg){
 	}
 }
 void EXPAND_HEAP(uint64_t size){
-	size=(size/0x1000)+12;
+	size=(size/0x1000);
 	for (int i = 0; i < size; ++i){
 		void* tmp=REQUEST_PAGE();
 		map_mem(heap_end+(0x1000*i),tmp);

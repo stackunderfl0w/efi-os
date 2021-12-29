@@ -25,7 +25,5 @@ void* malloc();
 void* calloc();
 
 void free(void* adr);
-/*			if(cur->len==size){
-				cur->free=false;
-				return (void*)(cur+1);
-			}*/
+
+

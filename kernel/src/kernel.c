@@ -2,7 +2,6 @@
 #include "bitmap-font.h"
 #include "graphics.h"
 #include "gdt.h"
-//#include "loop.h"
 #include "idt.h"
 #include "pit.h"
 #include "efimemory.h"
@@ -16,7 +15,6 @@
 typedef struct {
 	Framebuffer* buf;
 	bitmap_font* font;
-	//void* psf1;
 	EFI_MEMORY_DESCRIPTOR* mem_map;
 	UINTN map_size;
 	UINTN map_desc_size;
@@ -33,9 +31,7 @@ extern "C" {
 extern "C" 
 #endif
 int _start(bootinfo *info){
-
 	//init_serial();
-
 	init_text_overlay(info->buf, info->font);
 	//print_serial("hello world");
 
@@ -46,25 +42,13 @@ int _start(bootinfo *info){
 
 	create_interrupts();
 
-	//asm("int $0x0e");
 
 	print("idt loaded ");
-	//asm volatile ("1: jmp 1b");
 
 	//INIT_PS2_MOUSE();
-	/*for (int i = 0; i < 1000; ++i)
-	{
-		printchar(i%256);
-		deletechar();
-	}*/
+
 	//SET_PIT_DIVISOR(65535);
 	SET_PIT_FREQUENCY(1000);
-
-
-	//asm("cli");
-	init_text_overlay(info->buf, info->font);
-	//asm("sti");
-
 
 
 	uint32_t numEntries=info->map_size/info->map_desc_size;
@@ -99,8 +83,7 @@ int _start(bootinfo *info){
 
 
 
-    //unsigned char sector_1[512];
-    unsigned char* sector_1=malloc(512);;
+    uint8_t* sector_1=malloc(512);;
 
 	atapio_software_reset(ATAPIO_REGULAR_STATUS_REGISTER_PORT);
 
@@ -112,7 +95,7 @@ int _start(bootinfo *info){
     	print(to_hstring_noformat(tmp));
     	printchar(' ');
     }*/
-	if (sector_1[0]==0xEB&&sector_1[1]==0x3C&&sector_1[2]==0x90){
+	/*if (sector_1[0]==0xEB&&sector_1[1]==0x3C&&sector_1[2]==0x90){
 		print("Fat fileystem found ");
 		char oem[9];
 		memcpy(oem,&sector_1[3],8);
@@ -137,7 +120,7 @@ int _start(bootinfo *info){
 		printf("Hidden sectors:%u\n",fat->hidden_sector_count);
 		printf("Total sectors:%u\n",fat->total_sectors_32);
 
-
+		//loop();
 
 		printf("Root dir %u %x\n",get_first_root_dir_sector(fat),512*get_first_root_dir_sector(fat));
 
@@ -147,37 +130,40 @@ int _start(bootinfo *info){
 		atapio_read_sectors(get_first_root_dir_sector(fat), 1, root_dir_entry);
 		atapio_read_sectors(get_first_fat_sector(fat),1,first_fat_table);
 		char tmp_name[256];
-		char tmp_long[16];
-		for (uint64_t i = 0; root_dir_entry[i]; i+=32)
-		{
+		char tmp_long[256];
+		for (uint64_t i = 0; root_dir_entry[i]; i+=32){
 			if(root_dir_entry[i]==0xE5){
 				continue;
 			}
 			if(root_dir_entry[i+11]==0xf){
-				FAT_LONG_NAME_ENTRY* lfn=&root_dir_entry[i];
+				FAT_LONG_NAME_ENTRY* lfn=(FAT_LONG_NAME_ENTRY*)&root_dir_entry[i];
 				print("lfn: ");
 				memset(tmp_long,0,16);
-				for (int i = 0; i < 5; ++i)
-				{
-					tmp_long[i]=lfn->first_5[i]&0xff;
+				for (int i = 0; i < 5; ++i){
+					tmp_long[i]=(char)lfn->first_5[i]&0xff;
 				}
-				for (int i = 0; i < 6; ++i)
-				{
-					tmp_long[i+5]=lfn->next_6[i]&0xff;
+				for (int i = 0; i < 6; ++i){
+					tmp_long[i+5]=(char)lfn->next_6[i]&0xff;
 				}
-				for (int i = 0; i < 2; ++i)
-				{
-					tmp_long[i+11]=lfn->last_2[i]&0xff;
+				for (int i = 0; i < 2; ++i){
+					tmp_long[i+11]=(char)lfn->last_2[i]&0xff;
 				}
 				tmp_long[14]=0;
 				print(tmp_long);
 			}
 			else{
-				FAT_DIRECTORY_ENTRY* entry=&root_dir_entry[i];
+				FAT_DIRECTORY_ENTRY* entry=(FAT_DIRECTORY_ENTRY*)&root_dir_entry[i];
+				memset(tmp_name,0,256);
+
 				memcpy(tmp_name,entry->name,11);
+				
 				tmp_name[11]=0;
 				print(tmp_name);
 				printf("Cluster:%u at:%x\n",entry->first_cluster_low_16,get_first_sector_of_cluster(fat,entry->first_cluster_low_16)*512);
+				printf("Size:%u\n",entry->size);
+				if(entry->attributes&0x10){
+					print("directory\n");
+				}
 				uint16_t next_cluster=entry->first_cluster_low_16;
 				while(1){
 					next_cluster=get_fat_next_cluster(fat,first_fat_table,next_cluster);
@@ -186,23 +172,116 @@ int _start(bootinfo *info){
 						break;
 					}
 				}
-				//print(to_string(get_fat_next_cluster(fat,first_fat_table,entry->first_cluster_low_16)));
 				if (strstr(tmp_name,"TEST")){
-					char* file=malloc(512);
+					printchar('U');
+					uint8_t* file=malloc(512);
 					atapio_read_sectors(get_first_sector_of_cluster(fat,entry->first_cluster_low_16), 1, file);
-					print(file);
+					print((char*)file);
+					print(to_hstring(crc32b(file,entry->size)));
+					free(file);
 
 				}
+				//print(to_string(get_fat_next_cluster(fat,first_fat_table,entry->first_cluster_low_16)));
+				if (strstr(tmp_name,"STARTUP")){
+					uint8_t* file=malloc((entry->size&0xffffff00)+512);
+					next_cluster=entry->first_cluster_low_16;
+					int c_index=0;
+
+					while (1){
+						atapio_read_sectors(get_first_sector_of_cluster(fat,next_cluster), 1, file+(512*c_index));
+						
+						next_cluster=get_fat_next_cluster(fat,first_fat_table,next_cluster);
+						c_index++;
+						if (next_cluster==4095){
+							break;
+						}
+					}
+					//print((char*)file);
+					print(to_hstring(crc32b(file,entry->size)));
+					free(file);
+				}
+				if (strstr(tmp_name,"RES")){
+					print("\n\n\n");
+					uint8_t* file=malloc(512);
+					memset(file,0,512);
+					next_cluster=entry->first_cluster_low_16;
+					printf("ld %u",entry->first_cluster_low_16);
+					int lfn_count=0;
+					atapio_read_sectors(get_first_sector_of_cluster(fat,entry->first_cluster_low_16), 1, file);
+					for (uint64_t i = 0; file[i]; i+=32){
+						if(file[i]==0xE5){
+							continue;
+						}
+						if(file[i+11]==0xf){
+							FAT_LONG_NAME_ENTRY* lfn=(FAT_LONG_NAME_ENTRY*)&file[i];
+							print("lfn: ");
+							if(lfn_count==0){
+								memset(tmp_long,0,256);
+							}
+							for (int i = 0; i < 5; ++i){
+								tmp_long[i+(16*lfn_count)]=(char)lfn->first_5[i]&0xff;
+							}
+							for (int i = 0; i < 6; ++i){
+								tmp_long[i+5+(16*lfn_count)]=(char)lfn->next_6[i]&0xff;
+							}
+							for (int i = 0; i < 2; ++i){
+								tmp_long[i+11+(16*lfn_count)]=(char)lfn->last_2[i]&0xff;
+							}
+							tmp_long[14]=0;
+							print(tmp_long+16*lfn_count);
+							printchar('\n');
+							lfn_count++;
+						}
+						else{
+							FAT_DIRECTORY_ENTRY* entry=(FAT_DIRECTORY_ENTRY*)&file[i];
+							memset(tmp_name,0,256);
+							int index=0;
+							if(lfn_count){
+								for(int i=lfn_count-1;i>=0;i--){
+									int long_index=0;
+									while(tmp_long[16*i+long_index]){
+										tmp_name[index++]=tmp_long[16*i+long_index++];
+									}
+									
+								}
+								tmp_name[index]=0;
+							}
+							else{
+								memcpy(tmp_name,entry->name,11);
+								tmp_name[11]=0;
+							}
+							print(tmp_name);
+							printf("Cluster:%u at:%x\n",entry->first_cluster_low_16,get_first_sector_of_cluster(fat,entry->first_cluster_low_16)*512);
+							printf("Size:%u\n",entry->size);
+							if(entry->attributes&0x10){
+								print("directory\n");
+							}
+							uint16_t next_cluster=entry->first_cluster_low_16;
+							lfn_count=0;
+						}
+						//sleep(500);
+					}
+					//for (int i = 0; i < 512; ++i)
+					//{
+					//	uint64_t tmp=file[i];
+				    //	print(to_hstring_noformat(tmp));
+				    //	printchar(' ');
+					//}
+
+
+					free(file);
+				}
 			}
-			
 			printchar('\n');
 		}
+	}*/
 
+	printf("%sknknknknk\n","helloytfoucv");
 
-	}
-
-	printf("%sknknknknk","helloytfoucv");
+	INIT_FILESYSTEM();
 	
+	int file_entries;
+	read_directory("/",&file_entries);
 
 	uint32_t x,y;
 
@@ -224,7 +303,5 @@ int _start(bootinfo *info){
 		sleep(50);
 	}
 	loop();
-
-
 	return 123;
 }

@@ -34,6 +34,35 @@ typedef struct {
 	unsigned char		extended_section[54];
  
 }__attribute__((packed)) fat_BS;
+
+
+typedef struct{
+	char name[11];
+	uint8_t attributes;
+	uint8_t reserved_nt;
+	uint8_t creation_durration;
+	uint16_t creation_time;
+	uint16_t creation_date;
+	uint16_t last_accessed_date;
+	uint16_t first_cluster_high_16;
+	uint16_t last_modified_time;
+	uint16_t last_modified_date;
+	uint16_t first_cluster_low_16;
+	uint32_t size;
+}__attribute__((packed))FAT_DIRECTORY_ENTRY;
+
+typedef struct{
+	uint8_t order;
+	uint16_t first_5[5];
+	uint8_t attribute;
+	uint8_t type;
+	uint8_t checksum;
+	uint16_t next_6[6];
+	uint16_t zero;
+	uint16_t last_2[2];
+}__attribute__((packed))FAT_LONG_NAME_ENTRY;
+
+
 #define FAT12 1
 #define FAT16 2
 #define FAT32 3
@@ -81,7 +110,7 @@ uint64_t get_first_sector_of_cluster(fat_BS* part,uint64_t cluster){
 	return first_sector_of_cluster;
 }
 
-uint64_t get_fat_next_cluster(fat_BS* part,char* fat_table, uint64_t cluster){
+uint64_t get_fat_next_cluster(fat_BS* part,uint8_t* fat_table, uint64_t cluster){
 	uint64_t fat_offset = cluster *1.5;
 	//uint64_t fat_sector = get_first_fat_sector(part) + (fat_offset / part->bytes_per_sector);
 	uint64_t ent_offset = fat_offset % 512;
@@ -92,51 +121,135 @@ uint64_t get_fat_next_cluster(fat_BS* part,char* fat_table, uint64_t cluster){
 }
 int ident_fat(fat_BS* part){
 	int fat_type;
-	if (part->bytes_per_sector == 0) 
-	{
+	if (part->bytes_per_sector == 0) {
 	   fat_type = ExFAT;
 	}
-	else if(get_total_clusters(part) < 4085) 
-	{
+	else if(get_total_clusters(part) < 4085) {
 	   fat_type = FAT12;
 	} 
-	else if(get_total_clusters(part) < 65525) 
-	{
+	else if(get_total_clusters(part) < 65525) {
 	   fat_type = FAT16;
 	} 
-	else
-	{
+	else{
 	   fat_type = FAT32;
 	}
 }
+uint8_t* boot_sector;
+uint8_t fs_type;
+fat_BS* BS;
+uint8_t* FAT_TABLE_0;
+uint8_t* FAT_TABLE_1;
+uint8_t* root_directory;
+
+
+struct FAT_PARTITION{
+
+};
+//will later diferentiate fs types but hardcoded to fat12 for now
+void INIT_FILESYSTEM(){
+	boot_sector=malloc(512);
+	atapio_read_sectors(0, 1, boot_sector);
+
+	fs_type=ident_fat((fat_BS*)boot_sector);
+	BS=(fat_BS*) boot_sector;
+
+	FAT_TABLE_0=malloc(512*BS->table_size_16);
+	atapio_read_sectors(get_first_fat_sector(BS),BS->table_size_16,FAT_TABLE_0);
+
+	root_directory=malloc(512);
+	atapio_read_sectors(get_first_root_dir_sector(BS), 1, root_directory);
 
 
 
+}
+char tmp_long[256];
+char tmp_name[256];
+char** read_directory(char* filepath,int *entries){
+	char* temp_dir=malloc(2048);
+	int lfn_count=0;
+	for (uint64_t i = 0; root_directory[i]; i+=32){
+		if(root_directory[i]==0xE5){
+			continue;
+		}
+		if(root_directory[i+11]==0xf){
+			FAT_LONG_NAME_ENTRY* lfn=(FAT_LONG_NAME_ENTRY*)&root_directory[i];
+			//print("lfn: ");
+			if(lfn_count==0){
+				memset(tmp_long,0,256);
+			}
+			for (int i = 0; i < 5; ++i){
+				tmp_long[i+(16*lfn_count)]=(char)lfn->first_5[i]&0xff;
+			}
+			for (int i = 0; i < 6; ++i){
+				tmp_long[i+5+(16*lfn_count)]=(char)lfn->next_6[i]&0xff;
+			}
+			for (int i = 0; i < 2; ++i){
+				tmp_long[i+11+(16*lfn_count)]=(char)lfn->last_2[i]&0xff;
+			}
+			tmp_long[14+(16*lfn_count)]=0;
+			lfn_count++;
+		}
+		else{
+			FAT_DIRECTORY_ENTRY* entry=(FAT_DIRECTORY_ENTRY*)&root_directory[i];
+			memset(tmp_name,0,256);
+			int index=0;
+			if(lfn_count){
+				for(int i=lfn_count-1;i>=0;i--){
+					int long_index=0;
+					while(tmp_long[16*i+long_index]){
+						tmp_name[index++]=tmp_long[16*i+long_index++];
+					}
+					
+				}
+				tmp_name[index]=0;
+			}
+			else{
+				memcpy(tmp_name,entry->name,11);
+				tmp_name[11]=0;
+			}
+			print(tmp_name);
+			printf(" Cluster:%u at:%x ",entry->first_cluster_low_16,get_first_sector_of_cluster(BS,entry->first_cluster_low_16)*512);
+			printf("Size:%u\n",entry->size);
+			if(entry->attributes&0x10){
+				//print("directory\n");
+			}
+			uint16_t next_cluster=entry->first_cluster_low_16;
+			lfn_count=0;
+		}
+	}
 
+	return 0;
+}
+uint8_t* read_file(char* filepath){
 
+}
+uint64_t get_filesize(char* filepath){
 
-typedef struct{
-	char name[11];
-	uint8_t attributes;
-	uint8_t reserved_nt;
-	uint8_t creation_durration;
-	uint16_t creation_time;
-	uint16_t creation_date;
-	uint16_t last_accessed_date;
-	uint16_t first_cluster_high_16;
-	uint16_t last_modified_time;
-	uint16_t last_modified_date;
-	uint16_t first_cluster_low_16;
-	uint32_t size;
-}__attribute__((packed))FAT_DIRECTORY_ENTRY;
+}
+/*
+char* file=(char*)"/EFI/BOOT/BOOTX64.efi";
+    char names[16][16];
+    memset(names,0,256);
+    int index=0;
+    int n_index=0;
+    int w_index=0;
+    while(file[index]){
+        names[n_index][w_index++]=file[index++];
+        if(file[index]=='/'){
+            names[n_index][w_index]=0;
+            n_index++;
+            w_index=0;
+        }
+    }
+    for(unsigned int i =0; i<=n_index;i++){
+        printf("%u %s\n",i,names[0]+16*i);
+    }
+    for (int i = 0; i < 256; ++i)
+					{
+						auto tmp=names[0][i];
+				    	printf("%c ",tmp);
+				    	//printchar(' ');
+					}
 
-typedef struct{
-	uint8_t order;
-	uint16_t first_5[5];
-	uint8_t attribute;
-	uint8_t type;
-	uint8_t checksum;
-	uint16_t next_6[6];
-	uint16_t zero;
-	uint16_t last_2[2];
-}__attribute__((packed))FAT_LONG_NAME_ENTRY;
+*/
+

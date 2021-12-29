@@ -32,8 +32,7 @@ arguments:
         vectors on the master become offset1..offset1+7
     offset2 - same for slave PIC: offset2..offset2+7
 */
-void PIC_remap(int offset1, int offset2)
-{
+void PIC_remap(int offset1, int offset2){
     unsigned char a1, a2;
  
     a1 = inb(PIC1_DATA);                        // save masks

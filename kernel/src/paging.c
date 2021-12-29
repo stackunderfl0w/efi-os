@@ -23,20 +23,20 @@ void INIT_PAGING(EFI_MEMORY_DESCRIPTOR* memMap, uint64_t Entries, uint64_t DescS
 
 	uint64_t total_mem=	getMemorySize(memMap, Entries, DescSize);
 	FREE_MEMORY=total_mem;
-	print("placing page table man at ");
-	print(to_hstring(largest_segment->PhysicalStart));
+	//print("placing page table man at ");
+	//print(to_hstring(largest_segment->PhysicalStart));
 	pages_used=(char*)largest_segment->PhysicalStart;
 	total_pages=total_mem/4096 +1;
-	print(" size(pages): ");
-	print(to_hstring(total_pages));
+	//print(" size(pages): ");
+	//print(to_hstring(total_pages));
 
 	for (uint64_t i = 0; i < total_pages; ++i){
 		pages_used[i]=0;
 	}
-	print("reserving pages ");
+	//print("reserving pages ");
 	RESERVE_PAGES(0, 0x100); // reserve between 0 and 0x100000
 
-	print("locking page man ");
+	//print("locking page man ");
 	LOCK_PAGES(pages_used,total_pages/4096+1);
 	for (uint64_t i = 0; i < Entries; ++i){
 		EFI_MEMORY_DESCRIPTOR* desc = (EFI_MEMORY_DESCRIPTOR*)((uint64_t)memMap + (i * DescSize));
@@ -49,29 +49,28 @@ void INIT_PAGING(EFI_MEMORY_DESCRIPTOR* memMap, uint64_t Entries, uint64_t DescS
 
 
 	uint64_t kernel_size=((uint64_t)&_KernelEnd-(uint64_t)&_KernelStart)/4096;
-	print("kernel_size: ");
-	print(to_string(kernel_size));
-	printchar('\n');
+	//print("kernel_size: ");
+	//print(to_string(kernel_size));
+	//printchar('\n');
 
 
 	LOCK_PAGES(&_KernelStart,kernel_size);
-	print("requesting pl4 page ");
+	//print("requesting pl4 page ");
 
 	KERNEL_PL4=REQUEST_PAGE();
-	print("memseting kernel");
+	//print("memseting kernel");
 	memset(KERNEL_PL4,0,4096);
 	KERNEL_PL4->entries[0].value=0;
-	print(to_hstring(KERNEL_PL4->entries[0].value));
-	print(to_hstring(KERNEL_PL4));
+	//print(to_hstring(KERNEL_PL4->entries[0].value));
+	//print(to_hstring(KERNEL_PL4));
 
-print("maping display Framebuffer ");
+	//print("maping display Framebuffer ");
 
-	for (uint64_t i = (uint64_t)buf->BaseAddress; i < (uint64_t)buf->BaseAddress+buf->BufferSize; i+=4096)
-	{
+	for (uint64_t i = (uint64_t)buf->BaseAddress; i < (uint64_t)buf->BaseAddress+buf->BufferSize; i+=4096){
 		map_mem((void*)i,(void*)i);
 	}
 
-	print("identitity maping mem ");
+	//print("identitity maping mem ");
 
 	for (uint64_t i = 0; i < total_mem; i+=4096){
 
@@ -173,7 +172,6 @@ uint64_t get_reserved_memory(){
 }
 
 void map_mem(void* virtadr, void* physadr){
-	uint64_t PL4_frag,PDP_frag, PD_frag, PT_frag;
 	//virtadr is 64 bits. 4 level page table doesnt map top 12 bits.
 	//the last 12 bits are also not important as they are inside the page we are mapping.
 	//the remaining 36 bits are split between the 4 levels.

@@ -1,10 +1,13 @@
 #include "graphics.h"
 
 void test_print_char(){
-	for (int i = 0; i < 256; ++i)
-	{
+	for (int i = 0; i < 256; ++i){
 		printchar(i);
 	}
+}
+void test_interupts(){
+	asm("int $0x0e");
+
 }
 void test_serial(){
 	print_serial("hello world");

@@ -50,35 +50,35 @@ void* intset(uint32_t *s, const uint32_t c, size_t n){
     //  s[n--]=c;
     //}
 
-
+    return s;
 }
 
 char* strstr(char* string, char* substring){
-    char *a, *b;
+  char *a, *b;
 
 
-    b = substring;
-    if (*b == 0) {
-  return string;
-    }
-    for ( ; *string != 0; string += 1) {
-  if (*string != *b) {
-      continue;
-  }
-  a = string;
-  while (1) {
-      if (*b == 0) {
+  b = substring;
+  if (*b == 0) {
     return string;
+  }
+  for ( ; *string != 0; string += 1) {
+    if (*string != *b) {
+      continue;
+    }
+    a = string;
+    while (1) {
+      if (*b == 0) {
+        return string;
       }
       if (*a++ != *b++) {
-    break;
+        break;
       }
-  }
-  b = substring;
     }
+  b = substring;
+  }
     return NULL;
 }
-char* strrstr(const char* haystack, const char* needle){
+char* strrstr(char* haystack, char* needle){
     if (*needle == '\0')
         return (char *) haystack;
 
@@ -92,3 +92,18 @@ char* strrstr(const char* haystack, const char* needle){
     }
     return result;
 }
+const uint32_t Polynomial = 0xEDB88320;
+uint32_t crc32b(const void* data, size_t length) {
+  uint32_t crc = ~0; // same as previousCrc32 ^ 0xFFFFFFFF
+  unsigned char* current = (unsigned char*) data;   
+  while (length--){
+    crc ^= *current++;
+    for (unsigned int j = 0; j < 8; j++){
+      if (crc & 1)
+        crc = (crc >> 1) ^ Polynomial;
+      else
+        crc =  crc >> 1;
+    }
+  }   
+  return ~crc; // same as crc ^ 0xFFFFFFFF 
+} 
