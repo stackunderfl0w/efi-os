@@ -1,3 +1,6 @@
+#pragma once
+#include "typedef.h"
+#include "string.h"
 	typedef struct{
 		char magic[3];
 		char oem[8];
@@ -62,11 +65,21 @@ typedef struct{
 	uint16_t last_2[2];
 }__attribute__((packed))FAT_LONG_NAME_ENTRY;
 
+typedef struct{
+	char name[256];
+	uint64_t location;
+	uint64_t size;
+	bool directory;
+	char flags;
+
+}FILE_ENTRY;
+
 
 #define FAT12 1
 #define FAT16 2
 #define FAT32 3
 #define ExFAT 4
+
 
 uint64_t get_total_sectors(fat_BS* part){
 	uint64_t total_sectors = (part->total_sectors_16 == 0)? part->total_sectors_32 : part->total_sectors_16;
@@ -220,7 +233,100 @@ char** read_directory(char* filepath,int *entries){
 
 	return 0;
 }
+FAT_DIRECTORY_ENTRY* get_entry_from_directory(fat_BS* part, char* start_entry,char* name){
+	FAT_DIRECTORY_ENTRY* entry;
+	uint64_t lfn_count=0;
+	for (uint64_t i = 0; start_entry[i]; i+=32){
+		if(start_entry[i]==0xE5){
+			continue;
+		}
+		if(start_entry[i+11]==0xf){
+			FAT_LONG_NAME_ENTRY* lfn=(FAT_LONG_NAME_ENTRY*)&start_entry[i];
+			if(lfn_count==0){
+				memset(tmp_long,0,256);
+			}
+			for (int i = 0; i < 5; ++i){
+				tmp_long[i+(16*lfn_count)]=(char)lfn->first_5[i]&0xff;
+			}
+			for (int i = 0; i < 6; ++i){
+				tmp_long[i+5+(16*lfn_count)]=(char)lfn->next_6[i]&0xff;
+			}
+			for (int i = 0; i < 2; ++i){
+				tmp_long[i+11+(16*lfn_count)]=(char)lfn->last_2[i]&0xff;
+			}
+			tmp_long[14]=0;
+			lfn_count++;
+		}
+		else{
+			entry=(FAT_DIRECTORY_ENTRY*)&start_entry[i];
+			memset(tmp_name,0,256);
+			int index=0;
+			if(lfn_count){
+				for(int i=lfn_count-1;i>=0;i--){
+					int long_index=0;
+					while(tmp_long[16*i+long_index]){
+						tmp_name[index++]=tmp_long[16*i+long_index++];
+					}
+					
+				}
+				tmp_name[index]=0;
+			}
+			else{
+				memcpy(tmp_name,entry->name,11);
+				tmp_name[11]=0;
+			}
+			//print(tmp_name);
+			//printf("Cluster:%u at:%x\n",entry->first_cluster_low_16,get_first_sector_of_cluster(part,entry->first_cluster_low_16)*512);
+			//printf("Size:%u\n",entry->size);
+			//if(entry->attributes&0x10){
+			//	print("directory\n");
+			//}
+			uint16_t next_cluster=entry->first_cluster_low_16;
+			lfn_count=0;
+			if (!strcmp(tmp_name,name)){
+				print("FOUNDIT");
+				print(tmp_name);
+
+				return entry;
+			}
+
+		}
+	}
+	return entry;
+}
 uint8_t* read_file(char* filepath){
+	uint8_t* cur_dir=malloc(512);
+	memcpy(cur_dir,root_directory,512);
+	int sections=0;
+	char** paths=split_string_by_char(filepath,'/',&sections);
+	
+	printf("sections: %u \n",sections);
+
+	for (int i = 0; i < sections; ++i){
+		printf("load %s\n", paths[i]);
+	}
+	FAT_DIRECTORY_ENTRY* entry=get_entry_from_directory((fat_BS*)boot_sector,root_directory,paths[0]);
+	for (int i = 1; i < sections; ++i){
+		if(strcmp(paths[i],"")){
+			atapio_read_sectors(get_first_sector_of_cluster((fat_BS*)boot_sector,entry->first_cluster_low_16), 1, cur_dir);
+			printf("trying to load %s\n", paths[i]);
+			entry=get_entry_from_directory((fat_BS*)boot_sector,root_directory,paths[i]);
+		}
+	}
+	uint8_t* file =malloc((entry->size&0xffffff00)+512);
+	uint16_t next_cluster=entry->first_cluster_low_16;
+	int c_index=0;
+
+	while (1){
+		atapio_read_sectors(get_first_sector_of_cluster((fat_BS*)boot_sector,next_cluster), 1, file+(512*c_index));
+		
+		next_cluster=get_fat_next_cluster((fat_BS*)boot_sector,FAT_TABLE_0,next_cluster);
+		c_index++;
+		if (next_cluster==4095){
+			break;
+		}
+	}
+	return file;
 
 }
 uint64_t get_filesize(char* filepath){
@@ -228,27 +334,27 @@ uint64_t get_filesize(char* filepath){
 }
 /*
 char* file=(char*)"/EFI/BOOT/BOOTX64.efi";
-    char names[16][16];
-    memset(names,0,256);
-    int index=0;
-    int n_index=0;
-    int w_index=0;
-    while(file[index]){
-        names[n_index][w_index++]=file[index++];
-        if(file[index]=='/'){
-            names[n_index][w_index]=0;
-            n_index++;
-            w_index=0;
-        }
-    }
-    for(unsigned int i =0; i<=n_index;i++){
-        printf("%u %s\n",i,names[0]+16*i);
-    }
-    for (int i = 0; i < 256; ++i)
+	char names[16][16];
+	memset(names,0,256);
+	int index=0;
+	int n_index=0;
+	int w_index=0;
+	while(file[index]){
+		names[n_index][w_index++]=file[index++];
+		if(file[index]=='/'){
+			names[n_index][w_index]=0;
+			n_index++;
+			w_index=0;
+		}
+	}
+	for(unsigned int i =0; i<=n_index;i++){
+		printf("%u %s\n",i,names[0]+16*i);
+	}
+	for (int i = 0; i < 256; ++i)
 					{
 						auto tmp=names[0][i];
-				    	printf("%c ",tmp);
-				    	//printchar(' ');
+						printf("%c ",tmp);
+						//printchar(' ');
 					}
 
 */

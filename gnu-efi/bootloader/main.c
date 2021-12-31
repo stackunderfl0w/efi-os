@@ -3,6 +3,7 @@
 #include <elf.h>
 
 #include "bitmap-font.h"
+#include "strutil.h"
  
 typedef struct {
 	void* BaseAddress;
@@ -14,15 +15,15 @@ typedef struct {
 
  
 typedef struct {
-    uint32_t magic;         /* magic bytes to identify PSF */
-    uint32_t version;       /* zero */
-    uint32_t headersize;    /* offset of bitmaps in file, 32 */
-    uint32_t flags;         /* 0 if there's no unicode table */
-    uint32_t numglyph;      /* number of glyphs */
-    uint32_t bytesperglyph; /* size of each glyph */
-    uint32_t height;        /* height in pixels */
-    uint32_t width;         /* width in pixels */
-    CHAR8* font;
+	uint32_t magic;			/* magic bytes to identify PSF */
+	uint32_t version;		/* zero */
+	uint32_t headersize;	/* offset of bitmaps in file, 32 */
+	uint32_t flags;			/* 0 if there's no unicode table */
+	uint32_t numglyph;		/* number of glyphs */
+	uint32_t bytesperglyph;	/* size of each glyph */
+	uint32_t height;		/* height in pixels */
+	uint32_t width;			/* width in pixels */
+	CHAR8* font;
 } PSF_font;
 
 typedef struct {
@@ -36,35 +37,35 @@ typedef struct {
 
 EFI_FILE_HANDLE GetVolume(EFI_HANDLE image)
 {
-  EFI_LOADED_IMAGE *loaded_image = NULL;                  /* image interface */
-  EFI_GUID lipGuid = EFI_LOADED_IMAGE_PROTOCOL_GUID;      /* image interface GUID */
-  EFI_FILE_IO_INTERFACE *IOVolume;                        /* file system interface */
-  EFI_GUID fsGuid = EFI_SIMPLE_FILE_SYSTEM_PROTOCOL_GUID; /* file system interface GUID */
-  EFI_FILE_HANDLE Volume;                                 /* the volume's interface */
+	EFI_LOADED_IMAGE *loaded_image = NULL;					/* image interface */
+	EFI_GUID lipGuid = EFI_LOADED_IMAGE_PROTOCOL_GUID;		/* image interface GUID */
+	EFI_FILE_IO_INTERFACE *IOVolume;						/* file system interface */
+	EFI_GUID fsGuid = EFI_SIMPLE_FILE_SYSTEM_PROTOCOL_GUID;	/* file system interface GUID */
+	EFI_FILE_HANDLE Volume;									/* the volume's interface */
  
-  /* get the loaded image protocol interface for our "image" */
-  uefi_call_wrapper(BS->HandleProtocol, 3, image, &lipGuid, (void **) &loaded_image);
-  /* get the volume handle */
-  return LibOpenRoot(loaded_image->DeviceHandle);
+	/* get the loaded image protocol interface for our "image" */
+	uefi_call_wrapper(BS->HandleProtocol, 3, image, &lipGuid, (void **) &loaded_image);
+	/* get the volume handle */
+	return LibOpenRoot(loaded_image->DeviceHandle);
 }
 
 UINT64 FileSize(EFI_FILE_HANDLE FileHandle)
 {
-  UINT64 ret;
-  EFI_FILE_INFO       *FileInfo;         /* file information structure */
-  /* get the file's size */
-  FileInfo = LibFileInfo(FileHandle);
-  ret = FileInfo->FileSize;
-  FreePool(FileInfo);
-  return ret;
+	UINT64 ret;
+	EFI_FILE_INFO       *FileInfo;         /* file information structure */
+	/* get the file's size */
+	FileInfo = LibFileInfo(FileHandle);
+	ret = FileInfo->FileSize;
+	FreePool(FileInfo);
+	return ret;
 }
 
 UINT8* Load_Text_File(EFI_FILE_HANDLE Volume, CHAR16* FileName){
 	//FileName = L"resources\\config.txt";
-  	EFI_FILE_HANDLE     FileHandle;
+	EFI_FILE_HANDLE     FileHandle;
  
 
-  	uefi_call_wrapper(Volume->Open, 5, Volume, &FileHandle, FileName, EFI_FILE_MODE_READ, EFI_FILE_READ_ONLY | EFI_FILE_HIDDEN | EFI_FILE_SYSTEM);
+	uefi_call_wrapper(Volume->Open, 5, Volume, &FileHandle, FileName, EFI_FILE_MODE_READ, EFI_FILE_READ_ONLY | EFI_FILE_HIDDEN | EFI_FILE_SYSTEM);
 
 
 	UINT64              ReadSize = FileSize(FileHandle);
@@ -73,14 +74,14 @@ UINT8* Load_Text_File(EFI_FILE_HANDLE Volume, CHAR16* FileName){
 	Buffer[ReadSize]=0x00;
 
 	uefi_call_wrapper(FileHandle->Read, 3, FileHandle, &ReadSize, Buffer);
-  	uefi_call_wrapper(FileHandle->Close, 1, FileHandle);
+	uefi_call_wrapper(FileHandle->Close, 1, FileHandle);
 	Print(L"%a\n",Buffer);
 	return Buffer;
 }
 UINT8* Load_File(EFI_FILE_HANDLE Volume, CHAR16* FileName, UINT64 *ReadSize){
-  	EFI_FILE_HANDLE     FileHandle;
+	EFI_FILE_HANDLE     FileHandle;
 
-  	uefi_call_wrapper(Volume->Open, 5, Volume, &FileHandle, FileName, EFI_FILE_MODE_READ, EFI_FILE_READ_ONLY | EFI_FILE_HIDDEN | EFI_FILE_SYSTEM);
+	uefi_call_wrapper(Volume->Open, 5, Volume, &FileHandle, FileName, EFI_FILE_MODE_READ, EFI_FILE_READ_ONLY | EFI_FILE_HIDDEN | EFI_FILE_SYSTEM);
 
 
 	*ReadSize = FileSize(FileHandle);
@@ -88,7 +89,7 @@ UINT8* Load_File(EFI_FILE_HANDLE Volume, CHAR16* FileName, UINT64 *ReadSize){
 	UINT8               *Buffer = AllocatePool(*ReadSize);
 
 	uefi_call_wrapper(FileHandle->Read, 3, FileHandle, ReadSize, Buffer);
-  	uefi_call_wrapper(FileHandle->Close, 1, FileHandle);
+	uefi_call_wrapper(FileHandle->Close, 1, FileHandle);
 	return Buffer;
 }
 
@@ -100,7 +101,7 @@ Framebuffer* setup_graphics(uint32_t pref_width, uint32_t pref_height){
 	EFI_STATUS status;
 
  
-  	status = uefi_call_wrapper(BS->LocateProtocol, 3, &gopGuid, NULL, (void**)&gop);
+	status = uefi_call_wrapper(BS->LocateProtocol, 3, &gopGuid, NULL, (void**)&gop);
 	if(EFI_ERROR(status)){
 		Print(L"Unable to locate GOP\n\r");
 		return NULL;
@@ -109,7 +110,7 @@ Framebuffer* setup_graphics(uint32_t pref_width, uint32_t pref_height){
 		Print(L"GOP located\n\r");
 	}
 
-    EFI_GRAPHICS_OUTPUT_MODE_INFORMATION *info;
+	EFI_GRAPHICS_OUTPUT_MODE_INFORMATION *info;
 	UINTN SizeOfInfo, numModes, nativeMode;
 	numModes=0;
 
@@ -129,23 +130,23 @@ Framebuffer* setup_graphics(uint32_t pref_width, uint32_t pref_height){
 
 
 	for (unsigned int i = 0; i < numModes; i++) {
-  		status = uefi_call_wrapper(gop->QueryMode, 4, gop, i, &SizeOfInfo, &info);
-  		Print(L"mode %03d width %d height %d format %x%s",
-    		i,
-    		info->HorizontalResolution,
-    		info->VerticalResolution,
-    		info->PixelFormat,
-    		i == nativeMode ? "(current)" : ""
-  			,"\r\n");
-  		Print(L"\r\n");
-  		if(info->HorizontalResolution==pref_width&&info->VerticalResolution==pref_height){
-  			mode=i;
-  		}
-  		else{
-  			if((info->HorizontalResolution-pref_width)*(info->VerticalResolution-pref_height)<greatest_dif){
+		status = uefi_call_wrapper(gop->QueryMode, 4, gop, i, &SizeOfInfo, &info);
+		Print(L"mode %03d width %d height %d format %x%s",
+			i,
+			info->HorizontalResolution,
+			info->VerticalResolution,
+			info->PixelFormat,
+			i == nativeMode ? "(current)" : ""
+			,"\r\n");
+		Print(L"\r\n");
+		if(info->HorizontalResolution==pref_width&&info->VerticalResolution==pref_height){
+			mode=i;
+		}
+		else{
+			if((info->HorizontalResolution-pref_width)*(info->VerticalResolution-pref_height)<greatest_dif){
 
-  			}
-  		}
+			}
+		}
 	}
 	if(mode>=0){
 		status = uefi_call_wrapper(gop->SetMode, 2, gop, mode);
@@ -153,20 +154,20 @@ Framebuffer* setup_graphics(uint32_t pref_width, uint32_t pref_height){
 	}
 	//22 is 1080p 9 is 720p//1
 
-  	if(EFI_ERROR(status)) {
-    	Print(L"Unable to set mode %03d", 1,"\r\n");
-  	} else {
-	    // get framebuffer
-	    Print(L"Framebuffer address %x size %d, width %d height %d pixelsperline %d",
-	      gop->Mode->FrameBufferBase,
-	      gop->Mode->FrameBufferSize,
-	      gop->Mode->Info->HorizontalResolution,
-	      gop->Mode->Info->VerticalResolution,
-	      gop->Mode->Info->PixelsPerScanLine
-	    );  
-	    Print(L"\r\n");
+	if(EFI_ERROR(status)) {
+		Print(L"Unable to set mode %03d", 1,"\r\n");
+	} else {
+		// get framebuffer
+		Print(L"Framebuffer address %x size %d, width %d height %d pixelsperline %d",
+			gop->Mode->FrameBufferBase,
+			gop->Mode->FrameBufferSize,
+			gop->Mode->Info->HorizontalResolution,
+			gop->Mode->Info->VerticalResolution,
+			gop->Mode->Info->PixelsPerScanLine
+		);
+		Print(L"\r\n");
 
-  	}
+	}
 
 	framebuffer.BaseAddress = (void*)gop->Mode->FrameBufferBase;
 	framebuffer.BufferSize = gop->Mode->FrameBufferSize;
@@ -243,54 +244,8 @@ CHAR8* to_string(int x){
 	string_buf[size+1]=0x00;
 	return string_buf;
 }
-int strcmp(const CHAR8* str1, const CHAR8* str2){
-	int index=0;
-	while(str1[index]==str2[index]&&str1[index]!=0){
-		index++;
-	}
-	return str1[index]-str2[index];
-}
-CHAR8* strstr(CHAR8* string, CHAR8* substring){
-  CHAR8 *a, *b;
 
 
-  b = substring;
-  if (*b == 0) {
-    return string;
-  }
-  for ( ; *string != 0; string += 1) {
-    if (*string != *b) {
-      continue;
-    }
-    a = string;
-    while (1) {
-      if (*b == 0) {
-        return string;
-      }
-      if (*a++ != *b++) {
-        break;
-      }
-    }
-  b = substring;
-  }
-    return NULL;
-}
-int atoi(const char* buf){
-    unsigned long long output=0;
-    int index=0;
-    int sign =1;
-    if(buf[index]=='-'){
-        sign=-1;
-        index++;
-    }
-    while(buf[index]>='0'&&buf[index]<='9'&&index<20){
-        //printf("index %c \n",buf[index]);
-
-        output*=10;
-        output+=buf[index++]-'0';
-    }
-    return output*sign;
-}
 
 
 EFI_STATUS
@@ -322,70 +277,49 @@ efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 
 	CHAR8* conf_buf = Load_Text_File(Volume,L"resources\\config.txt");
 
-    CHAR8 names[16*256];
-    for (int i = 0; i < 16*256; ++i)
-    {
-    	*names=0;
-    }
-    //memset(names,0,256);
-    CHAR16 font_name[256]={0};
-    uint32_t width=0,height=0;
+	//CHAR8 names[16*256];
+	//for (int i = 0; i < 16*256; ++i)
+	//{
+	//  *names=0;
+	//}
+	//memset(names,0,256);
+	CHAR16 font_name[256]={0};
+	uint32_t width=0,height=0;
 
-    int index=0;
-    int n_index=0;
-    int w_index=0;
+	int index=0;
+	int n_index=0;
+	int w_index=0;
+
+	CHAR8** names =split_string_by_char(conf_buf, '\n', &n_index);
 
 	Print(L"HELLO\n");
 
-	while(conf_buf[index]){
-        names[n_index*256+w_index++]=conf_buf[index++];
-        if(conf_buf[index]=='\n'){
-        	index++;
-            names[n_index*256+w_index]=0;
-            n_index++;
-            w_index=0;
-        }
-    }
-    for(int i =0; i<=n_index;i++){
-        //print(names[0]+256*i);
-        //printchar('\n');
-    }
-
-    for(int i =0; i<=n_index;i++){
-    	if(strstr(&names[256*i],(CHAR8*)"#font")){
-    		Print(L"FOUND");
-    		i++;
-    		for (int y = 0; names[i*256+y]; ++y){
-    			font_name[y]=(CHAR16)names[i*256+y];
-    			Print(L"%u",(uint32_t)names[i*256+y]);
-    			//printchar(names[i][y]);
-    		}
-    	}
-    	else if(strstr(&names[256*i],(CHAR8*)"#resolution")){
-    		Print(L"FOUND");
+	for(int i =0; i<n_index;i++){
+		if(!strcmp(names[i],(CHAR8*)"#font")){
+			Print(L"FOUND");
 			i++;
-    		width=atoi((char*)&names[i*256]);
-    		i++;
-    		height=atoi((char*)&names[i*256]);
-    	}
-    }
-    Print(L"Width %u Height %u",width,height);
-    //print((CHAR8*)"endnio");
-    Print(font_name);
+			for (int y = 0; names[i][y]; ++y){
+				font_name[y]=(CHAR16)names[i][y];
+				//Print(L"%u",(uint32_t)names[i][y]);
+				//printchar(names[i][y]);
+			}
+		}
+		else if(!strcmp(names[i],(CHAR8*)"#resolution")){
+			Print(L"FOUND");
+			i++;
+			width=atoi((char*)names[i]);
+			i++;
+			height=atoi((char*)names[i]);
+		}
+		else if(!strcmp(names[i],(CHAR8*)"#end")){
+			break;
+		}
 
-    for (int i = 0; i < 64; ++i)
-    {
-    	printchar(((char*)font_name)[i]);
-    }
+	}
 
-    //print((CHAR8*)"endnio");
-
-
-	Print(L"%a\n",conf_buf);
-	Print(L"Loading file");
-    Print(font_name+1);
-	Print(L"Loading file");
-
+	Print(L"Width %u Height %u",width,height);
+	//print((CHAR8*)"endnio");
+	Print(font_name);
 
 	UINT64 FileSize2=0;
 
@@ -403,6 +337,8 @@ efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 	bitmap_font bmf=load_font(font);
 
 	init_text_overlay(newBuffer, &bmf);
+
+
 	
 
 	//uint32_t x, y;
@@ -421,14 +357,6 @@ efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 		//putchar(x, y, i);
 		printchar(i);
 	}
-	/*for (uint32_t y2 = 0; y2 < bmf.height; ++y2){
-		for (uint32_t x2 = 0; x2 < bmf.width; ++x2)
-		{
-			if ((bmf.buffer[bmf.bytesperglyph*99+(y2*bmf.width/8)+x2/8]>>(7-(x2%8)))&0x1){
-				PlotPixel_32bpp(x2,y2,0xffffffff);
-			}
-		}
-	}*/
 
 
 	Print(L"Hello, world!\n");
@@ -473,27 +401,14 @@ efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 	Print(L"Kernel e_entry %u \n",header->e_entry);
 	Print(L"Kernel entry %u \n",&header->e_entry);
 
-	//int (*KernelStart)()=((__attribute__((sysv_abi)) int (*)() ) header->e_entry);
 
 	//it seems since the kernes first segement is loaded at 0x0 you can just call 0. at least until the size changes
 	//int (*KernelStart)()=(__attribute__((sysv_abi))int (*)())header->e_entry;
 	int (*KernelStart)() = ((__attribute__((sysv_abi)) int (*)() ) header->e_entry);
-	//int (*KernelStart)()=(kern+header->e_entry+header->e_phoff);
 
 	Print(L"Kernel start %u \n",&KernelStart);
 
 
-
-    /*EFI_MEMORY_DESCRIPTOR* Map = NULL;
-	UINTN MapSize, MapKey;
-	UINTN DescriptorSize;
-	UINT32 DescriptorVersion;
-	{
-		SystemTable->BootServices->GetMemoryMap(&MapSize, Map, &MapKey, &DescriptorSize, &DescriptorVersion);
-		SystemTable->BootServices->AllocatePool(EfiLoaderData, MapSize + 2 * DescriptorSize, (void**)&Map);
-		SystemTable->BootServices->GetMemoryMap(&MapSize, Map, &MapKey, &DescriptorSize, &DescriptorVersion);
-
-	}*/
 	EFI_STATUS                  Status;
 	EFI_MEMORY_DESCRIPTOR       *EfiMemoryMap;
 	UINTN                       EfiMemoryMapSize;
@@ -514,14 +429,7 @@ efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 					&EfiDescriptorVersion
 					);
 	ASSERT (Status == EFI_BUFFER_TOO_SMALL);
-	//Print(L"Size: %u\n",EfiMemoryMapSize);
-	//Print(L"Size: %u\n",EfiMemoryMapSize + 2 * EfiDescriptorSize);
-	//Print(L"Size: %u\n",EfiMemoryMapSize *4);
 
-	//
-	// Use size returned for the AllocatePool.
-	//
-	//this should only require EfiMemoryMapSize + 2 * EfiDescriptorSize but it crashes if i go below EfiMemoryMapSize *4
 	EfiMemoryMap = (EFI_MEMORY_DESCRIPTOR *) AllocatePool (EfiMemoryMapSize + 2 * EfiDescriptorSize);
 	ASSERT (EfiMemoryMap != NULL);
 	Status = gBS->GetMemoryMap (
@@ -542,31 +450,31 @@ efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 	uint64_t mem_size=0;
 	uint64_t mem_size_0=0;
 
-    printchar('8');
-    for (UINTN i = 0; i < EfiMemoryMapSize/EfiDescriptorSize; ++i){
-        EFI_MEMORY_DESCRIPTOR* desc = (EFI_MEMORY_DESCRIPTOR*)((uint64_t)EfiMemoryMap + (i * EfiDescriptorSize));
+	printchar('8');
+	for (UINTN i = 0; i < EfiMemoryMapSize/EfiDescriptorSize; ++i){
+		EFI_MEMORY_DESCRIPTOR* desc = (EFI_MEMORY_DESCRIPTOR*)((uint64_t)EfiMemoryMap + (i * EfiDescriptorSize));
 
-        Print(L"%x %u %lu  ",desc->PhysicalStart,desc->Type,desc->NumberOfPages);
-
-
-        //if(desc->Type){
-            mem_size+=4096*desc->NumberOfPages;
-        //}
-        if(desc->Type){
-            mem_size_0+=4096*desc->NumberOfPages;
-        }
+		Print(L"%x %u %lu  ",desc->PhysicalStart,desc->Type,desc->NumberOfPages);
 
 
-    }
-    Print(L"Mem size: %lu\n",mem_size);
-    Print(L"Mem size_0: %lu\n",mem_size_0);
+		//if(desc->Type){
+			mem_size+=4096*desc->NumberOfPages;
+		//}
+		if(desc->Type){
+			mem_size_0+=4096*desc->NumberOfPages;
+		}
+
+
+	}
+	Print(L"Mem size: %lu\n",mem_size);
+	Print(L"Mem size_0: %lu\n",mem_size_0);
 
 
 	CHAR8 x[]="Exiting boot services";
 	print(x); 
 	Print(L"Exiting boot services");
 
-    SystemTable->BootServices->ExitBootServices(ImageHandle, EfiMapKey);
+	SystemTable->BootServices->ExitBootServices(ImageHandle, EfiMapKey);
 
 	bootinfo info;
 	info.buf=newBuffer;

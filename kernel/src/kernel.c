@@ -55,12 +55,12 @@ int _start(bootinfo *info){
 
 
 	printchar('\n');
-    INIT_PS2_MOUSE();
+	INIT_PS2_MOUSE();
 
 	asm ("sti");
 
-    print("mouse inited");
-    print(to_hstring((uint64_t)info->buf->BaseAddress));
+	print("mouse inited");
+	print(to_hstring((uint64_t)info->buf->BaseAddress));
 
 	uint64_t memsize=getMemorySize(info->mem_map,numEntries,info->map_desc_size);
 	printchar('\n');
@@ -69,32 +69,32 @@ int _start(bootinfo *info){
 	printchar('\n');
 
 	print("Initializing paging\n");
-    INIT_PAGING(info->mem_map,numEntries,info->map_desc_size,info->buf);
+	INIT_PAGING(info->mem_map,numEntries,info->map_desc_size,info->buf);
 
 
-    print("page table loaded\n");
+	print("page table loaded\n");
 
-    printf("Free memory: %ukb\n",get_free_memory()/1024);
-    printf("Used memory: %ukb\n",get_used_memory()/1024);
-    printf("Reserved memory: %ukb\n",get_reserved_memory()/1024);
-
-
-    INIT_HEAP((void*)0x8000000000,0x10);
+	printf("Free memory: %ukb\n",get_free_memory()/1024);
+	printf("Used memory: %ukb\n",get_used_memory()/1024);
+	printf("Reserved memory: %ukb\n",get_reserved_memory()/1024);
 
 
+	INIT_HEAP((void*)0x8000000000,0x10);
 
-    uint8_t* sector_1=malloc(512);;
+
+
+	uint8_t* sector_1=malloc(512);;
 
 	atapio_software_reset(ATAPIO_REGULAR_STATUS_REGISTER_PORT);
 
 	atapio_read_sectors(0, 1, sector_1);
 
-    /*for (int i = 0; i < 512; ++i)
-    {
-    	uint64_t tmp=sector_1[i];
-    	print(to_hstring_noformat(tmp));
-    	printchar(' ');
-    }*/
+	/*for (int i = 0; i < 512; ++i)
+	{
+		uint64_t tmp=sector_1[i];
+		print(to_hstring_noformat(tmp));
+		printchar(' ');
+	}*/
 	/*if (sector_1[0]==0xEB&&sector_1[1]==0x3C&&sector_1[2]==0x90){
 		print("Fat fileystem found ");
 		char oem[9];
@@ -264,8 +264,8 @@ int _start(bootinfo *info){
 					//for (int i = 0; i < 512; ++i)
 					//{
 					//	uint64_t tmp=file[i];
-				    //	print(to_hstring_noformat(tmp));
-				    //	printchar(' ');
+					//	print(to_hstring_noformat(tmp));
+					//	printchar(' ');
 					//}
 
 
@@ -281,8 +281,11 @@ int _start(bootinfo *info){
 	INIT_FILESYSTEM();
 	
 	int file_entries;
-	read_directory("/",&file_entries);
+	//read_directory("/",&file_entries);
+	
+	uint8_t* file = read_file("/resources/TEST    TXT");
 
+	printf("%s",file);
 	uint32_t x,y;
 
 	while(1){

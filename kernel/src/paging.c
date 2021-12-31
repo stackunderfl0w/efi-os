@@ -176,14 +176,14 @@ void map_mem(void* virtadr, void* physadr){
 	//the last 12 bits are also not important as they are inside the page we are mapping.
 	//the remaining 36 bits are split between the 4 levels.
 	uint64_t virt=(uint64_t)virtadr;
-    virt >>= 12;
-    uint64_t PT_ofset = virt & 0x1ff;
-    virt >>= 9;
-    uint64_t PD_ofset = virt & 0x1ff;
-    virt >>= 9;
-    uint64_t PDP_ofset = virt & 0x1ff;
-    virt >>= 9;
-    uint64_t PL4_ofset = virt & 0x1ff;
+	virt >>= 12;
+	uint64_t PT_ofset = virt & 0x1ff;
+	virt >>= 9;
+	uint64_t PD_ofset = virt & 0x1ff;
+	virt >>= 9;
+	uint64_t PDP_ofset = virt & 0x1ff;
+	virt >>= 9;
+	uint64_t PL4_ofset = virt & 0x1ff;
 	Page_Table_Entry* PL4E=&KERNEL_PL4->entries[PL4_ofset];
 	//check if this part of virtual memory has been mapped yet
 	if (!PT_GET_FLAG(PL4E,PT_Present)){

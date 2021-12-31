@@ -24,33 +24,33 @@ void test_benchmark_clrscr(){
 
 void test_heap(){
 	void* test_mal=calloc(0x200);
-    printchar('\n');
-    print(to_hstring((uint64_t)test_mal));
+	printchar('\n');
+	print(to_hstring((uint64_t)test_mal));
 
 	void* test_mal2=calloc(0x10);
-    printchar('\n');
-    print(to_hstring((uint64_t)test_mal2));
-    free(test_mal);
+	printchar('\n');
+	print(to_hstring((uint64_t)test_mal2));
+	free(test_mal);
 
 	void* test_mal3=calloc(0x20);
-    printchar('\n');
-    print(to_hstring((uint64_t)test_mal3));
+	printchar('\n');
+	print(to_hstring((uint64_t)test_mal3));
 
 
 	void* test_mal4=calloc(0x10000);
-    printchar('\n');
-    print(to_hstring((uint64_t)test_mal4));
+	printchar('\n');
+	print(to_hstring((uint64_t)test_mal4));
 
 
 	free(test_mal2);
 	free(test_mal3);
 	free(test_mal4);
 	void* test_mal5=calloc(0x1000);
-    printchar(' ');
-    print(to_hstring((uint64_t)test_mal5));
-    printchar(' ');
+	printchar(' ');
+	print(to_hstring((uint64_t)test_mal5));
+	printchar(' ');
 
-    double starttime=TimeSinceBoot;
+	double starttime=TimeSinceBoot;
 
 	for (int i = 0; i < 1000; ++i){
 		void* tmp =malloc(0x100);
@@ -64,31 +64,31 @@ void test_heap(){
 
 void test_paging(){
 	for (int i = 0; i < 6; ++i){
-	    void* test = REQUEST_PAGE();
-	    print(to_hstring((uint64_t)test));
-	    printchar('\n');
-    }
+		void* test = REQUEST_PAGE();
+		print(to_hstring((uint64_t)test));
+		printchar('\n');
+	}
 
-    map_mem((void*)0x6000000000,REQUEST_PAGE());
+	map_mem((void*)0x6000000000,REQUEST_PAGE());
 
-    uint64_t* test =(uint64_t*)0x6000000000;
+	uint64_t* test =(uint64_t*)0x6000000000;
 
-    *test=30000;
+	*test=30000;
 
-    print(to_string(*test));
-    printchar('\n');
-
-
-    void* test_ptr = REQUEST_PAGE();
-    print(to_hstring((uint64_t)test_ptr));
+	print(to_string(*test));
+	printchar('\n');
 
 
-    printchar('\n');
+	void* test_ptr = REQUEST_PAGE();
+	print(to_hstring((uint64_t)test_ptr));
+
+
+	printchar('\n');
 }
 
 void test_benchmark_paging(){
 
-    double starttime=TimeSinceBoot;
+	double starttime=TimeSinceBoot;
 
 	for (int i = 0; i < 50000; ++i){
 		REQUEST_PAGE();

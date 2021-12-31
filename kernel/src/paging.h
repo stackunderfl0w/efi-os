@@ -31,16 +31,16 @@ extern uint64_t _KernelEnd;
 
 enum PAGE_FLAGS{
 	PT_Present,
-    PT_RW,
-    PT_UserSuper,
-    PT_WriteThrough,
-    PT_CacheDisabled,
-    PT_Accessed,
-    PT_LargerPages = 7,
-    PT_Custom0 = 9,
-    PT_Custom1,
-    PT_Custom2,
-    PT_NX = 63
+	PT_RW,
+	PT_UserSuper,
+	PT_WriteThrough,
+	PT_CacheDisabled,
+	PT_Accessed,
+	PT_LargerPages = 7,
+	PT_Custom0 = 9,
+	PT_Custom1,
+	PT_Custom2,
+	PT_NX = 63
 
 };
 

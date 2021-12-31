@@ -1,6 +1,6 @@
 #pragma once
 #include "io.h"
-#define PORT 0x3f8          // COM1
+#define PORT 0x3f8			// COM1
  
 int init_serial();
 int is_transmit_empty();

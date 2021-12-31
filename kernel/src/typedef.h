@@ -15,8 +15,8 @@ typedef unsigned int UINT32;
 typedef unsigned long long UINTN;
 typedef unsigned long long UINT64;
 
-typedef UINT64          EFI_PHYSICAL_ADDRESS;
-typedef UINT64          EFI_VIRTUAL_ADDRESS;
+typedef UINT64			EFI_PHYSICAL_ADDRESS;
+typedef UINT64			EFI_VIRTUAL_ADDRESS;
 
 
 void *
@@ -27,8 +27,6 @@ wchar_t *
 wmemset (wchar_t *s, wchar_t c, size_t n);
 void* intset(uint32_t *s, const uint32_t c, size_t n);
 //char * strstr (const char *haystack, const char *needle);
-char *strstr(char* string, char* substring);
-char* strrstr(char* haystack, char* needle);
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))

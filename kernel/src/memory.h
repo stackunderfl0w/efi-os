@@ -1,3 +1,4 @@
+#pragma once
 #include "typedef.h"
 #include "paging.h"
 

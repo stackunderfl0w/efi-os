@@ -17,16 +17,16 @@ typedef unsigned int uint32_t;
 #define PSF1_STARTSEQ   0xFFFE
 
 typedef struct {
-        unsigned char magic[2];     /* Magic number */
-        unsigned char mode;         /* PSF font mode */
-        unsigned char charsize;     /* Character size */
+	unsigned char magic[2];		/* Magic number */
+	unsigned char mode;			/* PSF font mode */
+	unsigned char charsize;		/* Character size */
 }psf1_header;
 
 
-#define PSF2_MAGIC0     0x72
-#define PSF2_MAGIC1     0xb5
-#define PSF2_MAGIC2     0x4a
-#define PSF2_MAGIC3     0x86
+#define PSF2_MAGIC0		0x72
+#define PSF2_MAGIC1		0xb5
+#define PSF2_MAGIC2		0x4a
+#define PSF2_MAGIC3		0x86
 #define PSF2_MAGIC 0x864ab572
 
 
@@ -41,22 +41,22 @@ typedef struct {
 #define PSF2_STARTSEQ   0xFE
 
 typedef struct{
-    uint32_t magic;         /* magic bytes to identify PSF */
-    uint32_t version;       /* zero */
-    uint32_t headersize;    /* offset of bitmaps in file, 32 */
-    uint32_t flags;         /* 0 if there's no unicode table */
-    uint32_t numglyph;      /* number of glyphs */
-    uint32_t bytesperglyph; /* size of each glyph */
-    uint32_t height;        /* height in pixels */
-    uint32_t width;         /* width in pixels */
+	uint32_t magic;			/* magic bytes to identify PSF */
+	uint32_t version;		/* zero */
+	uint32_t headersize;	/* offset of bitmaps in file, 32 */
+	uint32_t flags;			/* 0 if there's no unicode table */
+	uint32_t numglyph;		/* number of glyphs */
+	uint32_t bytesperglyph;	/* size of each glyph */
+	uint32_t height;		/* height in pixels */
+	uint32_t width;			/* width in pixels */
 }psf2_header;
 
 typedef struct {
-    uint32_t numglyph;      /* number of glyphs */
-    uint32_t bytesperglyph; /* size of each glyph */
-    uint32_t height;        /* height in pixels */
-    uint32_t width;         /* width in pixels */
-    CHAR8* buffer;
+	uint32_t numglyph;		/* number of glyphs */
+	uint32_t bytesperglyph;	/* size of each glyph */
+	uint32_t height;		/* height in pixels */
+	uint32_t width;			/* width in pixels */
+	CHAR8* buffer;
 }bitmap_font;
 
 //create a bitmap font from a loaded file

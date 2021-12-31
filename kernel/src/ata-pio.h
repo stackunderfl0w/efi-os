@@ -1,3 +1,4 @@
+#pragma once
 #include "io.h"
 #define ATAPIO_SECTOR_SIZE 512
 // ATA bus I/O ports
@@ -18,18 +19,18 @@
 #define ATAPIO_IRQ_LINE PIC1_OFFSET + 0x0E
 
 struct atapio_status_byte{
-    uint8_t ERR : 3; // Indicates an error occurred.
-    uint8_t DRQ : 1; // Set when the drive has PIO data to transfer, or is ready to accept PIO data.
-    uint8_t SRV : 1; // Overlapped Mode Service Request.
-    uint8_t DF : 1;  // Drive Fault Error
-    uint8_t RDY : 1; // Bit is clear when drive is spun down, or after an error. Set otherwise.
-    uint8_t BSY : 1; // Indicates the drive is preparing to send/receive data
+	uint8_t ERR : 3; // Indicates an error occurred.
+	uint8_t DRQ : 1; // Set when the drive has PIO data to transfer, or is ready to accept PIO data.
+	uint8_t SRV : 1; // Overlapped Mode Service Request.
+	uint8_t DF : 1;  // Drive Fault Error
+	uint8_t RDY : 1; // Bit is clear when drive is spun down, or after an error. Set otherwise.
+	uint8_t BSY : 1; // Indicates the drive is preparing to send/receive data
 };
 
 typedef struct atapio_status_byte atapio_status_byte_t;
 
 struct atapio_disk_sector{
-    uint8_t bytes[32];
+	uint8_t bytes[32];
 };
 
 typedef struct atapio_disk_sector atapio_disk_sector_t;

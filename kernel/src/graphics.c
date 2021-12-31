@@ -111,20 +111,20 @@ char* to_string_double(double x, uint64_t precision){
 	return string_buf;
 }
 long atoi(const char* buf){
-    unsigned long long output=0;
-    int index=0;
-    int sign =1;
-    if(buf[index]=='-'){
-        sign=-1;
-        index++;
-    }
-    while(buf[index]>='0'&&buf[index]<='9'&&index<20){
-        printf("index %c \n",buf[index]);
+	unsigned long long output=0;
+	int index=0;
+	int sign =1;
+	if(buf[index]=='-'){
+		sign=-1;
+		index++;
+	}
+	while(buf[index]>='0'&&buf[index]<='9'&&index<20){
+		printf("index %c \n",buf[index]);
 
-        output*=10;
-        output+=buf[index++]-'0';
-    }
-    return output*sign;
+		output*=10;
+		output+=buf[index++]-'0';
+	}
+	return output*sign;
 }
 void putchar(UINT32 x, UINT32 y, CHAR8 chr){
 	clear_mouse();
@@ -235,10 +235,10 @@ void clrscr(uint32_t color){
 	//int end=globalBuf->PixelsPerScanLine*globalBuf->Height;
 	uint64_t flags;
 	asm volatile("# __raw_save_flags\n\t"
-	      "pushf ; pop %0"
-	      : "=rm" (flags)
-	      : /* no input */
-	      : "memory");
+		"pushf ; pop %0"
+		: "=rm" (flags)
+		: /* no input */
+		: "memory");
 	if (flags&0x200){
 		asm volatile("cli");
 	}
@@ -379,10 +379,10 @@ void get_display_resolution(UINT32 *x, UINT32 *y){
 void scroll_console(){
 	uint64_t flags;
 	asm volatile("# __raw_save_flags\n\t"
-	      "pushf ; pop %0"
-	      : "=rm" (flags)
-	      : /* no input */
-	      : "memory");
+		"pushf ; pop %0"
+		: "=rm" (flags)
+		: /* no input */
+		: "memory");
 	if (flags&0x200){
 		asm volatile("cli");
 	}

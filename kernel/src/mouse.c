@@ -4,51 +4,51 @@ uint32_t display_width=0,display_height=0;
 
 
 void PS2_WAIT_WRITE(){
-    uint32_t timeout=10000;
-    while((inb(0x64)&0b10)&&timeout--){
+	uint32_t timeout=10000;
+	while((inb(0x64)&0b10)&&timeout--){
 
-    }
+	}
 }
 void PS2_WAIT_READ(){
-    uint32_t timeout=10000;
-    while((!inb(0x64)&0b1)&&timeout--){
+	uint32_t timeout=10000;
+	while((!inb(0x64)&0b1)&&timeout--){
 
-    }
+	}
 }
 void PS2_WRITE_PORT_2(){
-    PS2_WAIT_WRITE();
-    outb(0x64,0xD4);
-    PS2_WAIT_WRITE();
+	PS2_WAIT_WRITE();
+	outb(0x64,0xD4);
+	PS2_WAIT_WRITE();
 }
 void INIT_PS2_MOUSE(){
-    PS2_WAIT_WRITE();
-    outb(0x64,0xA8);
-    PS2_WAIT_WRITE();
-    outb(0x64,0x20);
-    PS2_WAIT_READ();
-    uint8_t minp = inb(0x60);
-    //print(to_hstring(minp));
+	PS2_WAIT_WRITE();
+	outb(0x64,0xA8);
+	PS2_WAIT_WRITE();
+	outb(0x64,0x20);
+	PS2_WAIT_READ();
+	uint8_t minp = inb(0x60);
+	//print(to_hstring(minp));
 
-    minp |= 1UL << 2;
-    minp &= ~(1UL << 5);
+	minp |= 1UL << 2;
+	minp &= ~(1UL << 5);
 
-    PS2_WAIT_WRITE();
-    outb(0x64,0x60);
-    PS2_WAIT_WRITE();
-    outb(0x60,minp);
+	PS2_WAIT_WRITE();
+	outb(0x64,0x60);
+	PS2_WAIT_WRITE();
+	outb(0x60,minp);
 
-    PS2_WRITE_PORT_2();
-    outb(0x60, 0xF6);
+	PS2_WRITE_PORT_2();
+	outb(0x60, 0xF6);
 
-    PS2_WAIT_READ();
-    inb(0x60);
+	PS2_WAIT_READ();
+	inb(0x60);
 
-    PS2_WRITE_PORT_2();
-    outb(0x60, 0xF4);
+	PS2_WRITE_PORT_2();
+	outb(0x60, 0xF4);
 
-    PS2_WAIT_READ();
-    inb(0x60);
-    get_display_resolution(&display_width, &display_height);
+	PS2_WAIT_READ();
+	inb(0x60);
+	get_display_resolution(&display_width, &display_height);
 
 }
 
