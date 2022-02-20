@@ -21,7 +21,6 @@ const char* efi_memory_types[] = {
 
 uint64_t getMemorySize(EFI_MEMORY_DESCRIPTOR* memMap, uint64_t Entries, uint64_t DescSize){
 	uint64_t mem_size=0;
-	printchar('8');
 	for (int i = 0; i < Entries; ++i){
 		EFI_MEMORY_DESCRIPTOR* desc = (EFI_MEMORY_DESCRIPTOR*)((uint64_t)memMap + (i * DescSize));
 		//print(efi_memory_types[desc->Type]);
@@ -36,8 +35,6 @@ uint64_t getMemorySize(EFI_MEMORY_DESCRIPTOR* memMap, uint64_t Entries, uint64_t
 		if(desc->Type){
 			mem_size+=4096*desc->NumberOfPages;
 		}
-
-
 	}
 	return mem_size;
 }

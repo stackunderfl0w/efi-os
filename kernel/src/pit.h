@@ -1,6 +1,8 @@
 #pragma once
 #include "typedef.h"
 #include "io.h"
+#include "graphics.h"
+#include "time.h"
 volatile extern double TimeSinceBoot;
 
 void SET_PIT_DIVISOR(uint16_t divisor);

@@ -2,7 +2,7 @@
 #include <stdarg.h>
 #include "bitmap-font.h"
 #include "typedef.h"
-#include "pit.h"
+//#include "pit.h"
 #include "serial.h"
 
 typedef struct {

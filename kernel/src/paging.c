@@ -236,12 +236,6 @@ void map_mem(void* virtadr, void* physadr){
 
 
 
-
-
-
-
-
-
 void PT_SET_FLAG(Page_Table_Entry* PT, char flag){
 	PT->value|= 1UL << flag;
 }

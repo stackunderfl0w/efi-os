@@ -15,8 +15,6 @@ bitmap_font load_font(CHAR8* buffer){
 		font.height=header->charsize;
 		font.width=8;
 		font.buffer=buffer+4;
-
-
 	}
 	else if(((uint32_t*)buffer)[0]==PSF2_MAGIC){
 		print_serial("PSF2 font found");

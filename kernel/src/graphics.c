@@ -199,6 +199,13 @@ void printf(const char* str, ...){
 					while(temp[ti]){
 						printf_buf[output_index++]=temp[ti++];
 					}	
+					break;				
+				case 'p':
+					temp=to_hstring(va_arg(ap,uint64_t));
+					ti=0;
+					while(temp[ti]){
+						printf_buf[output_index++]=temp[ti++];
+					}	
 					break;
 				case 'u':
 					temp=to_string(va_arg(ap,uint64_t));
@@ -221,6 +228,10 @@ void printf(const char* str, ...){
 						printf_buf[output_index++]=temp[ti++];
 					}	
 					break;
+				case 'c':
+					printf_buf[output_index++]=(char)va_arg(ap,int);
+					break;
+
 			}
 		}
 		else{
@@ -259,7 +270,7 @@ void init_text_overlay(Framebuffer* buf, bitmap_font* font){
 	cursor_y=0;
 	
 	clrscr(0x00000000);
-	printf("\n%u %u %u %u %u %u",console_width,buf->Width,font->width,console_height,buf->Height,font->height);
+	//printf("\n%u %u %u %u %u %u",console_width,buf->Width,font->width,console_height,buf->Height,font->height);
 
 }
 void move_cursor(UINT32 x, UINT32 y){

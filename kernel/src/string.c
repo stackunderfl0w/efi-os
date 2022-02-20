@@ -49,7 +49,6 @@ int strcmp(const char* str1, const char* str2){
 char** split_string_by_char(char* str, char seperator, int *section_count){
 	int index=0;
 	int n_index=0;
-	int w_index=0;
 
 	int n_count=0;
 	while(str[index]){
@@ -75,8 +74,6 @@ char** split_string_by_char(char* str, char seperator, int *section_count){
 	sections[0]=&start[index];
 
 	while(str[index]){
-		//printchar(str[index]);
-		//printchar(' ');
 		start[index]=str[index];
 		if(str[index]==seperator){
 			start[index]=0;
@@ -97,4 +94,16 @@ uint64_t strlen(char* str){
 	uint64_t index=0;
 	while(str[index++]);
 	return index-1;
+}
+
+char* strcpy(char* dest, const char* src){
+
+	for (int i = 0; src[i]; ++i)
+	{
+		dest[i]=src[i];
+	}
+	return dest;
+}
+char* memmove(char* dest, const char* src, uint64_t len){
+	
 }

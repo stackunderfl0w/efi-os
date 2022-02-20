@@ -12,6 +12,10 @@
 #include "ata-pio.h"
 #include "fat.h"
 
+#include "time.h"
+#include "keyboard.h"
+#include "shell.h"
+
 typedef struct {
 	Framebuffer* buf;
 	bitmap_font* font;
@@ -45,8 +49,6 @@ int _start(bootinfo *info){
 
 	print("idt loaded ");
 
-	//INIT_PS2_MOUSE();
-
 	//SET_PIT_DIVISOR(65535);
 	SET_PIT_FREQUENCY(1000);
 
@@ -77,6 +79,7 @@ int _start(bootinfo *info){
 	printf("Free memory: %ukb\n",get_free_memory()/1024);
 	printf("Used memory: %ukb\n",get_used_memory()/1024);
 	printf("Reserved memory: %ukb\n",get_reserved_memory()/1024);
+	sleep(1000);
 
 
 	INIT_HEAP((void*)0x8000000000,0x10);
@@ -283,10 +286,59 @@ int _start(bootinfo *info){
 	int file_entries;
 	//read_directory("/",&file_entries);
 	
-	uint8_t* file = read_file("/resources/TEST    TXT");
+	//uint8_t* file = read_file("/resources/TEST    TXT");
+	uint8_t* file = read_file("/resources/config.txt");
+	//uint8_t* file = read_file("/resources/startup.txt");
 
-	printf("%s",file);
+	uint8_t* font2 = read_file("/resources/zap-light16.psf");
+
+	bitmap_font loaded_font=load_font(font2);
+
+	init_text_overlay(info->buf, &loaded_font);
+
+	write_file("/resources/WRTTEST TXT",file,1024);
+
+	//file = read_file("/resources/WRTTEST TXT");
+
+	//printf("\n%s\n",file);
+	print(file);
 	uint32_t x,y;
+
+
+	char* chr_ptr=malloc(13);
+	char* src="Hello there";
+	memcpy(chr_ptr,src,12);
+	printf(chr_ptr);
+	realloc(chr_ptr,256);
+	printf(chr_ptr);
+
+	//printf(chr_ptr);
+
+	INIT_RTC();
+
+	run_shell(info->buf, info->font);
+
+
+
+	while(1){
+		//printf("second:%u minute:%u hour:%u day:%u month:%u year:%u\n",
+			//SYSTEM_TIME.second,SYSTEM_TIME.minute,SYSTEM_TIME.hour,SYSTEM_TIME.day,SYSTEM_TIME.month,SYSTEM_TIME.year);
+		//printf("Day of week: %s\n",days_of_the_week[dayofweek()]);
+		//printf("second:%u ",
+		//SYSTEM_TIME.second);
+		get_cursor_pos(&x, &y);
+
+		move_cursor(40, 0);
+		for(int i=0; i<40;i++){
+			deletechar();
+		}
+		printf("%s %u %s, %u:%u:%u", days_of_the_week[dayofweek()], SYSTEM_TIME.day, months_short[SYSTEM_TIME.month], SYSTEM_TIME.hour, SYSTEM_TIME.minute, SYSTEM_TIME.second );
+		move_cursor(x, y);
+
+		sleep(100);
+	}
+
+
 
 	while(1){
 		get_cursor_pos(&x, &y);

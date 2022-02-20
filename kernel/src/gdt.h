@@ -35,3 +35,6 @@ extern "C" {
 void LoadGDT(GDT_Descriptor* gdtDescriptor);
 
 void INIT_GDT();
+#ifdef __cplusplus
+}
+#endif

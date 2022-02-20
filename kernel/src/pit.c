@@ -1,9 +1,9 @@
 #include "pit.h"
-#include "graphics.h"
 
 volatile double TimeSinceBoot = 0;
 uint16_t Divisor = 65535;
 const uint64_t BaseFrequency = 1193182;
+//const uint64_t BaseFrequency = 1193400;
 #define min(a,b) (((a)<(b))?(a):(b))
 #define max(a,b) (((a)>(b))?(a):(b))
 
@@ -21,7 +21,11 @@ double GET_PIT_FREQUENCY(){
 	return (double)BaseFrequency / (double)Divisor;
 }
 void PIT_TICK(){
-	TimeSinceBoot+=1.0/GET_PIT_FREQUENCY();
+	volatile uint64_t old_time=(uint64_t)TimeSinceBoot;
+	TimeSinceBoot+=1.01/GET_PIT_FREQUENCY();
+	if((uint64_t)TimeSinceBoot>old_time){
+		SYSTEM_TIME_INCREMENT();
+	}
 	//printchar('t');
 }
 

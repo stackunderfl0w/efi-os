@@ -2,7 +2,6 @@
 HEAP_SEG_HEADER* last_hdr;
 void* heap_start;
 void* heap_end;
-
 void SPLIT_HEAP_SEGMENT(HEAP_SEG_HEADER* seg, uint64_t length){
 	HEAP_SEG_HEADER* n_hdr=(HEAP_SEG_HEADER*)((void*)(seg+1)+length);
 	n_hdr->next_hdr=seg->next_hdr;
@@ -90,4 +89,12 @@ void free(void* adr){
 		cur=cur->previous_hdr;
 		JOIN_HEAP_NEXT_SEGMENT(cur);
 	}
+}
+void* realloc(void* adr, uint64_t size){
+	char* loc = calloc(size);
+	printf("1");
+	HEAP_SEG_HEADER* cur=((HEAP_SEG_HEADER*)adr)-1;
+	memcpy(loc,adr,MIN(size,cur->len));
+	free(adr);
+	return loc;
 }
