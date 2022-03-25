@@ -1,13 +1,13 @@
 #include "shell.h"
 #include "fat.h"
 
-inline bool is_alpha(char ch){
+bool is_alpha(char ch){
 	return((ch >= 97 && ch <= 122) || (ch >= 65 && ch <= 90));
 }
-inline bool is_print(char ch){
+bool is_print(char ch){
 	return((ch >= 0x20 && ch <= 0x7e));
 }
-inline bool isdigit(char ch){
+bool isdigit(char ch){
 	return ((ch>=0x30 && ch<=0x39));
 }
 void run_cmd(char* cmd);

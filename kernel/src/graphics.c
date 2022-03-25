@@ -3,8 +3,7 @@
 Framebuffer* globalBuf;
 bitmap_font* console_font;
 
- void PlotPixel_32bpp(int x, int y, uint32_t pixel)
-{
+void PlotPixel_32bpp(int x, int y, uint32_t pixel){
 	*((uint32_t*)((char*)globalBuf->BaseAddress + 4 * globalBuf->PixelsPerScanLine * y + 4 * x)) = pixel;
 }
 uint32_t ReadPixel_32bpp(int x, int y){

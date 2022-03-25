@@ -1,4 +1,28 @@
 #include "graphics.h"
+#include "fat.h"
+
+void test_ata_pio_read(){
+	uint8_t* sector_1=malloc(512);;
+
+	//atapio_software_reset(ATAPIO_REGULAR_STATUS_REGISTER_PORT);
+
+	atapio_read_sectors(0, 1, sector_1);
+
+	for (int i = 0; i < 512; ++i){
+		uint64_t tmp=sector_1[i];
+		print(to_hstring_noformat(tmp));
+		printchar(' ');
+	}
+	atapio_read_sectors(1, 1, sector_1);
+
+	for (int i = 0; i < 512; ++i){
+		uint64_t tmp=sector_1[i];
+		print(to_hstring_noformat(tmp));
+		printchar(' ');
+	}
+
+	
+}
 
 void test_print_char(){
 	for (int i = 0; i < 256; ++i){

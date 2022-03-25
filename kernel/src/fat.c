@@ -53,28 +53,30 @@ uint64_t get_first_sector_of_cluster(fat_BS* part,uint64_t cluster){
 uint64_t get_fat_next_cluster(fat_BS* part,uint8_t* fat_table, uint64_t cluster){
 	uint64_t fat_offset = cluster *1.5;
 	//uint64_t fat_sector = get_first_fat_sector(part) + (fat_offset / part->bytes_per_sector);
-	uint64_t ent_offset = fat_offset % 512;
+	//uint64_t ent_offset = fat_offset % 512;
 	if(cluster%2){
-		return (*(uint16_t*)&fat_table[ent_offset])>>4;
+		return (*(uint16_t*)&fat_table[fat_offset])>>4;
 	}
-	return (*(uint16_t*)&fat_table[ent_offset])&0xFFF;
+	return (*(uint16_t*)&fat_table[fat_offset])&0xFFF;
 }
 uint64_t get_first_free_cluster(fat_BS* part,uint8_t* fat_table){
 	uint64_t cluster=0;
 	while(get_fat_next_cluster(part,fat_table,cluster)){
 		cluster++;
 	}
+	//set the next cluster ahead of time to prevent the same cluster being found multiple times
+	set_fat_next_cluster(part, fat_table, cluster, 4095);
 	return cluster;
 }
 void set_fat_next_cluster(fat_BS* part,uint8_t* fat_table,uint64_t start_cluster,uint64_t next_cluster){
 	uint64_t fat_offset = start_cluster *1.5;
 	//uint64_t fat_sector = get_first_fat_sector(part) + (fat_offset / part->bytes_per_sector);
-	uint64_t ent_offset = fat_offset % 512;
+	//uint64_t ent_offset = fat_offset % 512;
 	if(start_cluster%2){
-		(*(uint16_t*)&fat_table[ent_offset])|=next_cluster<<4;
+		(*(uint16_t*)&fat_table[fat_offset])=((*(uint16_t*)&fat_table[fat_offset])&0x000F)|(next_cluster<<4);
 	}
 	else{
-		(*(uint16_t*)&fat_table[ent_offset])|=0xFFF&next_cluster;
+		(*(uint16_t*)&fat_table[fat_offset])=((*(uint16_t*)&fat_table[fat_offset])&0xF000)|(0xFFF&next_cluster);
 	}
 }
 int ident_fat(fat_BS* part){
@@ -91,6 +93,7 @@ int ident_fat(fat_BS* part){
 	else{
 	   fat_type = FAT32;
 	}
+	return fat_type;
 }
 uint8_t* boot_sector;
 uint8_t fs_type;
@@ -406,6 +409,9 @@ void write_file(char* filepath, uint8_t* data, uint64_t size){
 
 
 	uint64_t cluster=get_first_free_cluster((fat_BS*)boot_sector,FAT_TABLE_0);
+	printf("Cluster: %u \n",cluster);
+	printf("Next cluster: %u \n",get_fat_next_cluster((fat_BS*)boot_sector,FAT_TABLE_0,cluster));
+
 	entry->first_cluster_low_16=cluster;
 	entry->size=size;
 	uint64_t next_cluster=0;
@@ -413,26 +419,32 @@ void write_file(char* filepath, uint8_t* data, uint64_t size){
 	if(size<=512){
 		printf("wrtietodisk\n");
 		set_fat_next_cluster((fat_BS*)boot_sector,FAT_TABLE_0, cluster,4095);
-		atapio_write_sectors(get_first_sector_of_cluster((fat_BS*)boot_sector,entry->first_cluster_low_16), 1, data);
+		atapio_write_sectors(get_first_sector_of_cluster((fat_BS*)boot_sector,cluster), 1, data);
 	}
 	else{
 		while(size>512){			
 			printf("wrtietodisk2\n");
 			next_cluster=get_first_free_cluster((fat_BS*)boot_sector,FAT_TABLE_0);
+			set_fat_next_cluster((fat_BS*)boot_sector,FAT_TABLE_0, next_cluster,4095);
+
 			set_fat_next_cluster((fat_BS*)boot_sector,FAT_TABLE_0, cluster,next_cluster);
-			atapio_write_sectors(get_first_sector_of_cluster((fat_BS*)boot_sector,entry->first_cluster_low_16), 1, data+(512+sectors_written++));
+			printf("Cluster: %u \n",cluster);
+			
+			printf("Next cluster: %u \n",next_cluster);
+
+			printf("actual found: %u \n",get_fat_next_cluster((fat_BS*)boot_sector,FAT_TABLE_0,cluster));
+			printf("location: %x \n",get_first_sector_of_cluster((fat_BS*)boot_sector,cluster)*512);
+
+			atapio_write_sectors(get_first_sector_of_cluster((fat_BS*)boot_sector,cluster), 1, data+(512*sectors_written));
+			sectors_written++;
 			cluster=next_cluster;
 			size-=512;
 		}
-		set_fat_next_cluster((fat_BS*)boot_sector,FAT_TABLE_0, next_cluster,4095);
-		atapio_write_sectors(get_first_sector_of_cluster((fat_BS*)boot_sector,entry->first_cluster_low_16), 1, data+(512+sectors_written++));
-	}
-	set_fat_next_cluster((fat_BS*)boot_sector,FAT_TABLE_0, cluster,next_cluster);
+		printf("wrtietodisk3\n");
+		atapio_write_sectors(get_first_sector_of_cluster((fat_BS*)boot_sector,next_cluster), 1, data+(512*sectors_written));
+		sectors_written++;
 
-	printf("cluster found\n");
-	set_fat_next_cluster((fat_BS*)boot_sector,FAT_TABLE_0, cluster,4095);
-	
-	printf("cluster info updated\n");
+	}
 
 
 
@@ -444,12 +456,12 @@ void write_file(char* filepath, uint8_t* data, uint64_t size){
 	atapio_write_sectors(get_first_fat_sector((fat_BS*)boot_sector),((fat_BS*)boot_sector)->table_size_16,FAT_TABLE_0);
 	atapio_write_sectors(get_first_fat_sector((fat_BS*)boot_sector)+9,((fat_BS*)boot_sector)->table_size_16,FAT_TABLE_0);
 	printf("fat tables rewriten\n");
+	printf("loc: %u",get_first_fat_sector((fat_BS*)boot_sector));
 
 	//write data to disk
-	//atapio_write_sectors(get_first_sector_of_cluster((fat_BS*)boot_sector,entry->first_cluster_low_16), (size+511)/512, data);
-	printf("date writen\n");
+	printf("data writen\n");
 	free(paths);
-	sleep(5000);
+	sleep(50000);
 }
 
 uint64_t get_filesize(char* filepath){

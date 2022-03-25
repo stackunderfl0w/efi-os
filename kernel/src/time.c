@@ -4,17 +4,17 @@ volatile time SYSTEM_TIME;
 #define CMOS_COMMAND 	0x70
 #define CMOS_DATA 		0x71
 
-inline int get_update_in_progress_flag() {
+int get_update_in_progress_flag() {
 	outb(CMOS_COMMAND, 0x0A);
 	return inb(CMOS_DATA) & 0x80;
 }
 
-inline uint8_t READ_RTC_REGISTER(uint16_t reg) {
+uint8_t READ_RTC_REGISTER(uint16_t reg) {
 	outb(CMOS_COMMAND, reg);
 	return inb(CMOS_DATA);
 }
 
-inline uint8_t bcd_to_int(uint8_t bcd){
+uint8_t bcd_to_int(uint8_t bcd){
 	return (bcd&0x0F)+((bcd/16)*10);
 }
 

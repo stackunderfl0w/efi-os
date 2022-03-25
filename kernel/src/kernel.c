@@ -1,4 +1,5 @@
 #include "typedef.h"
+#include <elf.h>
 #include "bitmap-font.h"
 #include "graphics.h"
 #include "gdt.h"
@@ -88,196 +89,25 @@ int _start(bootinfo *info){
 
 	uint8_t* sector_1=malloc(512);;
 
-	atapio_software_reset(ATAPIO_REGULAR_STATUS_REGISTER_PORT);
+	//atapio_software_reset(ATAPIO_REGULAR_STATUS_REGISTER_PORT);
 
 	atapio_read_sectors(0, 1, sector_1);
 
-	/*for (int i = 0; i < 512; ++i)
+	for (int i = 0; i < 512; ++i)
 	{
 		uint64_t tmp=sector_1[i];
 		print(to_hstring_noformat(tmp));
 		printchar(' ');
-	}*/
-	/*if (sector_1[0]==0xEB&&sector_1[1]==0x3C&&sector_1[2]==0x90){
-		print("Fat fileystem found ");
-		char oem[9];
-		memcpy(oem,&sector_1[3],8);
-		oem[8]=0;
-		print(oem);
-		printchar('\n');
-		print(to_string((uint64_t)*(uint16_t*)&sector_1[0xb]));
-		print(to_string((uint64_t)sector_1[0xd]));
-		printchar('\n');
+	}
+	atapio_read_sectors(1, 1, sector_1);
 
-		fat_BS* fat = (fat_BS*)sector_1;
-		printf("Bytes per Sector:%u\n",fat->bytes_per_sector);
-		printf("Sectors per Cluster:%u\n",fat->sectors_per_cluster);
-		printf("Reserved sectors:%u\n",fat->reserved_sector_count);
-		printf("Fat tables:%u\n",fat->table_count);
-		printf("Root entry count:%u\n",fat->root_entry_count);
-		printf("Total sectors:%u\n",fat->total_sectors_16);
-		printf("Media Type:%x\n",fat->media_type);
-		printf("Table size:%u\n",fat->table_size_16);
-		printf("Sectors per track:%u\n",fat->sectors_per_track);
-		printf("Head side count:%u\n",fat->head_side_count);
-		printf("Hidden sectors:%u\n",fat->hidden_sector_count);
-		printf("Total sectors:%u\n",fat->total_sectors_32);
+	for (int i = 0; i < 512; ++i){
+		uint64_t tmp=sector_1[i];
+		print(to_hstring_noformat(tmp));
+		printchar(' ');
+	}
 
-		//loop();
-
-		printf("Root dir %u %x\n",get_first_root_dir_sector(fat),512*get_first_root_dir_sector(fat));
-
-		uint8_t* root_dir_entry=malloc(512);
-		uint8_t* first_fat_table=malloc(512);
-
-		atapio_read_sectors(get_first_root_dir_sector(fat), 1, root_dir_entry);
-		atapio_read_sectors(get_first_fat_sector(fat),1,first_fat_table);
-		char tmp_name[256];
-		char tmp_long[256];
-		for (uint64_t i = 0; root_dir_entry[i]; i+=32){
-			if(root_dir_entry[i]==0xE5){
-				continue;
-			}
-			if(root_dir_entry[i+11]==0xf){
-				FAT_LONG_NAME_ENTRY* lfn=(FAT_LONG_NAME_ENTRY*)&root_dir_entry[i];
-				print("lfn: ");
-				memset(tmp_long,0,16);
-				for (int i = 0; i < 5; ++i){
-					tmp_long[i]=(char)lfn->first_5[i]&0xff;
-				}
-				for (int i = 0; i < 6; ++i){
-					tmp_long[i+5]=(char)lfn->next_6[i]&0xff;
-				}
-				for (int i = 0; i < 2; ++i){
-					tmp_long[i+11]=(char)lfn->last_2[i]&0xff;
-				}
-				tmp_long[14]=0;
-				print(tmp_long);
-			}
-			else{
-				FAT_DIRECTORY_ENTRY* entry=(FAT_DIRECTORY_ENTRY*)&root_dir_entry[i];
-				memset(tmp_name,0,256);
-
-				memcpy(tmp_name,entry->name,11);
-				
-				tmp_name[11]=0;
-				print(tmp_name);
-				printf("Cluster:%u at:%x\n",entry->first_cluster_low_16,get_first_sector_of_cluster(fat,entry->first_cluster_low_16)*512);
-				printf("Size:%u\n",entry->size);
-				if(entry->attributes&0x10){
-					print("directory\n");
-				}
-				uint16_t next_cluster=entry->first_cluster_low_16;
-				while(1){
-					next_cluster=get_fat_next_cluster(fat,first_fat_table,next_cluster);
-					printf("%u ",next_cluster);
-					if (next_cluster==4095){
-						break;
-					}
-				}
-				if (strstr(tmp_name,"TEST")){
-					printchar('U');
-					uint8_t* file=malloc(512);
-					atapio_read_sectors(get_first_sector_of_cluster(fat,entry->first_cluster_low_16), 1, file);
-					print((char*)file);
-					print(to_hstring(crc32b(file,entry->size)));
-					free(file);
-
-				}
-				//print(to_string(get_fat_next_cluster(fat,first_fat_table,entry->first_cluster_low_16)));
-				if (strstr(tmp_name,"STARTUP")){
-					uint8_t* file=malloc((entry->size&0xffffff00)+512);
-					next_cluster=entry->first_cluster_low_16;
-					int c_index=0;
-
-					while (1){
-						atapio_read_sectors(get_first_sector_of_cluster(fat,next_cluster), 1, file+(512*c_index));
-						
-						next_cluster=get_fat_next_cluster(fat,first_fat_table,next_cluster);
-						c_index++;
-						if (next_cluster==4095){
-							break;
-						}
-					}
-					//print((char*)file);
-					print(to_hstring(crc32b(file,entry->size)));
-					free(file);
-				}
-				if (strstr(tmp_name,"RES")){
-					print("\n\n\n");
-					uint8_t* file=malloc(512);
-					memset(file,0,512);
-					next_cluster=entry->first_cluster_low_16;
-					printf("ld %u",entry->first_cluster_low_16);
-					int lfn_count=0;
-					atapio_read_sectors(get_first_sector_of_cluster(fat,entry->first_cluster_low_16), 1, file);
-					for (uint64_t i = 0; file[i]; i+=32){
-						if(file[i]==0xE5){
-							continue;
-						}
-						if(file[i+11]==0xf){
-							FAT_LONG_NAME_ENTRY* lfn=(FAT_LONG_NAME_ENTRY*)&file[i];
-							print("lfn: ");
-							if(lfn_count==0){
-								memset(tmp_long,0,256);
-							}
-							for (int i = 0; i < 5; ++i){
-								tmp_long[i+(16*lfn_count)]=(char)lfn->first_5[i]&0xff;
-							}
-							for (int i = 0; i < 6; ++i){
-								tmp_long[i+5+(16*lfn_count)]=(char)lfn->next_6[i]&0xff;
-							}
-							for (int i = 0; i < 2; ++i){
-								tmp_long[i+11+(16*lfn_count)]=(char)lfn->last_2[i]&0xff;
-							}
-							tmp_long[14]=0;
-							print(tmp_long+16*lfn_count);
-							printchar('\n');
-							lfn_count++;
-						}
-						else{
-							FAT_DIRECTORY_ENTRY* entry=(FAT_DIRECTORY_ENTRY*)&file[i];
-							memset(tmp_name,0,256);
-							int index=0;
-							if(lfn_count){
-								for(int i=lfn_count-1;i>=0;i--){
-									int long_index=0;
-									while(tmp_long[16*i+long_index]){
-										tmp_name[index++]=tmp_long[16*i+long_index++];
-									}
-									
-								}
-								tmp_name[index]=0;
-							}
-							else{
-								memcpy(tmp_name,entry->name,11);
-								tmp_name[11]=0;
-							}
-							print(tmp_name);
-							printf("Cluster:%u at:%x\n",entry->first_cluster_low_16,get_first_sector_of_cluster(fat,entry->first_cluster_low_16)*512);
-							printf("Size:%u\n",entry->size);
-							if(entry->attributes&0x10){
-								print("directory\n");
-							}
-							uint16_t next_cluster=entry->first_cluster_low_16;
-							lfn_count=0;
-						}
-						//sleep(500);
-					}
-					//for (int i = 0; i < 512; ++i)
-					//{
-					//	uint64_t tmp=file[i];
-					//	print(to_hstring_noformat(tmp));
-					//	printchar(' ');
-					//}
-
-
-					free(file);
-				}
-			}
-			printchar('\n');
-		}
-	}*/
+	sleep(5000);
 
 	printf("%sknknknknk\n","helloytfoucv");
 
@@ -287,7 +117,7 @@ int _start(bootinfo *info){
 	//read_directory("/",&file_entries);
 	
 	//uint8_t* file = read_file("/resources/TEST    TXT");
-	uint8_t* file = read_file("/resources/config.txt");
+	uint8_t* file = read_file("/resources/startup.nsh");
 	//uint8_t* file = read_file("/resources/startup.txt");
 
 	uint8_t* font2 = read_file("/resources/zap-light16.psf");
@@ -298,7 +128,7 @@ int _start(bootinfo *info){
 
 	write_file("/resources/WRTTEST TXT",file,1024);
 
-	//file = read_file("/resources/WRTTEST TXT");
+	file = read_file("/resources/WRTTEST TXT");
 
 	//printf("\n%s\n",file);
 	print(file);
@@ -315,6 +145,64 @@ int _start(bootinfo *info){
 	//printf(chr_ptr);
 
 	INIT_RTC();
+
+
+	CHAR8* kern =  read_file("/SCRCLR  ELF");
+
+	printf("Kernel loaded , size=%u\n",512);
+
+
+	Elf64_Ehdr* header=(Elf64_Ehdr*)kern;
+	printf("Arch: %u\n\n",(long)header->e_machine);
+	for (int i = 0; i < 32; ++i)
+	{
+		long x=kern[i];
+		printf("%x,  ",x);
+	}
+
+
+	printf("entry: %u\n",header->e_entry);
+	printf("ofset: %u\n",header->e_phoff);
+
+	Elf64_Phdr* phdrs=(Elf64_Phdr*)(kern+header->e_phoff);
+
+	for (
+		Elf64_Phdr* phdr = phdrs;
+		(char*)phdr < (char*)phdrs + header->e_phnum * header->e_phentsize;
+		phdr = (Elf64_Phdr*)((char*)phdr + header->e_phentsize)
+	)
+	{//load each program segment at the memory location indicated by its header in p_addr
+		switch (phdr->p_type){
+			case PT_LOAD:
+			{
+				int pages = (phdr->p_memsz + 0x1000 - 1) / 0x1000;
+				Elf64_Addr segment = phdr->p_paddr;
+				printf("Kernel p_paddr %u \n",phdr->p_paddr);
+
+				//SystemTable->BootServices->AllocatePages(AllocateAddress, EfiLoaderData, pages, &segment);
+				//map_mem(segment, REQUEST_PAGE());
+
+				UINTN size = phdr->p_filesz;
+				for (UINTN i = 0; i < size; ++i)
+				{
+					((char*)segment)[i]=kern[phdr->p_offset+i];
+				}
+				break;
+			}
+		}
+	}
+	printf("Kernel e_entry %u \n",header->e_entry);
+	printf("Kernel entry %u \n",&header->e_entry);
+
+
+	int (*KernelStart)() = ((__attribute__((sysv_abi)) int (*)() ) header->e_entry);
+
+	printf("Kernel start %u \n",&KernelStart);
+
+	//char* nel=calloc(1024);
+
+	//atapio_write_sectors(0,1,file);
+	loop();
 
 	run_shell(info->buf, info->font);
 

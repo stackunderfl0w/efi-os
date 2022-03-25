@@ -23,20 +23,20 @@ void INIT_PAGING(EFI_MEMORY_DESCRIPTOR* memMap, uint64_t Entries, uint64_t DescS
 
 	uint64_t total_mem=	getMemorySize(memMap, Entries, DescSize);
 	FREE_MEMORY=total_mem;
-	//print("placing page table man at ");
+	print("placing page table man at ");
 	//print(to_hstring(largest_segment->PhysicalStart));
 	pages_used=(char*)largest_segment->PhysicalStart;
 	total_pages=total_mem/4096 +1;
-	//print(" size(pages): ");
+	print(" size(pages): ");
 	//print(to_hstring(total_pages));
 
 	for (uint64_t i = 0; i < total_pages; ++i){
 		pages_used[i]=0;
 	}
-	//print("reserving pages ");
+	print("reserving pages ");
 	RESERVE_PAGES(0, 0x100); // reserve between 0 and 0x100000
 
-	//print("locking page man ");
+	print("locking page man ");
 	LOCK_PAGES(pages_used,total_pages/4096+1);
 	for (uint64_t i = 0; i < Entries; ++i){
 		EFI_MEMORY_DESCRIPTOR* desc = (EFI_MEMORY_DESCRIPTOR*)((uint64_t)memMap + (i * DescSize));
@@ -45,17 +45,17 @@ void INIT_PAGING(EFI_MEMORY_DESCRIPTOR* memMap, uint64_t Entries, uint64_t DescS
 			RESERVE_PAGES((void*)desc->PhysicalStart,desc->NumberOfPages);
 		}
 	}
-	//print(to_hstring(REQUEST_PAGE()));
+	print(to_hstring(REQUEST_PAGE()));
 
 
 	uint64_t kernel_size=((uint64_t)&_KernelEnd-(uint64_t)&_KernelStart)/4096;
-	//print("kernel_size: ");
-	//print(to_string(kernel_size));
-	//printchar('\n');
+	print("kernel_size: ");
+	print(to_string(kernel_size));
+	printchar('\n');
 
 
 	LOCK_PAGES(&_KernelStart,kernel_size);
-	//print("requesting pl4 page ");
+	print("requesting pl4 page ");
 
 	KERNEL_PL4=REQUEST_PAGE();
 	//print("memseting kernel");

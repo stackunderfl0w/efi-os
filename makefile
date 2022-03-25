@@ -29,7 +29,8 @@ boot: kernel bootloader
 	mcopy -i fat.img $(BL_DIR)/test.txt ::/
 	mcopy -i fat.img $(BL_DIR)/dat ::/resources
 	mcopy -i fat.img $(KER_DIR)/kernel.elf ::/
-	mcopy -i fat.img $(BL_DIR)/verylong.txt ::/verylindg.xhtml
+	#mcopy -i fat.img $(BL_DIR)/verylong.txt ::/verylindg.xhtml
+	mcopy -i fat.img programs/scrclr/bin/scrclr.elf ::/
 
 qemu:
 	qemu-system-x86_64 -drive file=fat.img -m 256M -cpu qemu64 -drive if=pflash,format=raw,unit=0,file=OVMFbin/OVMF_CODE-pure-efi.fd,readonly=on -drive if=pflash,format=raw,unit=1,file=OVMFbin/OVMF_VARS-pure-efi.fd -net none #-no-reboot #-d int,cpu_reset
