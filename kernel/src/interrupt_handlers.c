@@ -3,7 +3,7 @@
 #include "io.h"
 #include "pit.h"
 #include "mouse.h"
-
+#include "scheduler.h"
 
 __attribute__((interrupt)) void PageFault_Handler(struct interrupt_frame* frame){
 	//Panic("Page Fault Detected");
@@ -59,4 +59,5 @@ __attribute__((interrupt)) void PIT_Handler(struct interrupt_frame* frame){
 	//printchar('t');
 	PIT_TICK();
 	PIC_EndMaster();
+	//handle_scheduler();
 }

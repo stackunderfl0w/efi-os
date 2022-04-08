@@ -27,16 +27,16 @@ all: kernel link
 kernel: $(OBJ_FILES)
 	$(shell mkdir -p $(DIRS))
 $(OBJ_DIR)/interrupt_handlers.o: $(SRC_DIR)/interrupt_handlers.c
-	gcc -mno-red-zone -mgeneral-regs-only -ffreestanding -c $^ -o $@
+	$(CC) -mno-red-zone -mgeneral-regs-only -ffreestanding -c $^ -o $@
 $(OBJ_DIR)/loop.o: $(SRC_DIR)/loop.c
-	gcc -ffreestanding -c $^ -o $@
+	$(CC) -ffreestanding -c $^ -o $@
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
-	gcc $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) -c -o $@ $<
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
-	gcc $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.asm
-	nasm $^ -f elf64 -o $@
+	$(ASMC) $^ -f elf64 -o $@
 	
 link: kernel
 	ld $(LDFLAGS) -o $(BUILD_DIR)/kernel.elf $(OBJ_FILES)

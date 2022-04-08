@@ -3,7 +3,6 @@
 
 char* strstr(char* string, char* substring){
 	char *a, *b;
-
 	b = substring;
 	if (*b == 0) {
 		return string;
@@ -83,10 +82,6 @@ char** split_string_by_char(char* str, char seperator, int *section_count){
 		
 	}
 	str[index]=0;
-	//printf("%x",sections);
-	//while(1){
-	//	asm("hlt");
-	//}
 
 	return sections;
 }
@@ -97,13 +92,13 @@ uint64_t strlen(char* str){
 }
 
 char* strcpy(char* dest, const char* src){
-
-	for (int i = 0; src[i]; ++i)
-	{
+	for (int i = 0; src[i]; ++i){
 		dest[i]=src[i];
 	}
 	return dest;
 }
 char* memmove(char* dest, const char* src, uint64_t len){
-	
+	if(dest<src){
+		memcpy(dest, src, len);
+	}
 }

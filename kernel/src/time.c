@@ -42,7 +42,6 @@ void INIT_RTC(){
 		day=bcd_to_int(day);
 		month=bcd_to_int(month);
 		year=bcd_to_int(year);
-
 	}
 	SYSTEM_TIME.second=second;
 	SYSTEM_TIME.minute=minute;

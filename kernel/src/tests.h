@@ -1,3 +1,4 @@
+#pragma once
 #include "graphics.h"
 #include "fat.h"
 
@@ -138,3 +139,4 @@ void test_printf(){
 	printf("double %f kk\nff",doub);
 
 }
+//asm ("movq %%rsp, %0" : "=r" (i) );

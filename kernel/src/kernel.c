@@ -12,7 +12,8 @@
 #include "serial.h"
 #include "ata-pio.h"
 #include "fat.h"
-
+#include "thread.h"
+#include "scheduler.h"
 #include "time.h"
 #include "keyboard.h"
 #include "shell.h"
@@ -35,6 +36,7 @@ extern "C" {
 
 extern "C" 
 #endif
+
 int _start(bootinfo *info){
 	//init_serial();
 	init_text_overlay(info->buf, info->font);
@@ -59,8 +61,6 @@ int _start(bootinfo *info){
 
 	printchar('\n');
 	INIT_PS2_MOUSE();
-
-	asm ("sti");
 
 	print("mouse inited");
 	print(to_hstring((uint64_t)info->buf->BaseAddress));
@@ -99,7 +99,7 @@ int _start(bootinfo *info){
 		print(to_hstring_noformat(tmp));
 		printchar(' ');
 	}
-	atapio_read_sectors(1, 1, sector_1);
+	/*atapio_read_sectors(1, 1, sector_1);
 
 	for (int i = 0; i < 512; ++i){
 		uint64_t tmp=sector_1[i];
@@ -107,9 +107,9 @@ int _start(bootinfo *info){
 		printchar(' ');
 	}
 
-	sleep(5000);
+	sleep(5000);*/
 
-	printf("%sknknknknk\n","helloytfoucv");
+	/*printf("%sknknknknk\n","helloytfoucv");
 
 	INIT_FILESYSTEM();
 	
@@ -118,7 +118,6 @@ int _start(bootinfo *info){
 	
 	//uint8_t* file = read_file("/resources/TEST    TXT");
 	uint8_t* file = read_file("/resources/startup.nsh");
-	//uint8_t* file = read_file("/resources/startup.txt");
 
 	uint8_t* font2 = read_file("/resources/zap-light16.psf");
 
@@ -205,8 +204,9 @@ int _start(bootinfo *info){
 	loop();
 
 	run_shell(info->buf, info->font);
+*/
 
-
+	/*
 
 	while(1){
 		//printf("second:%u minute:%u hour:%u day:%u month:%u year:%u\n",
@@ -224,10 +224,20 @@ int _start(bootinfo *info){
 		move_cursor(x, y);
 
 		sleep(100);
+	}*/
+
+	//current = new_thread(thread_function);
+  	//next = new_thread(thread_function);
+
+ 	//uint64_t dummy_stack_ptr;
+  	//switch_stack(&dummy_stack_ptr, &current->stack_ptr);
+	asm ("sti");
+	start_scheduler();
+	while(1){
+		clrscr(0xffffffff);
 	}
 
-
-
+	uint32_t x,y;
 	while(1){
 		get_cursor_pos(&x, &y);
 		move_cursor(20, 0);

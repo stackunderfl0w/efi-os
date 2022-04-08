@@ -15,5 +15,4 @@ void INIT_GDT(){
 	gdtDescriptor.Offset = (uint64_t)&Default_GDT;
 
 	LoadGDT(&gdtDescriptor);
-
 }
