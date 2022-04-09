@@ -49,6 +49,8 @@ void create_idt_entry(void* handler, uint8_t entryOffset, uint8_t type_attr, uin
 	interupt->Segment_Selector=selector;
 }
 
+extern void Pit_Handler_Asm();
+
 void create_interrupts(){
 	for (uint32_t i = 0; i < sizeof(IDT_ENTRY)*slots; ++i){
 		*(((char*)idt_entries)+i)=0;
@@ -59,7 +61,8 @@ void create_interrupts(){
 	create_idt_entry((void*)Keyboard_Handler, 0x21, INTERRUPT_GATE, 0x08);
 	create_idt_entry((void*)Mouse_Handler, 0x2C, INTERRUPT_GATE, 0x08);
 
-	create_idt_entry((void*)PIT_Handler, 0x20, INTERRUPT_GATE, 0x08);
+	//create_idt_entry((void*)PIT_Handler, 0x20, INTERRUPT_GATE, 0x08);
+	create_idt_entry((void*)Pit_Handler_Asm, 0x20, INTERRUPT_GATE, 0x08);
 
 
 	IDT_Descriptor idt_descriptor;

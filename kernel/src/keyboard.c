@@ -1,7 +1,7 @@
 #include "keyboard.h"
 bool isLeftShiftPressed;
 bool isRightShiftPressed;
-uint8_t previous=0;
+uint8_t previous_key=0;
 const char ASCIITable[] = {
 		 0 ,  0 , '1', '2',
 		'3', '4', '5', '6',
@@ -35,13 +35,13 @@ void handle_key(unsigned char keycode){
 	//printchar('\n');
 	//return;
 	int final_keycode=0;
-	if (keycode==0xE0 && previous==0){
-		previous=keycode;
+	if (keycode==0xE0 && previous_key==0){
+		previous_key=keycode;
 		return;
 	}
 	int action=(keycode&0x80)/0x80;
-	if (previous==0xE0){
-		previous=0;
+	if (previous_key==0xE0){
+		previous_key=0;
 		switch (keycode){
 			case Left_Arrow:
 				final_keycode=KEYCODE_LEFT;

@@ -256,7 +256,9 @@ void clrscr(uint32_t color){
 	for (int i = 0; i < end; ++i){
 		((uint32_t*)globalBuf->BaseAddress)[i]=color;
 	}
-	asm volatile("sti");
+	if (flags&0x200){
+		asm volatile("sti");
+	}
 }
 
 void init_text_overlay(Framebuffer* buf, bitmap_font* font){
@@ -393,16 +395,16 @@ void scroll_console(){
 		: "=rm" (flags)
 		: /* no input */
 		: "memory");
-	if (flags&0x200){
-		asm volatile("cli");
-	}
+	asm volatile("cli");
 	clear_mouse();
 	memcpy(globalBuf->BaseAddress,globalBuf->BaseAddress+(globalBuf->PixelsPerScanLine*console_font->height)*4,globalBuf->PixelsPerScanLine*console_font->height*(console_height-1)*4);
 	memset(globalBuf->BaseAddress+globalBuf->PixelsPerScanLine*console_font->height*(console_height-1)*4,
 		0,
 		globalBuf->BufferSize-(4*globalBuf->PixelsPerScanLine*console_font->height*(console_height-1)));
 	draw_mouse();
-	asm volatile("sti");
+	if (flags&0x200){
+		asm volatile("sti");
+	}
 }
 
 

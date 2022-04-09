@@ -4,6 +4,8 @@
 #include "pit.h"
 #include "mouse.h"
 #include "scheduler.h"
+#include "graphics.h"
+#include "loop.h"
 
 __attribute__((interrupt)) void PageFault_Handler(struct interrupt_frame* frame){
 	//Panic("Page Fault Detected");
@@ -60,4 +62,7 @@ __attribute__((interrupt)) void PIT_Handler(struct interrupt_frame* frame){
 	PIT_TICK();
 	PIC_EndMaster();
 	//handle_scheduler();
+	printf("\nip %u\ncs %u\nflags %u\nsp %u\nss %u\nerr %u\npad %u\npad2 %u",frame->ip,frame->cs,frame->flags,frame->sp,frame->ss,frame->err,frame->pad,frame->pad2);
+	asm volatile("cli");
+	loop();
 }

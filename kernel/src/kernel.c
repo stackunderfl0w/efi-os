@@ -38,6 +38,7 @@ extern "C"
 #endif
 
 int _start(bootinfo *info){
+	asm("cli");
 	//init_serial();
 	init_text_overlay(info->buf, info->font);
 	//print_serial("hello world");
@@ -54,6 +55,7 @@ int _start(bootinfo *info){
 
 	//SET_PIT_DIVISOR(65535);
 	SET_PIT_FREQUENCY(1000);
+	print("pit set ");
 
 
 	uint32_t numEntries=info->map_size/info->map_desc_size;
@@ -80,37 +82,17 @@ int _start(bootinfo *info){
 	printf("Free memory: %ukb\n",get_free_memory()/1024);
 	printf("Used memory: %ukb\n",get_used_memory()/1024);
 	printf("Reserved memory: %ukb\n",get_reserved_memory()/1024);
-	sleep(1000);
+
 
 
 	INIT_HEAP((void*)0x8000000000,0x10);
+	print("Heap inited\n");
 
 
+	asm("sti");
+	sleep(2000);
 
-	uint8_t* sector_1=malloc(512);;
-
-	//atapio_software_reset(ATAPIO_REGULAR_STATUS_REGISTER_PORT);
-
-	atapio_read_sectors(0, 1, sector_1);
-
-	for (int i = 0; i < 512; ++i)
-	{
-		uint64_t tmp=sector_1[i];
-		print(to_hstring_noformat(tmp));
-		printchar(' ');
-	}
-	/*atapio_read_sectors(1, 1, sector_1);
-
-	for (int i = 0; i < 512; ++i){
-		uint64_t tmp=sector_1[i];
-		print(to_hstring_noformat(tmp));
-		printchar(' ');
-	}
-
-	sleep(5000);*/
-
-	/*printf("%sknknknknk\n","helloytfoucv");
-
+	/*
 	INIT_FILESYSTEM();
 	
 	int file_entries;
@@ -231,7 +213,7 @@ int _start(bootinfo *info){
 
  	//uint64_t dummy_stack_ptr;
   	//switch_stack(&dummy_stack_ptr, &current->stack_ptr);
-	asm ("sti");
+	//asm ("sti");
 	start_scheduler();
 	while(1){
 		clrscr(0xffffffff);
