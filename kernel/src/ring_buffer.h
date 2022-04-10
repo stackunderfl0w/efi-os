@@ -69,11 +69,11 @@ void push_command(ring_buffer_command *ring, command cmd){
 void push_string(ring_buffer_command *ring, char* x){
 	volatile uint64_t len=strlen(x);
 	if(ring->free<len){
-			volatile uint64_t* ptr=&ring->free;
-			while(*ptr<len){
-				busyloop(100);
-			}
+		volatile uint64_t* ptr=&ring->free;
+		while(*ptr<len){
+			busyloop(100);
 		}
+	}
 	while(*x){
 		push_command(ring, (command){(uint8_t)(*x)});
 		x++;

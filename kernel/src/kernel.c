@@ -54,7 +54,7 @@ int _start(bootinfo *info){
 	print("idt loaded ");
 
 	//SET_PIT_DIVISOR(65535);
-	SET_PIT_FREQUENCY(1000);
+	SET_PIT_FREQUENCY(100);
 	print("pit set ");
 
 
@@ -89,8 +89,8 @@ int _start(bootinfo *info){
 	print("Heap inited\n");
 
 
-	asm("sti");
-	sleep(2000);
+	//asm("sti");
+	//sleep(2000);
 
 	/*
 	INIT_FILESYSTEM();

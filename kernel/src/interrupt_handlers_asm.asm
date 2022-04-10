@@ -4,6 +4,7 @@ extern printf
 extern loop
 extern PIT_TICK
 extern PIC_EndMaster
+extern get_next_thread
 
 Pit_Handler_Asm:
 ;stack frame
@@ -40,12 +41,22 @@ Pit_Handler_Asm:
 	;uint64_t err;
 	;uint64_t pad;
 	;uint64_t pad2;
-
-	mov	rdi,fmt
-	mov	rsi,[rsp+128]
-	xor	rax,rax		; or can be  xor  rax,rax
+	; rsp+184 is 0xDEADBEEFDEADBEEF end of containing stack
+	;so i guess the manual is wrong
+	;mov r15,10
+	;mov r14,128
+prt:
+	;mov	rdi,fmt
+	;mov	rsi,[rsp+r14]
+	;xor	rax,rax		; or can be  xor  rax,rax
 	;call	printf		; Call C function
-
+	;add r14,8
+	;dec r15
+	;jnz prt
+	;call loop
+	mov rdi,rsp
+	call get_next_thread
+	mov rsp,rax
 
 
 ;restore registers
@@ -69,19 +80,6 @@ Pit_Handler_Asm:
 	mov rsp, rbp
 	pop rbp
 
-	;mov	rdi,fmt
-	;mov	rsi,rsp
-	;mov	rax,0		; or can be  xor  rax,rax
-	;mov rbx,9
-	;call    printf		; Call C function
-	;cli
-;jop:
-	;inc r15
-	;push r15
-	;call    printf		; Call C function
-	;pop r15
-	;cmp r15,100000000
-	;jmp jop
 ;return from interupt
 	iretq
 
