@@ -50,11 +50,12 @@ void create_idt_entry(void* handler, uint8_t entryOffset, uint8_t type_attr, uin
 }
 
 extern void Pit_Handler_Asm();
-
+extern void interupt3();
 void create_interrupts(){
 	for (uint32_t i = 0; i < sizeof(IDT_ENTRY)*slots; ++i){
 		*(((char*)idt_entries)+i)=0;
 	}
+	create_idt_entry((void*)interupt3, 0x03, INTERRUPT_GATE, 0x08);
 	create_idt_entry((void*)PageFault_Handler, 0x0E, INTERRUPT_GATE, 0x08);
 	create_idt_entry((void*)GeneralFault_Handler, 0x0D, INTERRUPT_GATE, 0x08);
 	create_idt_entry((void*)DoubleFault_Handler, 0x08, INTERRUPT_GATE, 0x08);

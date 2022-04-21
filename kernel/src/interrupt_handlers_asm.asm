@@ -6,7 +6,7 @@ extern PIT_TICK
 extern PIC_EndMaster
 extern get_next_thread
 
-Pit_Handler_Asm:
+%macro pushall64 0
 ;stack frame
 	push rbp
 	mov rbp, rsp
@@ -27,38 +27,9 @@ Pit_Handler_Asm:
 	push rcx
 	push rbx
 	push rax
-;use pit for time tracking
-	call PIT_TICK
-	call PIC_EndMaster
+%endmacro
 
-
-;call sceduler and get pointer for next
-	;uint64_t ip; rsp+128
-	;uint64_t cs; rsp+136
-	;uint64_t flags; rsp+144
-	;uint64_t sp; rsp+152
-	;uint64_t ss; rsp+160
-	;uint64_t err;
-	;uint64_t pad;
-	;uint64_t pad2;
-	; rsp+184 is 0xDEADBEEFDEADBEEF end of containing stack
-	;so i guess the manual is wrong
-	;mov r15,10
-	;mov r14,128
-prt:
-	;mov	rdi,fmt
-	;mov	rsi,[rsp+r14]
-	;xor	rax,rax		; or can be  xor  rax,rax
-	;call	printf		; Call C function
-	;add r14,8
-	;dec r15
-	;jnz prt
-	;call loop
-	mov rdi,rsp
-	call get_next_thread
-	mov rsp,rax
-
-
+%macro popall64 0
 ;restore registers
 	pop rax
 	pop rbx
@@ -79,8 +50,64 @@ prt:
 
 	mov rsp, rbp
 	pop rbp
+%endmacro
+
+Pit_Handler_Asm:
+	pushall64
+;use pit for time tracking
+	call PIT_TICK
+	call PIC_EndMaster
+
+
+;call sceduler and get pointer for next
+	;uint64_t ip; rsp+128
+	;uint64_t cs; rsp+136
+	;uint64_t flags; rsp+144
+	;uint64_t sp; rsp+152
+	;uint64_t ss; rsp+160
+	;uint64_t err;
+	;uint64_t pad;
+	;uint64_t pad2;
+	; rsp+184 is 0xDEADBEEFDEADBEEF end of containing stack
+	;so i guess the manual is wrong
+	;mov r15,10
+	;mov r14,128
+;prt:
+	;mov	rdi,fmt
+	;mov	rsi,[rsp+r14]
+	;xor	rax,rax		; or can be  xor  rax,rax
+	;call	printf		; Call C function
+	;add r14,8
+	;dec r15
+	;jnz prt
+	;call loop
+	mov rdi,rsp
+	call get_next_thread
+	mov rsp,rax
+
+
+	popall64
 
 ;return from interupt
 	iretq
 
 global Pit_Handler_Asm
+
+interupt3:
+	pushall64
+	mov rdi,rsp
+	call get_next_thread
+	mov rsp,rax
+	popall64
+	iretq
+global interupt3
+
+yield:
+	int 3
+	mov	rdi,fmt
+	mov	rsi,[rsp]
+	xor	rax,rax		; or can be  xor  rax,rax
+	call	printf		; Call C function
+	ret
+
+global yield

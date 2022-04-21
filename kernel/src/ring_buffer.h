@@ -39,7 +39,7 @@ ring_buffer_command new_cmd_buf(uint64_t size){
 	ring.max=size;
 	ring.free=size;
 	ring.full=false;
-	ring.empty=false;
+	ring.empty=true;
 
 	return ring;
 }

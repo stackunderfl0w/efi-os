@@ -8,14 +8,16 @@ thread *dummy_stack_ptr;
 bool scheduler_inited=false;
 ring_buffer_command ring;
 //ring_buffer_command threads;
-
+extern void yield();
 void thread_function(){
+	//yield();
 	int thread_id = current->tid;
 	char arr[16]={'T','h','r','e','a','d',' ','0',10,0};
 	arr[7]='0'+thread_id;
 	while(1){
 		//printf(arr);
 		push_string(&ring,arr);
+		//yield();
 		// /busyloop(62000);
 		//busyloop(50000);
 		//printf("%u ",thread_id);
@@ -47,6 +49,9 @@ void print_thread(){
 			command cmd = pop_command(&ring);
 			printchar(cmd.cmd);
 		}
+		//yield();
+		//while loop seems to be optimized to not repeat if there is nothing outside loop
+		busyloop(0);
 	}
 }
 thread *threads[3];
@@ -91,9 +96,9 @@ void start_scheduler(){
 	threads[1]=new_thread_old(thread_function_old);
 	threads[2]=new_thread_old(thread_function_old);
 	int_thread=new_thread(test_second_thread);
-	new_threads[0]=new_thread(thread_function);
+	new_threads[2]=new_thread(thread_function);
 	new_threads[1]=new_thread(t3);
-	new_threads[2]=new_thread(print_thread);
+	new_threads[0]=new_thread(print_thread);
 	ring=new_cmd_buf(1000);
 
 	scheduler_inited=true;
