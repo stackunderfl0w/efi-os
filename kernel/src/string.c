@@ -97,8 +97,8 @@ char* strcpy(char* dest, const char* src){
 	}
 	return dest;
 }
-char* memmove(char* dest, const char* src, uint64_t len){
+/*char* memmove(char* dest, const char* src, uint64_t len){
 	if(dest<src){
 		memcpy(dest, src, len);
 	}
-}
+}*/

@@ -126,9 +126,9 @@ char** read_directory(char* filepath,int *entries){
 	char* temp_dir=malloc(2048);
 	int lfn_count=0;
 	for (uint64_t i = 0; root_directory[i]; i+=32){
-		if(root_directory[i]==0xE5){
+		if(root_directory[i]==0xE5)
 			continue;
-		}
+		
 		if(root_directory[i+11]==0xf){
 			FAT_LONG_NAME_ENTRY* lfn=(FAT_LONG_NAME_ENTRY*)&root_directory[i];
 			//print("lfn: ");

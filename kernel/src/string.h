@@ -10,4 +10,4 @@ char** split_string_by_char(char* str, char seperator, int *section_count);
 
 uint64_t strlen(char* str);
 char* strcpy(char* dest, const char* src);
-char* memmove(char* dest, const char* src, uint64_t len);
+//char* memmove(char* dest, const char* src, uint64_t len);

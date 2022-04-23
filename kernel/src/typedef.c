@@ -40,9 +40,8 @@ void* intset(uint32_t *s, const uint32_t c, size_t n){
 		wp+=2;
 		n-=2;
 	}
-	if (n > 0){
+	if (n > 0)
 		wp[0] = c;
-	}
 	return s;
 }
 

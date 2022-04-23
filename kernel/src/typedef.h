@@ -14,6 +14,8 @@ typedef unsigned int UINT32;
 
 typedef unsigned long long UINTN;
 typedef unsigned long long UINT64;
+typedef signed long long ssize_t;
+
 
 typedef UINT64			EFI_PHYSICAL_ADDRESS;
 typedef UINT64			EFI_VIRTUAL_ADDRESS;

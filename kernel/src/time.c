@@ -79,11 +79,11 @@ void SYSTEM_TIME_INCREMENT(){
 		SYSTEM_TIME.hour=0;
 		SYSTEM_TIME.day++;
 	}
-	if(SYSTEM_TIME.day>=60){
+	if(SYSTEM_TIME.day>=30){//fix at some point
 		SYSTEM_TIME.day=0;
 		SYSTEM_TIME.month++;
 	}
-	if(SYSTEM_TIME.month>=60){
+	if(SYSTEM_TIME.month>=12){
 		SYSTEM_TIME.month=0;
 		SYSTEM_TIME.year++;
 	}

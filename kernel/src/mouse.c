@@ -5,15 +5,11 @@ uint32_t display_width=0,display_height=0;
 
 void PS2_WAIT_WRITE(){
 	uint32_t timeout=10000;
-	while((inb(0x64)&0b10)&&timeout--){
-
-	}
+	while((inb(0x64)&0b10)&&timeout--);
 }
 void PS2_WAIT_READ(){
 	uint32_t timeout=10000;
-	while((!inb(0x64)&0b1)&&timeout--){
-
-	}
+	while((!inb(0x64)&0b1)&&timeout--);
 }
 void PS2_WRITE_PORT_2(){
 	PS2_WAIT_WRITE();
@@ -65,14 +61,13 @@ int mouse_x=0,mouse_y=0;
 #define PS2YOverflow 0b10000000
 
 //bool fr=true;
-char fr=2;
+char skip=1;
 void HANDLE_PS2_MOUSE(uint8_t frag){
-	if(fr){
-		fr--;
+	if(skip){
+		skip--;
 		return;
 	}
-	fragments[fragment_counter]=frag;
-	fragment_counter++;
+	fragments[fragment_counter++]=frag;
 	if(fragment_counter==3){
 		fragment_counter=0;
 		bool x_neg, y_neg, x_over, y_over;
@@ -82,28 +77,13 @@ void HANDLE_PS2_MOUSE(uint8_t frag){
 		x_over=fragments[0] & X_OVERFLOW;
 		y_over=fragments[0] & Y_OVERFLOW;
 
-		if(x_neg){
-			mouse_x-=256-fragments[1];
-		}
-		else{
-			mouse_x+=fragments[1];
-		}
+		mouse_x+=x_neg?fragments[1]-256:fragments[1];
+		mouse_y-=y_neg?fragments[2]-256:fragments[2];
 
-		if(y_neg){
-			mouse_y+=256-fragments[2];
-		}
-		else{
-			mouse_y-=fragments[2];
-		}
+		mouse_x=MAX(0,MIN(mouse_x,display_width-1));
+		mouse_y=MAX(0,MIN(mouse_y,display_height-1));
 
-		if(mouse_x < 0) mouse_x = 0;
-		if(mouse_x > display_width-1) mouse_x = display_width-1;
-
-		if(mouse_y < 0) mouse_y = 0;
-		if(mouse_y > display_height-1) mouse_y = display_height-1;
-
-
-		clear_mouse();
+		//clear_mouse();
 		if (fragments[0]&LEFT_BTN){
 			putchar(mouse_x,mouse_y,'a');
 		}

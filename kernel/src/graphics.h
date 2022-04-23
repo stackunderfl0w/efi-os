@@ -28,6 +28,9 @@ void clearchar(UINT32 x, UINT32 y);
 void deletechar();
 void printchar(char chr);
 void print(const char* str);
+void sprintf(char* str, const char* format, ...);
+void sprintf2(char* str, const char* format, ...);
+
 void printf(const char* str, ...);
 
 void clrscr(uint32_t color);

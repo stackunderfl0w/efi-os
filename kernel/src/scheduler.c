@@ -6,7 +6,7 @@
 thread *current, *previous;
 thread *dummy_stack_ptr;
 bool scheduler_inited=false;
-ring_buffer_command ring;
+ring_buffer ring;
 //ring_buffer_command threads;
 extern void yield();
 void thread_function(){
@@ -15,115 +15,105 @@ void thread_function(){
 	char arr[16]={'T','h','r','e','a','d',' ','0',10,0};
 	arr[7]='0'+thread_id;
 	while(1){
-		//printf(arr);
-		push_string(&ring,arr);
+		printf(arr);
+		//push_ring_buffer_string(&ring,arr);
 		//yield();
-		// /busyloop(62000);
-		//busyloop(50000);
-		//printf("%u ",thread_id);
 	}
 }
 void t3(){
+	char str[128];
 	uint32_t x,y;
 	while(1){
+		//ring_buffer_request_space(&ring,100);
+		//command cmd;
+		//cmd.cmd=command_save_location;
+		//push_ring_buffer(&ring, *(void**)&cmd);
+		//asm("cli");
 		get_cursor_pos(&x, &y);
-		move_cursor(20, 0);
+		//cmd.cmd=command_jump_location;
+		//cmd.x=20;
+		//cmd.y=0;
+		//push_ring_buffer(&ring, *(void**)&cmd);
+
+		move_cursor(30, 0);
+
+		//printf("%u\n",ring.free);
+		//if(ring.free>5000){
+		//	asm("cli");
+		//	loop();
+		//}
+		//cmd.cmd=command_deletechar;
+
 		for (int i = 0; i < 10; ++i){
 			deletechar();
+			//push_ring_buffer(&ring, *(void**)&cmd);
 		}
+		
 
 		uint64_t time=(uint64_t)(TimeSinceBoot*100);
-		print(to_string(time));
-		printchar(' ');
-		print(to_string(x));
-		printchar(' ');
-		print(to_string(y));
+		//cmd.cmd=command_deletechar;
 
-		move_cursor(x, y);
-		sleep(50);
+		printf("%u %u %u",time,x,y);
+		//printf(str);
+		//push_ring_buffer_string(&ring, str);
+		//move_cursor(x, y);
+		//cmd.cmd=command_return_location;
+		//push_ring_buffer(&ring, *(void**)&cmd);
+		//asm("sti");
+
+		sleep(1);
 	}
 }
 void print_thread(){
+	uint32_t x=0,y=0;
 	while (1){
 		while(!ring.empty){
-			command cmd = pop_command(&ring);
-			printchar(cmd.cmd);
+			void* tmp = pop_ring_buffer(&ring);
+			command cmd=(*(command*)&tmp);
+
+			switch(cmd.cmd){
+				case command_printchar:
+					printchar(cmd.character);
+					break;
+				case command_save_location:
+					get_cursor_pos(&x, &y);
+					break;
+				case command_jump_location:
+					move_cursor(cmd.x,cmd.y);
+					break;
+				case command_return_location:
+					move_cursor(x,y);
+					break;
+
+			}
+
 		}
 		//yield();
-		//while loop seems to be optimized to not repeat if there is nothing outside loop
+		//outer while loop seems to be optimized out if there is nothing here
 		busyloop(0);
 	}
 }
-thread *threads[3];
 thread *new_threads[3];
-
+int num_threads=3;
 uint64_t cur_thread=0;
-void thread_function_old(){
-	current=threads[cur_thread%3];
 
-	//int thread_id = current->tid;
-	long thread_id = 0xDEADBEEFBEEFBEEF;
-	printf("loc %x\n\n",&thread_id);
-	asm ("sti");
-	asm("hlt");
-	while(1){
-		//thread_id = current->tid;
-		printf("Thread %u but cur is %u\n", thread_id,current->tid);
-		//printf("Thread %u\n", thread_id);
-		asm ("sti");
-		loop();
 
-		previous=threads[cur_thread%3];
-		cur_thread++;
-		current=threads[cur_thread%3];
-		cur_thread%=3;
-
-		switch_stack(&previous->stack_ptr, &current->stack_ptr);
-
-	}
-}
-void test_second_thread(){
-	//asm volatile("cli");
-	char* str=("hello from second thread, we made it boys\n");
-	push_string(&ring,str);
-
-	loop();
-}
 thread* int_thread;
 void start_scheduler(){
 	printf("start_scheduler\n");
-	threads[0]=new_thread_old(thread_function_old);
-	threads[1]=new_thread_old(thread_function_old);
-	threads[2]=new_thread_old(thread_function_old);
-	int_thread=new_thread(test_second_thread);
-	new_threads[2]=new_thread(thread_function);
+	new_threads[0]=new_thread(thread_function);
 	new_threads[1]=new_thread(t3);
-	new_threads[0]=new_thread(print_thread);
+	new_threads[2]=new_thread(print_thread);
+	//new_threads[3]=new_thread(thread_function);
+
 	ring=new_cmd_buf(1000);
 
 	scheduler_inited=true;
 	asm ("sti");
-	current=threads[0];
-	dummy_stack_ptr=(thread*)REQUEST_PAGE;
-
 	loop();
 
-	switch_stack(&dummy_stack_ptr, &current->stack_ptr);
 }
-void handle_scheduler(){
-	if(!scheduler_inited)
-		return;
-	printf("s");
 
-
-	previous=threads[cur_thread%3];
-	cur_thread++;
-	current=threads[cur_thread%3];
-	cur_thread%=3;
-	switch_stack(&previous->stack_ptr, &current->stack_ptr);
-
-	//switch_stack(&threads[cur_thread%3]->stack_ptr, &threads[(cur_thread+1)%3]->stack_ptr);
-}
 bool first=true;
 void* get_next_thread(void *stack_ptr){
 	//return new_threads[0]->RSP;
@@ -133,10 +123,10 @@ void* get_next_thread(void *stack_ptr){
 		cur_thread=0;
 		return current->RSP;
 	}
-	current->RSP=(uint64_t)stack_ptr;
-	previous=new_threads[cur_thread%3];
+	current->RSP=stack_ptr;
+	previous=new_threads[cur_thread%num_threads];
 	cur_thread++;
-	current=new_threads[cur_thread%3];
-	cur_thread%=3;
+	current=new_threads[cur_thread%num_threads];
+	cur_thread%=num_threads;
 	return current->RSP;
 }

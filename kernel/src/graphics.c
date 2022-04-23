@@ -181,63 +181,74 @@ void print(const char* str){
 }
 char printf_buf[512];
 char* temp;
-void printf(const char* str, ...){
-	memset(printf_buf,0,512);
+void vsprintf(char* str, const char* format, va_list ap){
+	//memset(printf_buf,0,512);
 	int output_index=0;
 	int ti=0;
 
-	va_list ap;
-	va_start(ap,str);
-
-	for (int i = 0; str[i]; ++i){
-		if(str[i]=='%'){
-			switch(str[++i]){
+	for (int i = 0; format[i]; ++i){
+		if(format[i]=='%'){
+			switch(format[++i]){
 				case 'x':
 					temp=to_hstring(va_arg(ap,uint64_t));
 					ti=0;
 					while(temp[ti]){
-						printf_buf[output_index++]=temp[ti++];
+						str[output_index++]=temp[ti++];
 					}	
 					break;				
 				case 'p':
 					temp=to_hstring(va_arg(ap,uint64_t));
 					ti=0;
 					while(temp[ti]){
-						printf_buf[output_index++]=temp[ti++];
+						str[output_index++]=temp[ti++];
 					}	
 					break;
 				case 'u':
 					temp=to_string(va_arg(ap,uint64_t));
 					ti=0;
 					while(temp[ti]){
-						printf_buf[output_index++]=temp[ti++];
+						str[output_index++]=temp[ti++];
 					}	
 					break;
 				case 'f':
 					temp=to_string_double(va_arg(ap,double),6);
 					ti=0;
 					while(temp[ti]){
-						printf_buf[output_index++]=temp[ti++];
+						str[output_index++]=temp[ti++];
 					}	
 					break;
 				case 's':
 					temp=va_arg(ap,char*);
 					ti=0;
 					while(temp[ti]){
-						printf_buf[output_index++]=temp[ti++];
+						str[output_index++]=temp[ti++];
 					}	
 					break;
 				case 'c':
-					printf_buf[output_index++]=(char)va_arg(ap,int);
+					str[output_index++]=(char)va_arg(ap,int);
 					break;
 
 			}
 		}
 		else{
-			printf_buf[output_index++]=str[i];
+			str[output_index++]=format[i];
 		}
 	}
+	str[output_index]=0;
 	va_end(ap);
+}
+void sprintf(char* str, const char* format, ...){
+	va_list arg;
+	va_start (arg, format);
+	sprintf (str, format, arg);
+	va_end (arg);
+}
+
+void printf(const char* format, ... ){
+	va_list args;
+	va_start (args, format);
+	vsprintf(printf_buf, format, args);
+	va_end (args);
 	print(printf_buf);
 }
 
@@ -344,10 +355,20 @@ volatile bool mouse_lock=false;
 int mouse_cursor_x=0;
 int mouse_cursor_y=0;
 void move_mouse(int x, int y){
+	uint64_t flags;
+	asm volatile("# __raw_save_flags\n\t"
+		"pushf ; pop %0"
+		: "=rm" (flags)
+		: /* no input */
+		: "memory");
+	asm volatile("cli");
 	clear_mouse();
 	mouse_cursor_x=x;
 	mouse_cursor_y=y;
 	draw_mouse();
+	if (flags&0x200){
+		asm volatile("sti");
+	}
 }
 
 uint8_t x_vis=0, y_vis=0;
