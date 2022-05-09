@@ -21,17 +21,12 @@ char* to_string(size_t x);
 char* to_hstring(size_t x);
 char* to_hstring_noformat(size_t x);
 char* to_string_double(double x, uint64_t precision);
-long atoi(const char* buf);
 
 void putchar(UINT32 x, UINT32 y, CHAR8 chr);
 void clearchar(UINT32 x, UINT32 y);
 void deletechar();
 void printchar(char chr);
 void print(const char* str);
-void sprintf(char* str, const char* format, ...);
-void sprintf2(char* str, const char* format, ...);
-
-void printf(const char* str, ...);
 
 void clrscr(uint32_t color);
 

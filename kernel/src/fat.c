@@ -1,6 +1,6 @@
 #include "fat.h"
 #include "pit.h"
-
+#include "stdio.h"
 
 #define FAT12 1
 #define FAT16 2

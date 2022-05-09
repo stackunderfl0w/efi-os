@@ -17,6 +17,7 @@
 #include "time.h"
 #include "keyboard.h"
 #include "shell.h"
+#include "stdio.h"
 
 typedef struct {
 	Framebuffer* buf;

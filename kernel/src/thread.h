@@ -32,6 +32,9 @@ typedef struct {
 	uint64_t err;
 	uint64_t pad;
 	uint64_t pad2;
+	uint64_t pad3;
+	//adding pad3 somehow makes it work on virtualbox. fuck the intel manual
+	//pad 4 then recrashes vb. looks like vb cares about alignment while qemu doesnt.
 	//rsp+184 is 0xDEADBEEFDEADBEEF end of containing stack
 	//so i guess the manual is wrong but il keep the pading anyways
 }registers;

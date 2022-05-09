@@ -6,6 +6,7 @@
 #include "scheduler.h"
 #include "graphics.h"
 #include "loop.h"
+#include "stdio.h"
 
 __attribute__((interrupt)) void PageFault_Handler(struct interrupt_frame* frame){
 	//Panic("Page Fault Detected");

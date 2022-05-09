@@ -1,5 +1,6 @@
 #include "shell.h"
 #include "fat.h"
+#include "stdio.h"
 
 bool is_alpha(char ch){
 	return((ch >= 97 && ch <= 122) || (ch >= 65 && ch <= 90));

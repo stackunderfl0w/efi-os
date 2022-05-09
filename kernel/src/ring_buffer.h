@@ -4,6 +4,7 @@
 #include "graphics.h"
 #include "string.h"
 #include "loop.h"
+#include "stdio.h"
 ///todo make thread safe. not necesary yet till multicore added.
 typedef struct {
 	union{

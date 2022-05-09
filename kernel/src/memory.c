@@ -1,4 +1,5 @@
 #include "memory.h"
+#include "stdio.h"
 HEAP_SEG_HEADER* last_hdr;
 void* heap_start;
 void* heap_end;
