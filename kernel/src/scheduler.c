@@ -116,6 +116,8 @@ void start_scheduler(){
 
 bool first=true;
 void* get_next_thread(void *stack_ptr){
+	if(!scheduler_inited)
+		return stack_ptr;
 	//return new_threads[0]->RSP;
 	if (first){
 		first=false;
