@@ -31,7 +31,7 @@ void vsprintf(char* str, const char* format, va_list ap){
 					while(temp[ti]){
 						str[output_index++]=temp[ti++];
 					}*/
-					itoa(va_arg(ap,uint64_t),str+output_index,10);
+					ltoa(va_arg(ap,uint64_t),str+output_index,10);
 					while(str[output_index]){
 						output_index++;
 					}

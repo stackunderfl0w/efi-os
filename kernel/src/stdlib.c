@@ -47,3 +47,23 @@ char* itoa (int value, char* str, int base){
 	str[size+1]=0x00;
 	return str;
 }
+char* ltoa (long value, char* str, int base){
+	if(!value){
+		str[0]='0';
+		str[1]=0;
+		return str;
+	}
+	int index=0;
+	int size=0;
+	int temp=value;
+	while(temp/=10){
+		size++;
+	}
+	while(value){
+		str[size-index]='0'+value%10;
+		value/=10;
+		index++;
+	}
+	str[size+1]=0x00;
+	return str;
+}

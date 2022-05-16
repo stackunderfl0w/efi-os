@@ -31,7 +31,6 @@ bitmap_font load_font(CHAR8* buffer){
 		font.width=header->width;
 		font.buffer=buffer+32;
 		//Print(L"%u",font.width);
-
 	}
 	else{
 		print_serial("Invalid font found");

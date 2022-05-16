@@ -81,8 +81,6 @@ char* to_hstring_noformat(size_t x){
 	while(temp/=16){
 		size++;
 	}
-
-
 	string_buf[0]='0';
 	string_buf[1]='x';
 

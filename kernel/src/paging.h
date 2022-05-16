@@ -66,3 +66,4 @@ void PT_SET_ADR(Page_Table_Entry* PT, uint64_t adr);
 uint64_t PT_GET_ADR(Page_Table_Entry* PT);
 
 void map_mem(void* virtadr, void* physadr);
+extern PL4* KERNEL_PL4;

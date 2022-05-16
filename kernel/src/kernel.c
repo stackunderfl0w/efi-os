@@ -18,6 +18,7 @@
 #include "keyboard.h"
 #include "shell.h"
 #include "stdio.h"
+#include "smp.h"
 
 typedef struct {
 	Framebuffer* buf;
@@ -25,6 +26,7 @@ typedef struct {
 	EFI_MEMORY_DESCRIPTOR* mem_map;
 	UINTN map_size;
 	UINTN map_desc_size;
+	RSDPDescriptor* rsdp;
 }bootinfo;
 
 #ifndef __cplusplus
@@ -65,16 +67,13 @@ int _start(bootinfo *info){
 	printchar('\n');
 	INIT_PS2_MOUSE();
 
-	print("mouse inited");
-	print(to_hstring((uint64_t)info->buf->BaseAddress));
-
+	printf("mouse inited\n");
+	printf("%u\n",(uint64_t)info->buf->BaseAddress);
 	uint64_t memsize=getMemorySize(info->mem_map,numEntries,info->map_desc_size);
-	printchar('\n');
 
-	print(to_string(memsize));
+	printf("%u\n",memsize);
 	printchar('\n');
-
-	print("Initializing paging\n");
+	printf("Initializing paging\n");
 	INIT_PAGING(info->mem_map,numEntries,info->map_desc_size,info->buf);
 
 
@@ -215,6 +214,16 @@ int _start(bootinfo *info){
  	//uint64_t dummy_stack_ptr;
   	//switch_stack(&dummy_stack_ptr, &current->stack_ptr);
 	//asm ("sti");
+
+
+	printf("%x\n",info->rsdp);
+	printf("%x\n", info->rsdp->RsdtAddress);
+	//busyloop(500000000);
+	detect_cores((void*)(uint64_t)info->rsdp->RsdtAddress);
+	printf("%x\n",info->rsdp);
+
+	busyloop(500000000);
+
 	start_scheduler();
 	while(1){
 		clrscr(0xffffffff);
@@ -229,11 +238,7 @@ int _start(bootinfo *info){
 		}
 
 		uint64_t time=(uint64_t)(TimeSinceBoot*100);
-		print(to_string(time));
-		printchar(' ');
-		print(to_string(x));
-		printchar(' ');
-		print(to_string(y));
+		printf("%u %u %u",time,x,y);
 
 		move_cursor(x, y);
 		sleep(50);

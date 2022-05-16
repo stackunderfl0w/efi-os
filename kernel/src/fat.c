@@ -116,9 +116,6 @@ void INIT_FILESYSTEM(){
 
 	root_directory=malloc(512);
 	atapio_read_sectors(get_first_root_dir_sector(BS), 1, root_directory);
-
-
-
 }
 char tmp_long[256];
 char tmp_name[256];
@@ -468,29 +465,3 @@ uint64_t get_filesize(char* filepath){
 
 	//uint8_t* file =malloc((entry->size&0xffffff00)+512);
 }
-/*
-char* file=(char*)"/EFI/BOOT/BOOTX64.efi";
-	char names[16][16];
-	memset(names,0,256);
-	int index=0;
-	int n_index=0;
-	int w_index=0;
-	while(file[index]){
-		names[n_index][w_index++]=file[index++];
-		if(file[index]=='/'){
-			names[n_index][w_index]=0;
-			n_index++;
-			w_index=0;
-		}
-	}
-	for(unsigned int i =0; i<=n_index;i++){
-		printf("%u %s\n",i,names[0]+16*i);
-	}
-	for (int i = 0; i < 256; ++i){
-		auto tmp=names[0][i];
-		printf("%c ",tmp);
-		//printchar(' ');
-	}
-
-*/
-
