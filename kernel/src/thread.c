@@ -13,7 +13,7 @@ thread* new_thread(void (*function)(void)){
 	registers *reg = th->stack_ptr;
 
 	//set up interrupt frame, the part that actually matters
-	reg->rcx=0xdeadbeefbeadbeef;
+	reg->rcx=0xdeadbeefbeadbeef;//debug
 	reg->ip = (uint64_t)function;
 	reg->cs=0x8;
 	reg->sp=(uint64_t)th->stack_ptr;

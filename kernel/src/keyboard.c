@@ -31,7 +31,7 @@ bool callbacks_enabled=false;
 void (*callback)(int, int)=NULL; 
 
 void handle_key(unsigned char keycode){
-	//print(to_hstring(keycode));
+	//printf("%h",keycode);
 	//printchar('\n');
 	//return;
 	int final_keycode=0;

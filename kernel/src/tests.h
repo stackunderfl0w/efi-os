@@ -20,9 +20,7 @@ void test_ata_pio_read(){
 		uint64_t tmp=sector_1[i];
 		print(to_hstring_noformat(tmp));
 		printchar(' ');
-	}
-
-	
+	}p
 }
 
 void test_print_char(){
@@ -85,6 +83,13 @@ void test_heap(){
 	time=(uint64_t)(TimeSinceBoot*100);
 	print(to_string(time));
 	printchar('\n');
+	print("test realoc")
+	char* chr_ptr=malloc(13);
+	char* src="Hello there";
+	memcpy(chr_ptr,src,12);
+	printf(chr_ptr);
+	realloc(chr_ptr,256);
+	printf(chr_ptr);
 }
 
 void test_paging(){

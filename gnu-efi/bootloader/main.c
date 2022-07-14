@@ -415,12 +415,12 @@ efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 	Print(L"Kernel start %u \n",&KernelStart);
 
 
-	EFI_STATUS                  Status;
-	EFI_MEMORY_DESCRIPTOR       *EfiMemoryMap;
-	UINTN                       EfiMemoryMapSize;
-	UINTN                       EfiMapKey;
-	UINTN                       EfiDescriptorSize;
-	UINT32                      EfiDescriptorVersion;
+	/*EFI_STATUS                  Status=0;
+	EFI_MEMORY_DESCRIPTOR       *EfiMemoryMap=0;
+	UINTN                       EfiMemoryMapSize=0;
+	UINTN                       EfiMapKey=0;
+	UINTN                       EfiDescriptorSize=0;
+	UINT32                      EfiDescriptorVersion=0;
 
 	//
 	// Get the EFI memory map.
@@ -436,7 +436,8 @@ efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 					);
 	ASSERT (Status == EFI_BUFFER_TOO_SMALL);
 
-	EfiMemoryMap = (EFI_MEMORY_DESCRIPTOR *) AllocatePool (EfiMemoryMapSize + 2 * EfiDescriptorSize);
+	//EfiMemoryMap = (EFI_MEMORY_DESCRIPTOR *) AllocatePool (EfiMemoryMapSize + 2 * EfiDescriptorSize);
+	EfiMemoryMap = (EFI_MEMORY_DESCRIPTOR *) AllocatePool (8192);
 	ASSERT (EfiMemoryMap != NULL);
 	Status = gBS->GetMemoryMap (
 					&EfiMemoryMapSize,
@@ -450,9 +451,61 @@ efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 	Print(L"Size: %u\n",sizeof(EFI_MEMORY_DESCRIPTOR));
 
 
-	Print(L"Status: %u\n",Status);
+	Print(L"Status: %u\n",Status);*/
 
 
+
+
+
+
+
+
+
+	UINTN EfiMemoryMapSize = 0;
+	EFI_MEMORY_DESCRIPTOR* descriptors = NULL;
+	UINTN EfiMapKey = 0;
+	UINTN EfiDescriptorSize = 0;
+	UINT32 descriptorVersion = 0;
+
+	// 1) Retrieve the memory map from the firmware
+	EFI_STATUS status;
+
+	while ((status = gBS->GetMemoryMap(&EfiMemoryMapSize, descriptors, &EfiMapKey, &EfiDescriptorSize, &descriptorVersion)) == EFI_BUFFER_TOO_SMALL)
+	{
+	    // Add some extra space. There are few reasons for this:
+	    // a) Allocating memory for the buffer can increase the size of the memory map itself.
+	    //    Adding extra space will prevent an infinite loop.
+	    // b) We want to try to prevent a "partial shutdown" when calling ExitBootServices().
+	    //    See comment below about what a "partial shutdown" is.
+	    // c) If a "partial shutdown" does happen, we won't be able to allocate more memory!
+	    //    Having some extra space now should mitigate the issue.
+	    EfiMemoryMapSize += EfiDescriptorSize * 10;
+	    if(descriptors){
+	    	FreePool(descriptors);
+	    }
+	    descriptors = (EFI_MEMORY_DESCRIPTOR*)AllocatePool(EfiMemoryMapSize);
+	}
+
+	if (EFI_ERROR(status))
+	{
+	    Print(L"Failed to retrieve the EFI memory map: %p\n", status);
+	}
+
+	// 2) Exit boot services - it is possible for the firmware to modify the memory map
+	// during a call to ExitBootServices(). A so-called "partial shutdown".
+	// When that happens, ExitBootServices() will return EFI_INVALID_PARAMETER.
+	/*while ((status = gBS->ExitBootServices(g_efiImage, memoryMapKey)) == EFI_INVALID_PARAMETER)
+	{
+	    // Memory map changed during ExitBootServices(), the only APIs we are allowed to
+	    // call at this point are GetMemoryMap() and ExitBootServices().
+	    //size = buffer.size(); // Probably not needed, but let's play safe since EFI could change that value behind our back (you never know!)
+	    status = gBS->GetMemoryMap(&size, descriptors, &memoryMapKey, &descriptorSize, &descriptorVersion);
+	    if (EFI_ERROR(status))
+	    {
+	        Print(L"Failed to retrieve the EFI memory map: %p\n", status);
+	    }
+	}*/
+	EFI_MEMORY_DESCRIPTOR* EfiMemoryMap = (EFI_MEMORY_DESCRIPTOR *) descriptors;
 	uint64_t mem_size=0;
 	uint64_t mem_size_0=0;
 
@@ -474,6 +527,25 @@ efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 	}
 	Print(L"Mem size: %lu\n",mem_size);
 	Print(L"Mem size_0: %lu\n",mem_size_0);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	EFI_CONFIGURATION_TABLE* configTable = SystemTable->ConfigurationTable;
 	void* rsdp = NULL; 

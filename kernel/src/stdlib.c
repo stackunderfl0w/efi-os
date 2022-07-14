@@ -12,7 +12,7 @@ int atoi(const char* buf){
 	}
 	return output*sign;
 }
-int atol(const char* buf){
+long atol(const char* buf){
 	long output=0;
 	long index=0;
 	long sign =1;

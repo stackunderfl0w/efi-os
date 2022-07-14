@@ -1,16 +1,8 @@
 #include "shell.h"
 #include "fat.h"
 #include "stdio.h"
+#include "ctype.h"
 
-bool is_alpha(char ch){
-	return((ch >= 97 && ch <= 122) || (ch >= 65 && ch <= 90));
-}
-bool is_print(char ch){
-	return((ch >= 0x20 && ch <= 0x7e));
-}
-bool isdigit(char ch){
-	return ((ch>=0x30 && ch<=0x39));
-}
 void run_cmd(char* cmd);
 
 char num_shift[10]={')','!','@','#','$','%','^','&','*','('};
@@ -39,7 +31,7 @@ void hide_cursor(){
 
 void print_character(char keycode){
 	if(isLeftShift||isRightShift){
-		if (is_alpha(keycode)){
+		if (isalpha(keycode)){
 			printchar(keycode-32);
 		}
 		else if(isdigit(keycode)){
@@ -67,7 +59,7 @@ void kb_callback(int keycode, int action){
 		isRightShift=!(bool)action;
 	}
 	if(action==PRESS){
-		if(is_print(keycode)){
+		if(isprint(keycode)){
 			hide_cursor();
 			print_character(keycode);
 			show_cursor();

@@ -1,4 +1,5 @@
 #include "paging.h"
+#include "stdio.h"
 uint64_t FREE_MEMORY;
 uint64_t USED_MEMORY;
 uint64_t RESERVED_MEMORY;
@@ -19,23 +20,21 @@ void INIT_PAGING(EFI_MEMORY_DESCRIPTOR* memMap, uint64_t Entries, uint64_t DescS
 			}
 		}
 	}
+	printf("largest_segment:%u\n",largest_segment_size);
 
 	uint64_t total_mem=	getMemorySize(memMap, Entries, DescSize);
 	FREE_MEMORY=total_mem;
-	print("placing page table man at ");
-	//print(to_hstring(largest_segment->PhysicalStart));
+	//print("placing page table man at ");
 	pages_used=(char*)largest_segment->PhysicalStart;
 	total_pages=total_mem/4096 +1;
-	print(" size(pages): ");
-	//print(to_hstring(total_pages));
-
+	printf("Total memory pages:%u",total_pages);
+	//maybe speed up with a memset
 	for (uint64_t i = 0; i < total_pages; ++i){
 		pages_used[i]=0;
 	}
-	print("reserving pages ");
-	RESERVE_PAGES(0, 0x100); // reserve between 0 and 0x100000(first megabyte)
+	// reserve between 0 and 0x100000(first megabyte)
+	RESERVE_PAGES(0, 0x100);
 
-	print("locking page man ");
 	LOCK_PAGES(pages_used,total_pages/4096+1);
 	for (uint64_t i = 0; i < Entries; ++i){
 		EFI_MEMORY_DESCRIPTOR* desc = (EFI_MEMORY_DESCRIPTOR*)((uint64_t)memMap + (i * DescSize));
@@ -44,24 +43,18 @@ void INIT_PAGING(EFI_MEMORY_DESCRIPTOR* memMap, uint64_t Entries, uint64_t DescS
 			RESERVE_PAGES((void*)desc->PhysicalStart,desc->NumberOfPages);
 		}
 	}
-	//print(to_hstring(REQUEST_PAGE()));
-
 
 	uint64_t kernel_size=((uint64_t)&_KernelEnd-(uint64_t)&_KernelStart)/4096;
-	print("kernel_size: ");
-	print(to_string(kernel_size));
-	printchar('\n');
+	printf("kernel_size: %u\n",kernel_size);
 
 
 	LOCK_PAGES(&_KernelStart,kernel_size);
-	print("requesting pl4 page ");
+	printf("Generating Kernel page table ");
 
 	KERNEL_PL4=REQUEST_PAGE();
 	//print("memseting kernel");
 	memset(KERNEL_PL4,0,4096);
 	KERNEL_PL4->entries[0].value=0;
-	//print(to_hstring(KERNEL_PL4->entries[0].value));
-	//print(to_hstring(KERNEL_PL4));
 
 	//print("maping display Framebuffer ");
 
@@ -69,16 +62,15 @@ void INIT_PAGING(EFI_MEMORY_DESCRIPTOR* memMap, uint64_t Entries, uint64_t DescS
 		map_mem((void*)i,(void*)i);
 	}
 
-	//print("identitity maping mem ");
-
 	for (uint64_t i = 0; i < total_mem; i+=4096){
 		map_mem((void*)i,(void*)i);
 	}	
 
-	print("loading cr3");
+	printf("Loading cr3");
 	asm ("mov %0, %%cr3" : : "r" (KERNEL_PL4));
-	print("cr3 loaded\n");
+	printf("cr3 loaded\n");
 }
+//index that should not be after first free page
 uint64_t page_index=0;
 void* REQUEST_PAGE(){
 	for ( ; page_index < total_pages; ++page_index){
@@ -97,10 +89,6 @@ void LOCK_PAGE(void* adr){
 		FREE_MEMORY-=4096;
 		USED_MEMORY+=4096;
 	}
-	else{
-		//print("page already locked");
-		//print(to_hstring((uint64_t)adr));
-	}
 }
 
 void FREE_PAGE(void* adr){
@@ -109,7 +97,7 @@ void FREE_PAGE(void* adr){
 		pages_used[page]=0;
 		FREE_MEMORY+=4096;
 		USED_MEMORY-=4096;
-		//page_index=MIN(page_index,page);
+		page_index=MIN(page_index,page);
 	}
 }
 
@@ -120,9 +108,6 @@ void RESERVE_PAGE(void* adr){
 		FREE_MEMORY-=4096;
 		RESERVED_MEMORY+=4096;
 	}
-	else{
-		//print("page already reserved");
-	}
 }
 void UNRESERVE_PAGE(void* adr){
 	uint64_t page=(uint64_t)adr/4096;
@@ -131,7 +116,6 @@ void UNRESERVE_PAGE(void* adr){
 		FREE_MEMORY+=4096;
 		RESERVED_MEMORY-=4096;
 		page_index=MIN(page_index,page);
-
 	}
 }
 
@@ -229,8 +213,6 @@ void map_mem(void* virtadr, void* physadr){
 	//void* page=(void*)PT_GET_ADR(PL1E);
 }
 
-
-
 void PT_SET_FLAG(Page_Table_Entry* PT, char flag){
 	PT->value|= 1UL << flag;
 }
@@ -247,4 +229,3 @@ void PT_SET_ADR(Page_Table_Entry* PT, uint64_t adr){
 uint64_t PT_GET_ADR(Page_Table_Entry* PT){
 	return (PT->value& 0x000ffffffffff00);
 }
-

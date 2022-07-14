@@ -19,6 +19,7 @@
 #include "shell.h"
 #include "stdio.h"
 #include "smp.h"
+#include "tty.h"
 
 typedef struct {
 	Framebuffer* buf;
@@ -40,56 +41,54 @@ extern "C" {
 extern "C" 
 #endif
 
+
 int _start(bootinfo *info){
 	asm("cli");
 	//init_serial();
-	init_text_overlay(info->buf, info->font);
 	//print_serial("hello world");
 
-	//gdt
-	print("didnt crash ");
+	init_text_overlay(info->buf, info->font);
+
+	printf("Bootloader exited successfully\n");
+
 	INIT_GDT();
-	print("GDT loaded ");
-
+	printf("GDT loaded\n");
+	
 	create_interrupts();
-
-
-	print("idt loaded ");
+	printf("Interupts loaded\n");
 
 	//SET_PIT_DIVISOR(65535);
 	SET_PIT_FREQUENCY(100);
-	print("pit set ");
+	print("Pit set\n");
 
+	INIT_PS2_MOUSE();
+	printf("PS2 mouse initialized\n");
+
+	printf("Frambuffer base:%u\n",(uint64_t)info->buf->BaseAddress);
 
 	uint32_t numEntries=info->map_size/info->map_desc_size;
-
-
-	printchar('\n');
-	INIT_PS2_MOUSE();
-
-	printf("mouse inited\n");
-	printf("%u\n",(uint64_t)info->buf->BaseAddress);
 	uint64_t memsize=getMemorySize(info->mem_map,numEntries,info->map_desc_size);
 
-	printf("%u\n",memsize);
-	printchar('\n');
-	printf("Initializing paging\n");
+	printf("Total memory:%u(%uMB)\n",memsize,memsize/(1024*1024));
+
 	INIT_PAGING(info->mem_map,numEntries,info->map_desc_size,info->buf);
-
-
-	print("page table loaded\n");
+	printf("Paging initialized\n");
 
 	printf("Free memory: %ukb\n",get_free_memory()/1024);
 	printf("Used memory: %ukb\n",get_used_memory()/1024);
 	printf("Reserved memory: %ukb\n",get_reserved_memory()/1024);
 
 
+	void* heap_location=(void*)0x8000000000;
+	INIT_HEAP(heap_location,0x10);
+	printf("Kernel Heap initialized at %p\n",heap_location);
 
-	INIT_HEAP((void*)0x8000000000,0x10);
-	print("Heap inited\n");
+	float fl=123.456789;
+
+	printf("%f\n",fl);
 
 
-	//asm("sti");
+	asm("sti");
 	//sleep(2000);
 
 	/*
@@ -116,14 +115,7 @@ int _start(bootinfo *info){
 	uint32_t x,y;
 
 
-	char* chr_ptr=malloc(13);
-	char* src="Hello there";
-	memcpy(chr_ptr,src,12);
-	printf(chr_ptr);
-	realloc(chr_ptr,256);
-	printf(chr_ptr);
-
-	//printf(chr_ptr);
+	
 
 	INIT_RTC();
 
@@ -208,41 +200,34 @@ int _start(bootinfo *info){
 		sleep(100);
 	}*/
 
-	//current = new_thread(thread_function);
-  	//next = new_thread(thread_function);
 
- 	//uint64_t dummy_stack_ptr;
-  	//switch_stack(&dummy_stack_ptr, &current->stack_ptr);
-	//asm ("sti");
-
-
-	printf("%x\n",info->rsdp);
-	printf("%x\n", info->rsdp->RsdtAddress);
+	//printf("%x\n",info->rsdp);
+	//printf("%x\n", info->rsdp->RsdtAddress);
 	//busyloop(500000000);
-	detect_cores((void*)(uint64_t)info->rsdp->RsdtAddress);
-	printf("%x\n",info->rsdp);
+	//detect_cores((void*)(uint64_t)info->rsdp->RsdtAddress);
+	//printf("%x\n",info->rsdp);
 
-	busyloop(500000000);
+	//busyloop(500000000);
+
+
+
+	tty tty0=init_tty();
+
+	for (int i = 0; i < 15; ++i){
+		fputc('A'+i, stdout);
+	}
+
+	fputc(10, stdout);
+
+	fputs("eejfaousdnawndoianwdian",stdout);
+
+	fputs("\n23232323\n",stdout);
+
+	loop();
 
 	start_scheduler();
-	while(1){
-		clrscr(0xffffffff);
-	}
-
-	uint32_t x,y;
-	while(1){
-		get_cursor_pos(&x, &y);
-		move_cursor(20, 0);
-		for (int i = 0; i < 10; ++i){
-			deletechar();
-		}
-
-		uint64_t time=(uint64_t)(TimeSinceBoot*100);
-		printf("%u %u %u",time,x,y);
-
-		move_cursor(x, y);
-		sleep(50);
-	}
-	loop();
+	//nothing after this point should run as the sceduler esentially abandons this base thread
+	//maybe this sould be changed to salvage a bit of ram?
+	
 	return 123;
 }

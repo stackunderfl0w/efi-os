@@ -19,11 +19,8 @@ __attribute__((interrupt)) void PageFault_Handler(struct interrupt_frame* frame)
 
 	uint64_t err;
 	asm ("mov %%cr2, %0" : : "r" (err));
-	print(to_hstring(err));
-	while(true){
-		asm("hlt");
-	}
-
+	printf("%p",err);
+	loop();
 }
 __attribute__((interrupt)) void GeneralFault_Handler(struct interrupt_frame* frame){
 	move_cursor(29,0);
@@ -32,8 +29,8 @@ __attribute__((interrupt)) void GeneralFault_Handler(struct interrupt_frame* fra
 		deletechar();
 	}
 	print("GENERAL FAULT DETECTED");
-	while(1);
-
+	//while(1);
+	loop();
 }
 __attribute__((interrupt)) void DoubleFault_Handler(struct interrupt_frame* frame){
 	move_cursor(29,0);
@@ -42,8 +39,8 @@ __attribute__((interrupt)) void DoubleFault_Handler(struct interrupt_frame* fram
 		deletechar();
 	}
 	print("Double FAULT DETECTED");
-	while(1);
-
+	//while(1);
+	loop();
 }
 __attribute__((interrupt)) void Keyboard_Handler(struct interrupt_frame* frame){
 	//print("keyboard");

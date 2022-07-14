@@ -23,7 +23,6 @@ void INIT_PS2_MOUSE(){
 	outb(0x64,0x20);
 	PS2_WAIT_READ();
 	uint8_t minp = inb(0x60);
-	//print(to_hstring(minp));
 
 	minp |= 1UL << 2;
 	minp &= ~(1UL << 5);

@@ -16,10 +16,7 @@ typedef struct {
 void PlotPixel_32bpp(int x, int y, uint32_t pixel);
 
 
-char* to_string(size_t x);
 
-char* to_hstring(size_t x);
-char* to_hstring_noformat(size_t x);
 char* to_string_double(double x, uint64_t precision);
 
 void putchar(UINT32 x, UINT32 y, CHAR8 chr);
@@ -45,3 +42,5 @@ void clear_mouse();
 
 void get_display_resolution(UINT32 *x, UINT32 *y);
 void scroll_console();
+
+void swap_buffer();

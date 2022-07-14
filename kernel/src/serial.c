@@ -31,7 +31,7 @@ void write_serial(char a) {
 }
 
 void print_serial(char* str) {
-	for (int i = 0; str[i]!=0; ++i){
+	for (int i = 0; str[i]; ++i){
 		write_serial(str[i]);
 	}
 }

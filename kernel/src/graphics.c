@@ -2,112 +2,38 @@
 #include "stdlib.h"
 
 Framebuffer* globalBuf;
+Framebuffer back_buffer;
+bool back_buffer_enabled;
 bitmap_font* console_font;
 
-void PlotPixel_32bpp(int x, int y, uint32_t pixel){
+inline void PlotPixel_32bpp(int x, int y, uint32_t pixel){
 	*((uint32_t*)((char*)globalBuf->BaseAddress + 4 * globalBuf->PixelsPerScanLine * y + 4 * x)) = pixel;
 }
-uint32_t ReadPixel_32bpp(int x, int y){
+inline uint32_t ReadPixel_32bpp(int x, int y){
 	return *(uint32_t*)(globalBuf->BaseAddress + 4 * globalBuf->PixelsPerScanLine * y + 4 * x);
+}
+
+uint64_t enter_critical(){
+	uint64_t flags;
+	asm volatile("# __raw_save_flags\n\t"
+		"pushf ; pop %0"
+		: "=rm" (flags)
+		: /* no input */
+		: "memory");
+	asm volatile("cli");
+	return flags;
+}
+
+inline void exit_critical(uint64_t flags){
+	if (flags&0x200){
+		asm volatile("sti");
+	}
 }
 
 
 UINT32 cursor_x,cursor_y;
 UINT32 console_width,console_height;
 bitmap_font* console_font;
-char string_buf[256]={0};
-
-char* to_string(size_t x){
-	if(x==0){
-		string_buf[0]='0';
-		string_buf[1]=0;
-		return string_buf;
-	}
-	size_t index=0;
-	size_t size=0;
-	size_t temp=x;
-	while(temp/=10){
-		size++;
-	}
-	while(x){
-		string_buf[size-index]='0'+x%10;
-		x/=10;
-		index++;
-		//print("x");
-	}
-	string_buf[size+1]=0x00;
-	return string_buf;
-}
-
-char* to_hstring(size_t x){
-	if(x==0){
-		string_buf[0]='0';
-		string_buf[1]='x';
-		string_buf[2]='0';
-		string_buf[3]=0;
-		return string_buf;
-	}
-	uint64_t index=0;
-	uint64_t size=0;
-	uint64_t temp =x;
-
-	while(temp/=16){
-		size++;
-	}
-
-
-	string_buf[0]='0';
-	string_buf[1]='x';
-
-	while(x){
-		string_buf[size-index+2]= x%16<10? '0'+x%16: '7'+x%16;
-		x/=16;
-		index++;
-		//print("x");
-	}
-	string_buf[size+3]=0x00;
-	return string_buf;
-}
-char* to_hstring_noformat(size_t x){
-	if(x==0){
-		string_buf[0]='0';
-		string_buf[1]=0;
-		return string_buf;
-	}
-	uint64_t index=0;
-	uint64_t size=0;
-	uint64_t temp =x;
-
-	while(temp/=16){
-		size++;
-	}
-	string_buf[0]='0';
-	string_buf[1]='x';
-
-	while(x){
-		string_buf[size-index]= x%16<10? '0'+x%16: '7'+x%16;
-		x/=16;
-		index++;
-		//print("x");
-	}
-	string_buf[size+1]=0x00;
-	return string_buf;
-}
-char* to_string_double(double x, uint64_t precision){
-	to_string((uint64_t)x);
-	int index=0;
-	while(string_buf[++index]);
-	double remainder=x-(uint64_t)x;
-	string_buf[index++]='.';
-
-	int places=0;
-	while(places++<precision){
-		string_buf[index++]='0'+(uint64_t)(remainder*=10)%10;
-	}
-	string_buf[index]=0;
-
-	return string_buf;
-}
 
 
 void putchar(UINT32 x, UINT32 y, CHAR8 chr){
@@ -141,21 +67,23 @@ void deletechar(){
 }
 
 void printchar(char chr){
-	if(cursor_y>=console_height){
-		cursor_y--;
-		scroll_console();       
-	}
 	if (chr=='\n'){
 		cursor_x=0;
 		cursor_y++;
 		return;
 	}
-	putchar(cursor_x*console_font->width, cursor_y*console_font->height, chr);
+	if(cursor_y>=console_height){
+		cursor_y--;
+		scroll_console();       
+	}
+	//save and calculate new position before printing char for multithreading
+	int print_x=cursor_x,print_y=cursor_y;
 	cursor_x++;
 	if (cursor_x>=console_width){
 		cursor_x=0;
 		cursor_y++;
 	}
+	putchar(print_x*console_font->width, print_y*console_font->height, chr);
 }
 void print(const char* str){
 	//print_serial(str);
@@ -271,20 +199,12 @@ volatile bool mouse_lock=false;
 int mouse_cursor_x=0;
 int mouse_cursor_y=0;
 void move_mouse(int x, int y){
-	uint64_t flags;
-	asm volatile("# __raw_save_flags\n\t"
-		"pushf ; pop %0"
-		: "=rm" (flags)
-		: /* no input */
-		: "memory");
-	asm volatile("cli");
+	uint64_t flags=enter_critical();
 	clear_mouse();
 	mouse_cursor_x=x;
 	mouse_cursor_y=y;
 	draw_mouse();
-	if (flags&0x200){
-		asm volatile("sti");
-	}
+	exit_critical(flags);
 }
 
 uint8_t x_vis=0, y_vis=0;
@@ -326,22 +246,13 @@ void get_display_resolution(UINT32 *x, UINT32 *y){
 }
 
 void scroll_console(){
-	uint64_t flags;
-	asm volatile("# __raw_save_flags\n\t"
-		"pushf ; pop %0"
-		: "=rm" (flags)
-		: /* no input */
-		: "memory");
-	asm volatile("cli");
+	uint64_t flags=enter_critical();
 	clear_mouse();
-	memcpy(globalBuf->BaseAddress,globalBuf->BaseAddress+(globalBuf->PixelsPerScanLine*console_font->height)*4,globalBuf->PixelsPerScanLine*console_font->height*(console_height-1)*4);
-	memset(globalBuf->BaseAddress+globalBuf->PixelsPerScanLine*console_font->height*(console_height-1)*4,
-		0,
-		globalBuf->BufferSize-(4*globalBuf->PixelsPerScanLine*console_font->height*(console_height-1)));
+	int row_size_px=globalBuf->PixelsPerScanLine*console_font->height;
+	//move everything up 1 line
+	memcpy(globalBuf->BaseAddress, globalBuf->BaseAddress+(row_size_px)*4, row_size_px*(console_height-1)*4);
+	//clear bottom line
+	memset(globalBuf->BaseAddress+row_size_px*(console_height-1)*4, 0, globalBuf->BufferSize-(4*row_size_px*(console_height-1)));
 	draw_mouse();
-	if (flags&0x200){
-		asm volatile("sti");
-	}
+	exit_critical(flags);
 }
-
-

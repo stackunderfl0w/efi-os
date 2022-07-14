@@ -64,8 +64,6 @@ void* malloc(uint64_t size){
 				cur->free=false;
 				return (void*)(cur+1);
 			}
-			else{
-			}
 		}
 		if(cur->next_hdr==NULL){
 			break;
