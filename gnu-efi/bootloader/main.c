@@ -412,7 +412,7 @@ efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 	//int (*KernelStart)()=(__attribute__((sysv_abi))int (*)())header->e_entry;
 	int (*KernelStart)() = ((__attribute__((sysv_abi)) int (*)() ) header->e_entry);
 
-	Print(L"Kernel start %u \n",&KernelStart);
+	Print(L"Kernel start %u \n",KernelStart);
 
 
 	/*EFI_STATUS                  Status=0;

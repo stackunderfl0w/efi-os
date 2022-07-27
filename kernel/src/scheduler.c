@@ -3,66 +3,30 @@
 #include "loop.h"
 #include "pit.h"
 #include "stdio.h"
-thread *current, *previous;
-thread *dummy_stack_ptr;
+#include "memory.h"
+#include "fat.h"
+#include <elf.h>
+thread *current;
 bool scheduler_inited=false;
 extern void yield();
 void thread_function(){
 	int thread_id = current->tid;
 	while(1){
-		printf("T12345678901234567890hread %u",thread_id);
+		printf("Thread %u",thread_id);
 		//yield();
 	}
 }
 void t3(){
-	char str[128];
-	uint32_t x,y;
 	while(1){
-		get_cursor_pos(&x, &y);
-
-		move_cursor(30, 0);
-
-		for (int i = 0; i < 10; ++i){
-			deletechar();
-		}
-		
-
 		uint64_t time=(uint64_t)(TimeSinceBoot*100);
 
-		printf("%u %u %u",time,x,y);
+		printf("\033[s\033[30;0H%u %u %u\033[u",time,30,0);
 
 		//sleep(1);
 	}
 }
-void print_thread(){
-	uint32_t x=0,y=0;
-	while (1){
-		/*while(!ring.empty){
-			void* tmp = pop_ring_buffer(&ring);
-			command cmd=(*(command*)&tmp);
 
-			switch(cmd.cmd){
-				case command_printchar:
-					printchar(cmd.character);
-					break;
-				case command_save_location:
-					get_cursor_pos(&x, &y);
-					break;
-				case command_jump_location:
-					move_cursor(cmd.x,cmd.y);
-					break;
-				case command_return_location:
-					move_cursor(x,y);
-					break;
-
-			}
-
-		}*/
-		//outer while loop seems to be optimized out if there is nothing here
-		busyloop(0);
-	}
-}
-thread *new_threads[4];
+thread *new_threads[256];
 int num_threads=3;
 uint64_t cur_thread=0;
 
@@ -76,10 +40,6 @@ void start_scheduler(){
 	new_threads[2]=new_thread(thread_function);
 	new_threads[3]=new_thread(thread_function);
 
-	//new_threads[3]=new_thread(thread_function);
-
-	//ring=new_cmd_buf(1000);
-
 	scheduler_inited=true;
 	asm ("sti");
 	loop();
@@ -90,7 +50,6 @@ bool first=true;
 void* get_next_thread(void *stack_ptr){
 	if(!scheduler_inited)
 		return stack_ptr;
-	//return new_threads[0]->RSP;
 	if (first){
 		first=false;
 		current=new_threads[0];
@@ -98,9 +57,70 @@ void* get_next_thread(void *stack_ptr){
 		return current->RSP;
 	}
 	current->RSP=stack_ptr;
-	previous=new_threads[cur_thread%num_threads];
 	cur_thread++;
 	current=new_threads[cur_thread%num_threads];
 	cur_thread%=num_threads;
 	return current->RSP;
+}
+
+void new_process(char* executable,void* ptr){
+	CHAR8* program_space=malloc(0x16000);
+
+	printf("space allocated at,%x",program_space);
+
+	CHAR8* program =  read_file(executable);
+
+	Elf64_Ehdr* header=(Elf64_Ehdr*)program;
+	printf("Arch: %u\n\n",(long)header->e_machine);
+	for (int i = 0; i < 32; ++i)
+	{
+		long x=program[i];
+		printf("%x,  ",x);
+	}
+
+
+	printf("entry: %u\n",header->e_entry);
+	printf("ofset: %u\n",header->e_phoff);
+
+	Elf64_Phdr* phdrs=(Elf64_Phdr*)(program+header->e_phoff);
+
+	for (
+		Elf64_Phdr* phdr = phdrs;
+		(char*)phdr < (char*)phdrs + header->e_phnum * header->e_phentsize;
+		phdr = (Elf64_Phdr*)((char*)phdr + header->e_phentsize)
+	)
+	{//load each program segment at the memory location indicated by its header in p_addr
+		switch (phdr->p_type){
+			case PT_LOAD:
+			{
+				int pages = (phdr->p_memsz + 0x1000 - 1) / 0x1000;
+				Elf64_Addr segment = phdr->p_paddr;
+				printf("Kernel p_paddr %u \n",phdr->p_paddr);
+
+				//SystemTable->BootServices->AllocatePages(AllocateAddress, EfiLoaderData, pages, &segment);
+				//map_mem(segment, REQUEST_PAGE());
+				printf("%x",program_space +(uint64_t)segment);
+				printf("%x",((uint64_t)segment));
+
+				UINTN size = phdr->p_filesz;
+				for (UINTN i = 0; i < size; ++i)
+				{
+					*(char*)(program_space+(uint64_t)segment+i)=program[phdr->p_offset+i];
+				}
+				break;
+			}
+		}
+	}
+	printf("Kernel e_entry %u \n",header->e_entry);
+	printf("Kernel entry %u \n",&header->e_entry);
+
+
+	int (*KernelStart)() = ((__attribute__((sysv_abi)) int (*)() ) program_space+header->e_entry);
+
+	printf("Kernel start %u \n",KernelStart);
+	KernelStart(ptr);
+	//char* nel=calloc(1024);
+
+	new_threads[num_threads++]=new_thread(thread_function);
+
 }

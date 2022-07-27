@@ -14,5 +14,6 @@ char read(FILE* f);
 
 
 tty init_tty();
+tty init_tty_0(graphics_context* kg, FILE* stdout_0, char* buf, unsigned buf_size);
 
-void tty_loop(tty this);
+void tty_loop(tty tt);

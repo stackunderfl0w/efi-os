@@ -98,5 +98,5 @@ uint64_t dayofweek(){      /* 0 = Sunday */
 }
 const char* days_of_the_week[]={"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"};
 const char* months[]={"January","Febuary","March","April","May","June","July","August","September","October","November","December"};
-const char* days_of_the_week_short[]={"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"};
+const char* days_of_the_week_short[]={"Sun","Mon","Tue","Wed","Thu","Fri","Sat"};
 const char* months_short[]={"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"};

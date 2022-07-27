@@ -1,4 +1,6 @@
 #include "keyboard.h"
+#include "graphics.h"
+extern graphics_context* k_context;
 bool isLeftShiftPressed;
 bool isRightShiftPressed;
 uint8_t previous_key=0;
@@ -97,31 +99,31 @@ void handle_key(unsigned char keycode){
 	}
 	switch(final_keycode){
 		case KEYCODE_LEFT:
-			cursor_left();
+			cursor_left(k_context);
 			return;
 		case KEYCODE_RIGHT:
-			cursor_right();
+			cursor_right(k_context);
 			return;
 		case KEYCODE_UP:
-			cursor_up();
+			cursor_up(k_context);
 			return;
 		case KEYCODE_DOWN:
-			cursor_down();
+			cursor_down(k_context);
 			return;
 		case KEYCODE_RETURN:
-			printchar('\n');
+			printchar(k_context,'\n');
 			return;
 		case KEYCODE_SPACE:
-			printchar(' ');
+			printchar(k_context,' ');
 			return;
 		case KEYCODE_BACKSPACE:
-			deletechar();
+			deletechar(k_context);
 			return;
 	}
 
 	char ascii = Translate(keycode, isLeftShiftPressed | isRightShiftPressed);
 	if (ascii != 0){
-		printchar(ascii);
+		printchar(k_context,ascii);
 	}
 }
 

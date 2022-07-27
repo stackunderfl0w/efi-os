@@ -97,17 +97,17 @@ void sprintf(char* str, const char* format, ...){
 	sprintf (str, format, arg);
 	va_end (arg);
 }
-void printf(const char* format, ... ){
+void old_printf(const char* format, ... ){
 	char printf_buf[512];
 	va_list args;
 	va_start (args, format);
 	vsprintf(printf_buf, format, args);
 	va_end (args);
 	//aquire_lock();
-	print(printf_buf);
+	//print(printf_buf);
 	//release_lock();
 }
-void new_printf(const char* format, ... ){
+void printf(const char* format, ... ){
 	char printf_buf[512];
 	va_list args;
 	va_start (args, format);

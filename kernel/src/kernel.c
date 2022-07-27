@@ -40,14 +40,26 @@ extern "C" {
 
 extern "C" 
 #endif
-
+graphics_context* k_context;
 
 int _start(bootinfo *info){
 	asm("cli");
+
 	//init_serial();
 	//print_serial("hello world");
 
-	init_text_overlay(info->buf, info->font);
+
+	//manually create kernel stdout&tty so it can be created without heap and remains in scope
+    graphics_context k_graphics=init_text_overlay(info->buf, info->font);
+	k_context=&k_graphics;
+	FILE std;
+	char std_buf[8192];
+
+    tty tty0=init_tty_0(k_context,&std,std_buf,8192);
+
+
+
+	printchar(k_context,'a');
 
 	printf("Bootloader exited successfully\n");
 
@@ -59,7 +71,7 @@ int _start(bootinfo *info){
 
 	//SET_PIT_DIVISOR(65535);
 	SET_PIT_FREQUENCY(100);
-	print("Pit set\n");
+	printf("Pit set\n");
 
 	INIT_PS2_MOUSE();
 	printf("PS2 mouse initialized\n");
@@ -83,46 +95,53 @@ int _start(bootinfo *info){
 	INIT_HEAP(heap_location,0x10);
 	printf("Kernel Heap initialized at %p\n",heap_location);
 
+	printf("Enabling interupts");
+
+	asm("sti");
+
 	float fl=123.456789;
 
 	printf("%f\n",fl);
 
-
-	asm("sti");
-	//sleep(2000);
-
-	/*
 	INIT_FILESYSTEM();
 	
 	int file_entries;
-	//read_directory("/",&file_entries);
-	
+	read_directory("/",&file_entries);
+	printf("%f\n",fl);
+
+	//sleep(2000);
+	/*sleep(1);
+	char* file =read_file("SCRCLR  ELF");
+	for (int i = 0; i < 32; ++i)
+	{
+		printf("%x ",(uint64_t)*(file+i));
+	}
+	printf("%f\n",fl);*/
+
 	//uint8_t* file = read_file("/resources/TEST    TXT");
-	uint8_t* file = read_file("/resources/startup.nsh");
+	//uint8_t* file = read_file("/resources/startup.txt");
 
-	uint8_t* font2 = read_file("/resources/zap-light16.psf");
+	//uint8_t* font2 = read_file("/resources/zap-light16.psf");
 
-	bitmap_font loaded_font=load_font(font2);
-
-	init_text_overlay(info->buf, &loaded_font);
-
-	write_file("/resources/WRTTEST TXT",file,1024);
-
-	file = read_file("/resources/WRTTEST TXT");
-
-	//printf("\n%s\n",file);
-	print(file);
-	uint32_t x,y;
+	//write_file("/resources/WRTTEST TXT",file,1024);
 
 
-	
+	//bitmap_font loaded_font=load_font(font2);
 
-	INIT_RTC();
+	//init_text_overlay(info->buf, &loaded_font);
 
+	//sleep(2000);
+
+	//INIT_RTC();
+
+
+	/*CHAR8* program_space=malloc(0x16000);
+
+	printf("space allocated at,%x",program_space);
 
 	CHAR8* kern =  read_file("/SCRCLR  ELF");
 
-	printf("Kernel loaded , size=%u\n",512);
+	printf("Program loaded , size=%u\n",512);
 
 
 	Elf64_Ehdr* header=(Elf64_Ehdr*)kern;
@@ -154,11 +173,13 @@ int _start(bootinfo *info){
 
 				//SystemTable->BootServices->AllocatePages(AllocateAddress, EfiLoaderData, pages, &segment);
 				//map_mem(segment, REQUEST_PAGE());
+				printf("%x",program_space +(uint64_t)segment);
+				printf("%x",((uint64_t)segment));
 
 				UINTN size = phdr->p_filesz;
 				for (UINTN i = 0; i < size; ++i)
 				{
-					((char*)segment)[i]=kern[phdr->p_offset+i];
+					*(char*)(program_space+(uint64_t)segment+i)=kern[phdr->p_offset+i];
 				}
 				break;
 			}
@@ -168,17 +189,17 @@ int _start(bootinfo *info){
 	printf("Kernel entry %u \n",&header->e_entry);
 
 
-	int (*KernelStart)() = ((__attribute__((sysv_abi)) int (*)() ) header->e_entry);
+	int (*KernelStart)() = ((__attribute__((sysv_abi)) int (*)() ) program_space+header->e_entry);
 
-	printf("Kernel start %u \n",&KernelStart);
-
+	printf("Kernel start %u \n",KernelStart);
+	KernelStart(info->buf->BaseAddress);
 	//char* nel=calloc(1024);
-
+*/	//new_process("/SCRCLR  ELF",info->buf->BaseAddress);
 	//atapio_write_sectors(0,1,file);
-	loop();
+	//loop();
 
-	run_shell(info->buf, info->font);
-*/
+	//run_shell(info->buf, info->font);
+
 
 	/*
 
@@ -210,8 +231,8 @@ int _start(bootinfo *info){
 	//busyloop(500000000);
 
 
+	//tty tty0=init_tty();
 
-	tty tty0=init_tty();
 
 	for (int i = 0; i < 15; ++i){
 		fputc('A'+i, stdout);
@@ -223,7 +244,17 @@ int _start(bootinfo *info){
 
 	fputs("\n23232323\n",stdout);
 
-	loop();
+	printf("\n23232323\n%f\n",fl);
+
+	printf("\033[s\nhello1\033[uhello2\n");
+
+	uint64_t time=(uint64_t)(TimeSinceBoot*100);
+
+	printf("\033[s\033[30;0H%u %u %u\033[u",time,2,3);
+
+	printf("\033[10;1HHello!\n");
+
+	//loop();
 
 	start_scheduler();
 	//nothing after this point should run as the sceduler esentially abandons this base thread

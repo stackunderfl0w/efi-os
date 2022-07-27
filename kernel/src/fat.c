@@ -120,7 +120,6 @@ void INIT_FILESYSTEM(){
 char tmp_long[256];
 char tmp_name[256];
 char** read_directory(char* filepath,int *entries){
-	char* temp_dir=malloc(2048);
 	int lfn_count=0;
 	for (uint64_t i = 0; root_directory[i]; i+=32){
 		if(root_directory[i]==0xE5)
@@ -162,7 +161,7 @@ char** read_directory(char* filepath,int *entries){
 				memcpy(tmp_name,entry->name,11);
 				tmp_name[11]=0;
 			}
-			print(tmp_name);
+			printf(tmp_name);
 			//printf(" Cluster:%u at:%x ",entry->first_cluster_low_16,get_first_sector_of_cluster(BS,entry->first_cluster_low_16)*512);
 			//printf("Size:%u\n",entry->size);
 			if(entry->attributes&0x10){
@@ -231,7 +230,7 @@ FAT_DIRECTORY_ENTRY* get_entry_from_directory(fat_BS* part, char* start_entry,ch
 					}	
 				}
 			}
-			print(tmp_name);
+			printf(tmp_name);
 			//printf("Cluster:%u at:%x\n",entry->first_cluster_low_16,get_first_sector_of_cluster(part,entry->first_cluster_low_16)*512);
 			//printf("Size:%u\n",entry->size);
 			//if(entry->attributes&0x10){
@@ -240,8 +239,8 @@ FAT_DIRECTORY_ENTRY* get_entry_from_directory(fat_BS* part, char* start_entry,ch
 			uint16_t next_cluster=entry->first_cluster_low_16;
 			lfn_count=0;
 			if (!strcmp(tmp_name,name)){
-				print("FOUNDIT");
-				print(tmp_name);
+				printf("FOUNDIT");
+				printf(tmp_name);
 
 				return entry;
 			}
@@ -457,8 +456,11 @@ void write_file(char* filepath, uint8_t* data, uint64_t size){
 
 	//write data to disk
 	printf("data writen\n");
+	//look for potenial crash
 	free(paths);
-	sleep(50000);
+	//sleep(1000);
+	printf("data writen\n");
+
 }
 
 uint64_t get_filesize(char* filepath){

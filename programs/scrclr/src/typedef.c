@@ -1,4 +1,4 @@
-#include "typedef.h"
+/*#include "typedef.h"
 void* memset (void *dest, int val, size_t len){
 	unsigned char *ptr = dest;
 	while (len-- > 0)
@@ -60,4 +60,4 @@ uint32_t crc32b(const void* data, size_t length) {
 		}
 	}   
 	return ~crc; // same as crc ^ 0xFFFFFFFF 
-} 
+} */

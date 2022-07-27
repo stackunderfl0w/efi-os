@@ -18,13 +18,13 @@ char* hostname="efios";
 
 void show_cursor(){
 	if(cursor_flash&&!cursor_present){
-		printchar(0x18);
+		//printchar(0x18);
 		cursor_present=true;
 	}
 }
 void hide_cursor(){
 	if(cursor_present){
-		deletechar();
+		//deletechar();
 		cursor_present=false;
 	}
 }
@@ -32,19 +32,18 @@ void hide_cursor(){
 void print_character(char keycode){
 	if(isLeftShift||isRightShift){
 		if (isalpha(keycode)){
-			printchar(keycode-32);
+			printf("%c",keycode-32);
 		}
 		else if(isdigit(keycode)){
-			printchar(num_shift[keycode-0x30]);
+			printf("%c",num_shift[keycode-0x30]);
 		}
 	}
 	else{
-		printchar(keycode);
+		printf("%c",keycode);
 	}
 }
 void new_console_line(){
-	printchar('\n');
-	printf("[%s@%s: ~]$",username,hostname);
+	printf("\n[%s@%s: ~]$",username,hostname);
 }
 void kb_callback(int keycode, int action){
 	//printf("hi\n");
@@ -68,14 +67,14 @@ void kb_callback(int keycode, int action){
 		if(keycode==KEYCODE_BACKSPACE){
 			if(cmd_index>0){
 				hide_cursor();
-				deletechar();
+				//deletechar();
 				show_cursor();
 				cmd[--cmd_index]=0;
 			}
 		}
 		if(keycode==KEYCODE_RETURN){
 			hide_cursor();
-			printchar('\n');
+			printf("\n");
 			printf("%s\n",cmd);
 			run_cmd(cmd);
 			memset(cmd,0,4096);
@@ -106,7 +105,7 @@ void run_cmd(char* cmd){
 	cursor_active=false;
 	if(cursor_present){
 		cursor_present=false;
-		deletechar();
+		//deletechar();
 	}
 	if(!strcmp(cmd,"free")){
 		printf("Free memory: %ukb\n",get_free_memory()/1024);

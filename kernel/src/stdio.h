@@ -1,12 +1,14 @@
 #pragma once
 #include "file_struct.h"
-void sprintf(char* str, const char* format, ...);
-
-void printf(const char* str, ...);
 
 extern FILE* stdout;
 
-void new_printf(const char* str, ...);
+void printf(const char* str, ...);
+
+void sprintf(char* str, const char* format, ...);
+
+void old_printf(const char* str, ...);
+
 
 int fgetc(FILE* f);
 

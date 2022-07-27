@@ -1,5 +1,6 @@
 #pragma once
 #include "graphics.h"
+#include "stdio.h"
 #include "fat.h"
 
 void test_ata_pio_read(){
@@ -11,21 +12,19 @@ void test_ata_pio_read(){
 
 	for (int i = 0; i < 512; ++i){
 		uint64_t tmp=sector_1[i];
-		print(to_hstring_noformat(tmp));
-		printchar(' ');
+		printf("%x ",tmp);
 	}
 	atapio_read_sectors(1, 1, sector_1);
 
 	for (int i = 0; i < 512; ++i){
 		uint64_t tmp=sector_1[i];
-		print(to_hstring_noformat(tmp));
-		printchar(' ');
-	}p
+		printf("%x ",tmp);
+	}
 }
 
 void test_print_char(){
 	for (int i = 0; i < 256; ++i){
-		printchar(i);
+		printf("%c",i);
 	}
 }
 void test_interupts(){
@@ -38,7 +37,7 @@ void test_serial(){
 
 void test_benchmark_clrscr(){
 	for (int i = 0; i < 10000; ++i){
-		clrscr(i*100);
+		//clrscr(i*100);
 		//memset(info->buf->BaseAddress,i%100,info->buf->PixelsPerScanLine*info->buf->Height*4);
 		//wmemset(buf->BaseAddress,i*100,buf->PixelsPerScanLine*buf->Height*2);
 		//intset(info->buf->BaseAddress,i*100,info->buf->PixelsPerScanLine*info->buf->Height);

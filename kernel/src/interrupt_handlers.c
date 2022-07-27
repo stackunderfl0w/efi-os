@@ -7,38 +7,39 @@
 #include "graphics.h"
 #include "loop.h"
 #include "stdio.h"
+extern graphics_context* k_context;
 
 __attribute__((interrupt)) void PageFault_Handler(struct interrupt_frame* frame){
 	//Panic("Page Fault Detected");
-	move_cursor(60,0);
+	move_cursor(k_context,60,0);
 	for (int i = 0; i < 19; ++i)
 	{
-		deletechar();
+		deletechar(k_context);
 	}
-	print("PAGE FAULT DETECTED");
+	print(k_context,"PAGE FAULT DETECTED");
 
 	uint64_t err;
 	asm ("mov %%cr2, %0" : : "r" (err));
-	printf("%p",err);
+	printf("%p\n",err);
 	loop();
 }
 __attribute__((interrupt)) void GeneralFault_Handler(struct interrupt_frame* frame){
-	move_cursor(29,0);
+	move_cursor(k_context,29,0);
 	for (int i = 0; i < 19; ++i)
 	{
-		deletechar();
+		deletechar(k_context);
 	}
-	print("GENERAL FAULT DETECTED");
+	print(k_context,"GENERAL FAULT DETECTED");
 	//while(1);
 	loop();
 }
 __attribute__((interrupt)) void DoubleFault_Handler(struct interrupt_frame* frame){
-	move_cursor(29,0);
+	move_cursor(k_context,29,0);
 	for (int i = 0; i < 19; ++i)
 	{
-		deletechar();
+		deletechar(k_context);
 	}
-	print("Double FAULT DETECTED");
+	print(k_context,"Double FAULT DETECTED");
 	//while(1);
 	loop();
 }
