@@ -60,13 +60,12 @@ uint32_t crc32b(const void* data, size_t length) {
 	}   
 	return ~crc; // same as crc ^ 0xFFFFFFFF 
 } 
-int memcmp (uint8_t* str1, uint8_t* str2, size_t count){
-  unsigned char *s1 = (unsigned char*)str1;
-  unsigned char *s2 = (unsigned char*)str2;
-  while (count-- > 0)
-    {
-      if (*s1++ != *s2++)
-          return s1[-1] < s2[-1] ? -1 : 1;
-    }
-  return 0;
+int memcmp(const void* str1, const void* str2, size_t count){
+	uint8_t *s1 = (uint8_t*)str1;
+	uint8_t *s2 = (uint8_t*)str2;
+	while (count-- > 0){
+		if (*s1++ != *s2++)
+			return s1[-1] < s2[-1] ? -1 : 1;
+		}
+	return 0;
 }

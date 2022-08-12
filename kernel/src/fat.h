@@ -2,6 +2,7 @@
 #include "typedef.h"
 #include "string.h"
 #include "ata-pio.h"
+
 typedef struct{
 	char magic[3];
 	char oem[8];
@@ -33,10 +34,10 @@ typedef struct {
 	unsigned short		head_side_count;
 	unsigned int 		hidden_sector_count;
 	unsigned int 		total_sectors_32;
- 
+
 	//this will be cast to it's specific type once the driver actually knows what type of FAT this is.
 	unsigned char		extended_section[54];
- 
+
 }__attribute__((packed)) fat_BS;
 
 
@@ -55,6 +56,7 @@ typedef struct{
 	uint32_t size;
 }__attribute__((packed))FAT_DIRECTORY_ENTRY;
 
+//lfn uses w-chars but I will not
 typedef struct{
 	uint8_t order;
 	uint16_t first_5[5];
@@ -109,9 +111,9 @@ void INIT_FILESYSTEM();
 
 char** read_directory(char* filepath,int *entries);
 
-FAT_DIRECTORY_ENTRY* get_entry_from_directory(fat_BS* part, char* start_entry,char* name);
+FAT_DIRECTORY_ENTRY* get_entry_from_directory(fat_BS* part, uint8_t* start_entry,char* name);
 
-FAT_DIRECTORY_ENTRY* create_entry_in_directory(fat_BS* part, char* start_entry, char* name);
+FAT_DIRECTORY_ENTRY* create_entry_in_directory(fat_BS* part, uint8_t* start_entry, char* name);
 
 
 uint8_t* read_file(char* filepath);
@@ -119,3 +121,5 @@ uint8_t* read_file(char* filepath);
 void write_file(char* filepath, uint8_t* data, uint64_t size);
 
 uint64_t get_filesize(char* filepath);
+
+void de_INIT_FILESYSTEM();

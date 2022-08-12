@@ -87,8 +87,7 @@ void kb_callback(int keycode, int action){
 
 
 void run_shell(Framebuffer* buf, bitmap_font* font){
-	init_text_overlay(buf, font);
-	printf("[%s@%s: ~]$",username,hostname);
+	printf("\n[%s@%s: ~]$",username,hostname);
 	set_keyboard_callback(kb_callback);
 
 	bool running=true;
@@ -114,7 +113,7 @@ void run_cmd(char* cmd){
 	}
 	else if(!strcmp(cmd,"ls")){
 		int entries;
-		char** files=read_directory("/",&entries);
+		//char** files=read_directory("/",&entries);
 		
 	}
 

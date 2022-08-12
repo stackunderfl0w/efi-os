@@ -7,16 +7,15 @@
 #include "graphics.h"
 #include "loop.h"
 #include "stdio.h"
-extern graphics_context* k_context;
+extern graphics_context* global_context;
 
 __attribute__((interrupt)) void PageFault_Handler(struct interrupt_frame* frame){
 	//Panic("Page Fault Detected");
-	move_cursor(k_context,60,0);
-	for (int i = 0; i < 19; ++i)
-	{
-		deletechar(k_context);
+	move_cursor(global_context,60,0);
+	for (int i = 0; i < 19; ++i){
+		deletechar(global_context);
 	}
-	print(k_context,"PAGE FAULT DETECTED");
+	print(global_context,"PAGE FAULT DETECTED");
 
 	uint64_t err;
 	asm ("mov %%cr2, %0" : : "r" (err));
@@ -24,22 +23,20 @@ __attribute__((interrupt)) void PageFault_Handler(struct interrupt_frame* frame)
 	loop();
 }
 __attribute__((interrupt)) void GeneralFault_Handler(struct interrupt_frame* frame){
-	move_cursor(k_context,29,0);
-	for (int i = 0; i < 19; ++i)
-	{
-		deletechar(k_context);
+	move_cursor(global_context,29,0);
+	for (int i = 0; i < 19; ++i){
+		deletechar(global_context);
 	}
-	print(k_context,"GENERAL FAULT DETECTED");
+	print(global_context,"GENERAL FAULT DETECTED");
 	//while(1);
 	loop();
 }
 __attribute__((interrupt)) void DoubleFault_Handler(struct interrupt_frame* frame){
-	move_cursor(k_context,29,0);
-	for (int i = 0; i < 19; ++i)
-	{
-		deletechar(k_context);
+	move_cursor(global_context,29,0);
+	for (int i = 0; i < 19; ++i){
+		deletechar(global_context);
 	}
-	print(k_context,"Double FAULT DETECTED");
+	print(global_context,"Double FAULT DETECTED");
 	//while(1);
 	loop();
 }
@@ -55,7 +52,7 @@ __attribute__((interrupt)) void Mouse_Handler(struct interrupt_frame* frame){
 	PIC_EndSlave();
 }
 
-__attribute__((interrupt)) void PIT_Handler(struct interrupt_frame* frame){
+/*__attribute__((interrupt)) void PIT_Handler(struct interrupt_frame* frame){
 	//print("keyboard");
 	//printchar('t');
 	PIT_TICK();
@@ -64,4 +61,4 @@ __attribute__((interrupt)) void PIT_Handler(struct interrupt_frame* frame){
 	printf("\nip %u\ncs %u\nflags %u\nsp %u\nss %u\nerr %u\npad %u\npad2 %u",frame->ip,frame->cs,frame->flags,frame->sp,frame->ss,frame->err,frame->pad,frame->pad2);
 	asm volatile("cli");
 	loop();
-}
+}*/

@@ -130,7 +130,7 @@ void test_benchmark_paging(){
 	printchar('\n');
 }
 void test_printf(){
-	print("test printf\n");
+	printf("test printf\n");
 
 	printf("hello\n");
 
@@ -138,9 +138,17 @@ void test_printf(){
 	printf("hi %u \n %x \n",7812345,0x55);
 	double doub= 12345.6789;
 
-	print(to_string_double(doub,3));
+	printf("%f",doub);
 
 	printf("double %f kk\nff",doub);
+	printf("\033[s\nhello1\033[uhello2\n");
+
 
 }
 //asm ("movq %%rsp, %0" : "=r" (i) );
+
+void test_put(){
+	fputc(10, stdout);
+	fputs("eejfaousdnawndoianwdian",stdout);
+
+}

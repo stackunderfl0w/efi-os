@@ -5,10 +5,13 @@
 #include "stdio.h"
 #include "memory.h"
 #include "fat.h"
+#include "graphics.h"
 #include <elf.h>
 thread *current;
 bool scheduler_inited=false;
 extern void yield();
+extern graphics_context* k_context;
+
 void thread_function(){
 	int thread_id = current->tid;
 	while(1){
@@ -23,6 +26,13 @@ void t3(){
 		printf("\033[s\033[30;0H%u %u %u\033[u",time,30,0);
 
 		//sleep(1);
+	}
+}
+void vsync(){
+	while(1){
+		//swap_buffer();
+		draw_mouse(k_context->buf);
+		sleep(100);
 	}
 }
 

@@ -11,6 +11,9 @@ void INIT_PAGING(EFI_MEMORY_DESCRIPTOR* memMap, uint64_t Entries, uint64_t DescS
 
 void* REQUEST_PAGE();
 
+void request_mapped_pages(void* virtadr, uint64_t bytes);
+
+
 void LOCK_PAGE(void* adr);
 void FREE_PAGE(void* adr);
 void RESERVE_PAGE(void* adr);
@@ -28,21 +31,39 @@ uint64_t get_reserved_memory();
 extern uint64_t _KernelStart;
 extern uint64_t _KernelEnd;
 
+#define PT_Present				1
+#define PT_RW					1<<1
+#define PT_UserSuper			1<<2
+#define PT_WriteThrough			1<<3
+#define PT_CacheDisabled		1<<4
+#define PT_Accessed				1<<5
+#define PT_Dirty				1<<6
+#define PT_PageAttributeTable 	1<<7
+#define PT_LargerPages			1<<7
+#define PT_Global				1<<8
 
-enum PAGE_FLAGS{
+#define PT_Custom0				1<<9
+#define PT_Custom1				1<<10
+#define PT_Custom2				1<<11
+
+#define PT_ExecuteDisable 		1<<63
+
+
+/*enum PAGE_FLAGS{
 	PT_Present,
 	PT_RW,
 	PT_UserSuper,
 	PT_WriteThrough,
 	PT_CacheDisabled,
 	PT_Accessed,
+	PT_Dirty,
+	PT_PageAttributeTable=7,
 	PT_LargerPages = 7,
 	PT_Custom0 = 9,
 	PT_Custom1,
 	PT_Custom2,
 	PT_NX = 63
-
-};
+};*/
 
 
 typedef struct {
@@ -53,17 +74,12 @@ typedef struct {
 	Page_Table_Entry entries[512];
 }Page_Table;
 
-typedef Page_Table PL4;
-typedef Page_Table PL3;
-typedef Page_Table PL2;
-typedef Page_Table PL1;
 
-
-
-void PT_SET_FLAG(Page_Table_Entry* PT, char flag);
-bool PT_GET_FLAG(Page_Table_Entry* PT, char flag);
+void PT_SET_FLAG(Page_Table_Entry* PT, uint64_t flag);
+bool PT_GET_FLAG(Page_Table_Entry* PT, uint64_t flag);
 void PT_SET_ADR(Page_Table_Entry* PT, uint64_t adr);
 uint64_t PT_GET_ADR(Page_Table_Entry* PT);
 
 void map_mem(void* virtadr, void* physadr);
-extern PL4* KERNEL_PL4;
+void map_pages(void* virtadr, void* physadr ,uint64_t pages);
+extern Page_Table* KERNEL_PL4;

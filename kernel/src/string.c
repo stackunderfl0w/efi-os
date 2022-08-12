@@ -81,8 +81,6 @@ char** split_string_by_char(char* str, char seperator, int *section_count){
 		index++;
 		
 	}
-	str[index]=0;
-
 	return sections;
 }
 uint64_t strlen(char* str){

@@ -41,6 +41,8 @@ extern "C" {
 extern "C" 
 #endif
 graphics_context* k_context;
+graphics_context* global_context;
+
 
 int _start(bootinfo *info){
 	asm("cli");
@@ -48,14 +50,13 @@ int _start(bootinfo *info){
 	//init_serial();
 	//print_serial("hello world");
 
-
 	//manually create kernel stdout&tty so it can be created without heap and remains in scope
-    graphics_context k_graphics=init_text_overlay(info->buf, info->font);
-	k_context=&k_graphics;
+    graphics_context global_graphics=init_text_overlay(info->buf, info->font);
+	k_context=global_context=&global_graphics;
 	FILE std;
 	char std_buf[8192];
 
-    tty tty0=init_tty_0(k_context,&std,std_buf,8192);
+    tty tty0=init_tty_0(&std,std_buf,8192);
 
 
 
@@ -95,28 +96,35 @@ int _start(bootinfo *info){
 	INIT_HEAP(heap_location,0x10);
 	printf("Kernel Heap initialized at %p\n",heap_location);
 
+	void* new_fb=(void*)0x7000000000;
+	request_mapped_pages(new_fb,info->buf->BufferSize);
+	Framebuffer fb=*info->buf;
+	fb.BaseAddress=new_fb;
+
+
+    graphics_context kernel_graphics=init_text_overlay(&fb, info->font);
+    k_context=&kernel_graphics;
+
+
 	printf("Enabling interupts");
 
 	asm("sti");
+	//for whatever reasons with no optimizations enabled sti corrupts float fl
 
-	float fl=123.456789;
+	float fl=123.456;
+	float g=123.456;
 
 	printf("%f\n",fl);
+	printf("%f\n",g);
 
 	INIT_FILESYSTEM();
-	
-	int file_entries;
-	read_directory("/",&file_entries);
-	printf("%f\n",fl);
 
-	//sleep(2000);
-	/*sleep(1);
-	char* file =read_file("SCRCLR  ELF");
-	for (int i = 0; i < 32; ++i)
-	{
-		printf("%x ",(uint64_t)*(file+i));
-	}
-	printf("%f\n",fl);*/
+	//int file_entries;
+	printf("%u : %f\n",(uint64_t)fl,fl);
+	printf("%u : %f\n",(uint64_t)g,g);
+
+	sleep(1);
+
 
 	//uint8_t* file = read_file("/resources/TEST    TXT");
 	//uint8_t* file = read_file("/resources/startup.txt");
@@ -125,80 +133,15 @@ int _start(bootinfo *info){
 
 	//write_file("/resources/WRTTEST TXT",file,1024);
 
-
 	//bitmap_font loaded_font=load_font(font2);
-
-	//init_text_overlay(info->buf, &loaded_font);
 
 	//sleep(2000);
 
-	//INIT_RTC();
+	INIT_RTC();
 
-
-	/*CHAR8* program_space=malloc(0x16000);
-
-	printf("space allocated at,%x",program_space);
-
-	CHAR8* kern =  read_file("/SCRCLR  ELF");
-
-	printf("Program loaded , size=%u\n",512);
-
-
-	Elf64_Ehdr* header=(Elf64_Ehdr*)kern;
-	printf("Arch: %u\n\n",(long)header->e_machine);
-	for (int i = 0; i < 32; ++i)
-	{
-		long x=kern[i];
-		printf("%x,  ",x);
-	}
-
-
-	printf("entry: %u\n",header->e_entry);
-	printf("ofset: %u\n",header->e_phoff);
-
-	Elf64_Phdr* phdrs=(Elf64_Phdr*)(kern+header->e_phoff);
-
-	for (
-		Elf64_Phdr* phdr = phdrs;
-		(char*)phdr < (char*)phdrs + header->e_phnum * header->e_phentsize;
-		phdr = (Elf64_Phdr*)((char*)phdr + header->e_phentsize)
-	)
-	{//load each program segment at the memory location indicated by its header in p_addr
-		switch (phdr->p_type){
-			case PT_LOAD:
-			{
-				int pages = (phdr->p_memsz + 0x1000 - 1) / 0x1000;
-				Elf64_Addr segment = phdr->p_paddr;
-				printf("Kernel p_paddr %u \n",phdr->p_paddr);
-
-				//SystemTable->BootServices->AllocatePages(AllocateAddress, EfiLoaderData, pages, &segment);
-				//map_mem(segment, REQUEST_PAGE());
-				printf("%x",program_space +(uint64_t)segment);
-				printf("%x",((uint64_t)segment));
-
-				UINTN size = phdr->p_filesz;
-				for (UINTN i = 0; i < size; ++i)
-				{
-					*(char*)(program_space+(uint64_t)segment+i)=kern[phdr->p_offset+i];
-				}
-				break;
-			}
-		}
-	}
-	printf("Kernel e_entry %u \n",header->e_entry);
-	printf("Kernel entry %u \n",&header->e_entry);
-
-
-	int (*KernelStart)() = ((__attribute__((sysv_abi)) int (*)() ) program_space+header->e_entry);
-
-	printf("Kernel start %u \n",KernelStart);
-	KernelStart(info->buf->BaseAddress);
-	//char* nel=calloc(1024);
-*/	//new_process("/SCRCLR  ELF",info->buf->BaseAddress);
-	//atapio_write_sectors(0,1,file);
+	//new_process("/resources/SCRCLR  ELF",info->buf->BaseAddress);
 	//loop();
 
-	//run_shell(info->buf, info->font);
 
 
 	/*
@@ -228,34 +171,45 @@ int _start(bootinfo *info){
 	//detect_cores((void*)(uint64_t)info->rsdp->RsdtAddress);
 	//printf("%x\n",info->rsdp);
 
-	//busyloop(500000000);
 
 
-	//tty tty0=init_tty();
 
 
-	for (int i = 0; i < 15; ++i){
-		fputc('A'+i, stdout);
+	swap_buffer(global_context->buf,k_context->buf);
+
+	//run_shell(info->buf, info->font);
+
+
+	double last_frame[60];
+	char st[32];
+	double fps;
+	int count=0;
+	while(1){
+		//memcpy(&last_frame[1],last_frame,59* sizeof(double));
+		for (int i = 59; i > 0; --i){
+			last_frame[i]=last_frame[i-1];
+		}
+        last_frame[0]=TimeSinceBoot;
+    
+		swap_buffer(global_context->buf,k_context->buf);
+
+		draw_mouse(global_context->buf);
+		int x=global_context->cursor_x,y=global_context->cursor_y;
+		global_context->cursor_x=10;
+		global_context->cursor_y=10;
+		count++;
+		if (count>10){
+			count=0;
+			//fps =(1/((last_frame[0]-last_frame[59]))*(60-1));
+        	fps =1/(last_frame[0]-last_frame[59])*59;
+			memset(st,0,32);
+			sprintf(st,"%f",fps);
+		}
+		print(global_context,st);
+
+		sleep(0);
 	}
-
-	fputc(10, stdout);
-
-	fputs("eejfaousdnawndoianwdian",stdout);
-
-	fputs("\n23232323\n",stdout);
-
-	printf("\n23232323\n%f\n",fl);
-
-	printf("\033[s\nhello1\033[uhello2\n");
-
-	uint64_t time=(uint64_t)(TimeSinceBoot*100);
-
-	printf("\033[s\033[30;0H%u %u %u\033[u",time,2,3);
-
-	printf("\033[10;1HHello!\n");
-
-	//loop();
-
+	loop();
 	start_scheduler();
 	//nothing after this point should run as the sceduler esentially abandons this base thread
 	//maybe this sould be changed to salvage a bit of ram?

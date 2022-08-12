@@ -60,7 +60,7 @@ void handle_key(unsigned char keycode){
 		}
 	}
 	else{
-		switch (keycode&~0x80){
+		switch (keycode){
 			case LeftShift:
 				final_keycode=KEYCODE_LSHIFT;
 				isLeftShiftPressed = true;

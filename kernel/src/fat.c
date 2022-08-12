@@ -1,7 +1,6 @@
 #include "fat.h"
-#include "pit.h"
 #include "stdio.h"
-
+#include "stdlib.h"
 #define FAT12 1
 #define FAT16 2
 #define FAT32 3
@@ -23,7 +22,7 @@ uint64_t get_root_dir_sectors(fat_BS* part){
 }
 
 uint64_t get_first_data_sector(fat_BS* part){
-	uint64_t first_data_sector = part->reserved_sector_count + (part->table_count * get_fat_size(part)) + get_root_dir_sectors(part);	
+	uint64_t first_data_sector = part->reserved_sector_count + (part->table_count * get_fat_size(part)) + get_root_dir_sectors(part);
 	return first_data_sector;
 }
 
@@ -51,7 +50,7 @@ uint64_t get_first_sector_of_cluster(fat_BS* part,uint64_t cluster){
 }
 
 uint64_t get_fat_next_cluster(fat_BS* part,uint8_t* fat_table, uint64_t cluster){
-	uint64_t fat_offset = cluster *1.5;
+	uint64_t fat_offset = cluster*3/2;
 	//uint64_t fat_sector = get_first_fat_sector(part) + (fat_offset / part->bytes_per_sector);
 	//uint64_t ent_offset = fat_offset % 512;
 	if(cluster%2){
@@ -69,7 +68,7 @@ uint64_t get_first_free_cluster(fat_BS* part,uint8_t* fat_table){
 	return cluster;
 }
 void set_fat_next_cluster(fat_BS* part,uint8_t* fat_table,uint64_t start_cluster,uint64_t next_cluster){
-	uint64_t fat_offset = start_cluster *1.5;
+	uint64_t fat_offset = start_cluster *3/2;
 	//uint64_t fat_sector = get_first_fat_sector(part) + (fat_offset / part->bytes_per_sector);
 	//uint64_t ent_offset = fat_offset % 512;
 	if(start_cluster%2){
@@ -82,16 +81,16 @@ void set_fat_next_cluster(fat_BS* part,uint8_t* fat_table,uint64_t start_cluster
 int ident_fat(fat_BS* part){
 	int fat_type;
 	if (part->bytes_per_sector == 0) {
-	   fat_type = ExFAT;
+		fat_type = ExFAT;
 	}
 	else if(get_total_clusters(part) < 4085) {
-	   fat_type = FAT12;
-	} 
+		fat_type = FAT12;
+	}
 	else if(get_total_clusters(part) < 65525) {
-	   fat_type = FAT16;
-	} 
+		fat_type = FAT16;
+	}
 	else{
-	   fat_type = FAT32;
+		fat_type = FAT32;
 	}
 	return fat_type;
 }
@@ -107,114 +106,56 @@ uint8_t* root_directory;
 void INIT_FILESYSTEM(){
 	boot_sector=malloc(512);
 	atapio_read_sectors(0, 1, boot_sector);
-
 	fs_type=ident_fat((fat_BS*)boot_sector);
 	BS=(fat_BS*) boot_sector;
 
 	FAT_TABLE_0=malloc(512*BS->table_size_16);
-	atapio_read_sectors(get_first_fat_sector(BS),BS->table_size_16,FAT_TABLE_0);
+	atapio_read_sectors(get_first_fat_sector(BS),(uint8_t)BS->table_size_16,FAT_TABLE_0);
 
 	root_directory=malloc(512);
 	atapio_read_sectors(get_first_root_dir_sector(BS), 1, root_directory);
 }
-char tmp_long[256];
-char tmp_name[256];
-char** read_directory(char* filepath,int *entries){
-	int lfn_count=0;
-	for (uint64_t i = 0; root_directory[i]; i+=32){
-		if(root_directory[i]==0xE5)
-			continue;
-		
-		if(root_directory[i+11]==0xf){
-			FAT_LONG_NAME_ENTRY* lfn=(FAT_LONG_NAME_ENTRY*)&root_directory[i];
-			//print("lfn: ");
-			if(lfn_count==0){
-				memset(tmp_long,0,256);
-			}
-			for (int i = 0; i < 5; ++i){
-				tmp_long[i+(16*lfn_count)]=(char)lfn->first_5[i]&0xff;
-			}
-			for (int i = 0; i < 6; ++i){
-				tmp_long[i+5+(16*lfn_count)]=(char)lfn->next_6[i]&0xff;
-			}
-			for (int i = 0; i < 2; ++i){
-				tmp_long[i+11+(16*lfn_count)]=(char)lfn->last_2[i]&0xff;
-			}
-			tmp_long[14+(16*lfn_count)]=0;
-			lfn_count++;
-		}
-		else{
-			FAT_DIRECTORY_ENTRY* entry=(FAT_DIRECTORY_ENTRY*)&root_directory[i];
-			memset(tmp_name,0,256);
-			int index=0;
-			if(lfn_count){
-				for(int i=lfn_count-1;i>=0;i--){
-					int long_index=0;
-					while(tmp_long[16*i+long_index]){
-						tmp_name[index++]=tmp_long[16*i+long_index++];
-					}
-					
-				}
-				tmp_name[index]=0;
-			}
-			else{
-				memcpy(tmp_name,entry->name,11);
-				tmp_name[11]=0;
-			}
-			printf(tmp_name);
-			//printf(" Cluster:%u at:%x ",entry->first_cluster_low_16,get_first_sector_of_cluster(BS,entry->first_cluster_low_16)*512);
-			//printf("Size:%u\n",entry->size);
-			if(entry->attributes&0x10){
-				//print("directory\n");
-			}
-			uint16_t next_cluster=entry->first_cluster_low_16;
-			lfn_count=0;
-		}
+char* read_lfn_entry_name(char* buf, FAT_LONG_NAME_ENTRY* lfn){
+	for (int i = 0; i < 5; ++i){
+		buf[i]=(char)lfn->first_5[i];
 	}
-
-	return 0;
+	for (int i = 0; i < 6; ++i){
+		buf[i+5]=(char)lfn->next_6[i];
+	}
+	for (int i = 0; i < 2; ++i){
+		buf[i+11]=(char)lfn->last_2[i];
+	}
+	return buf;
 }
-FAT_DIRECTORY_ENTRY* get_entry_from_directory(fat_BS* part, char* start_entry,char* name){
+FAT_DIRECTORY_ENTRY* get_next_fat_entry(FAT_DIRECTORY_ENTRY* entry, char* buf){
+
+}
+FAT_DIRECTORY_ENTRY* get_entry_from_directory(fat_BS* part, uint8_t* start_entry,char* name){
+	char tmp_name[256];
 	FAT_DIRECTORY_ENTRY* entry;
-	uint64_t lfn_count=0;
+	bool lfn_found=false;
 	for (uint64_t i = 0; start_entry[i]; i+=32){
 		if(start_entry[i]==0xE5){
 			continue;
 		}
 		if(start_entry[i+11]==0xf){
 			FAT_LONG_NAME_ENTRY* lfn=(FAT_LONG_NAME_ENTRY*)&start_entry[i];
-			if(lfn_count==0){
-				memset(tmp_long,0,256);
+			if(!lfn_found){
+				memset(tmp_name,0,256);
+				lfn_found=true;
 			}
-			for (int i = 0; i < 5; ++i){
-				tmp_long[i+(16*lfn_count)]=(char)lfn->first_5[i]&0xff;
-			}
-			for (int i = 0; i < 6; ++i){
-				tmp_long[i+5+(16*lfn_count)]=(char)lfn->next_6[i]&0xff;
-			}
-			for (int i = 0; i < 2; ++i){
-				tmp_long[i+11+(16*lfn_count)]=(char)lfn->last_2[i]&0xff;
-			}
-			tmp_long[14]=0;
-			lfn_count++;
+			int loc=(lfn->order&0x1f)-1;
+			read_lfn_entry_name(tmp_name+(13*loc),lfn);
 		}
 		else{
 			entry=(FAT_DIRECTORY_ENTRY*)&start_entry[i];
-			memset(tmp_name,0,256);
 			int index=0;
-			if(lfn_count){
-				for(int i=lfn_count-1;i>=0;i--){
-					int long_index=0;
-					while(tmp_long[16*i+long_index]){
-						tmp_name[index++]=tmp_long[16*i+long_index++];
-					}
-					
-				}
-				tmp_name[index]=0;
+			if(lfn_found){
+				lfn_found=false;
 			}
 			else{
+				memset(tmp_name,0,256);
 				for(int i=0; i<11;i++){
-
 					if(entry->name[i]!=' '){
 						if(entry->name[i]>='A'&&entry->name[i]<='Z'){
 							tmp_name[index++]=entry->name[i]+32;
@@ -227,66 +168,41 @@ FAT_DIRECTORY_ENTRY* get_entry_from_directory(fat_BS* part, char* start_entry,ch
 						if(entry->name[8]!=' '){
 							tmp_name[index++]='.';
 						}
-					}	
+					}
 				}
 			}
-			printf(tmp_name);
-			//printf("Cluster:%u at:%x\n",entry->first_cluster_low_16,get_first_sector_of_cluster(part,entry->first_cluster_low_16)*512);
-			//printf("Size:%u\n",entry->size);
-			//if(entry->attributes&0x10){
-			//	print("directory\n");
-			//}
-			uint16_t next_cluster=entry->first_cluster_low_16;
-			lfn_count=0;
 			if (!strcmp(tmp_name,name)){
-				printf("FOUNDIT");
-				printf(tmp_name);
-
 				return entry;
 			}
-
 		}
 	}
 	return entry;
 }
 
-FAT_DIRECTORY_ENTRY* create_entry_in_directory(fat_BS* part, char* start_entry, char* name){
+FAT_DIRECTORY_ENTRY* create_entry_in_directory(fat_BS* part, uint8_t* start_entry, char* name){
+	char tmp_long[256],tmp_name[256];
 	FAT_DIRECTORY_ENTRY* entry;
-	uint64_t lfn_count=0;
+	bool lfn_found=false;
 	for (uint64_t i = 0; i<512; i+=32){
-		printf("%x ",i);
 		if(start_entry[i]==0xE5){
 			continue;
 		}
 		if(start_entry[i+11]==0xf){
 			FAT_LONG_NAME_ENTRY* lfn=(FAT_LONG_NAME_ENTRY*)&start_entry[i];
-			if(lfn_count==0){
+			if(!lfn_found){
 				memset(tmp_long,0,256);
+				lfn_found=true;
 			}
-			for (int i = 0; i < 5; ++i){
-				tmp_long[i+(16*lfn_count)]=(char)lfn->first_5[i]&0xff;
-			}
-			for (int i = 0; i < 6; ++i){
-				tmp_long[i+5+(16*lfn_count)]=(char)lfn->next_6[i]&0xff;
-			}
-			for (int i = 0; i < 2; ++i){
-				tmp_long[i+11+(16*lfn_count)]=(char)lfn->last_2[i]&0xff;
-			}
-			tmp_long[14]=0;
-			lfn_count++;
+			int loc=(lfn->order&0x1f)-1;
+			read_lfn_entry_name(tmp_long+(13*loc),lfn);
 		}
 		else if(start_entry[i]){
 			entry=(FAT_DIRECTORY_ENTRY*)&start_entry[i];
 			memset(tmp_name,0,256);
 			int index=0;
-			if(lfn_count){
-				for(int i=lfn_count-1;i>=0;i--){
-					int long_index=0;
-					while(tmp_long[16*i+long_index]){
-						tmp_name[index++]=tmp_long[16*i+long_index++];
-					}
-				}
-				tmp_name[index]=0;
+			if(lfn_found){
+				memcpy(tmp_name,tmp_long,256);
+				lfn_found=false;
 			}
 			else{
 				int idex=0;
@@ -304,20 +220,15 @@ FAT_DIRECTORY_ENTRY* create_entry_in_directory(fat_BS* part, char* start_entry, 
 						if(entry->name[8]!=' '){
 							tmp_name[index++]='.';
 						}
-					}	
+					}
 				}
 			}
-			lfn_count=0;
 			if (!strcmp(tmp_name,name)){
-				//print(tmp_name);
 				return entry;
 			}
 		}
 		else{//blank entry
-			//int len=strlen(name);
 			memset(entry,0,32);
-			//memcpy(entry,name,11);
-			//entry->first_cluster_low_16=get_first_free_cluster((fat_BS*)boot_sector,FAT_TABLE_0);
 			return entry;
 		}
 	}
@@ -326,7 +237,7 @@ FAT_DIRECTORY_ENTRY* create_entry_in_directory(fat_BS* part, char* start_entry, 
 
 uint64_t get_cluster_chain_length(uint16_t next_cluster){
 	int c_index=0;
-	while (1){		
+	while (1){
 		next_cluster=get_fat_next_cluster((fat_BS*)boot_sector,FAT_TABLE_0,next_cluster);
 		c_index++;
 		if (next_cluster==4095){
@@ -338,132 +249,110 @@ uint64_t get_cluster_chain_length(uint16_t next_cluster){
 uint8_t* load_fat_cluster_chain(uint16_t next_cluster){
 	uint8_t* file =malloc(512*get_cluster_chain_length(next_cluster));
 	int c_index=0;
-	while (1){
+	while (next_cluster!=4095){
 		atapio_read_sectors(get_first_sector_of_cluster((fat_BS*)boot_sector,next_cluster), 1, file+(512*c_index));
-		
+
 		next_cluster=get_fat_next_cluster((fat_BS*)boot_sector,FAT_TABLE_0,next_cluster);
 		c_index++;
-		if (next_cluster==4095){
-			break;
-		}
 	}
 	return file;
 }
-//potential speedup to look for multiple sequential sectors to read with one command instead of sector by sector.
-uint8_t* read_file(char* filepath){
-	uint8_t* cur_dir=malloc(512);
-
+uint64_t get_file_base_cluster(char* filepath){
 	int sections=0;
 	char** paths=split_string_by_char(filepath,'/',&sections);
-	
-	//printf("sections: %u \n",sections);
 
-	//for (int i = 0; i < sections; ++i){
-		//printf("load %s\n", paths[i]);
-	//}
 	FAT_DIRECTORY_ENTRY* entry=get_entry_from_directory((fat_BS*)boot_sector,root_directory,paths[0]);
+	uint16_t cluster=entry->first_cluster_low_16;
 	for (int i = 1; i < sections; ++i){
 		if(strcmp(paths[i],"")){
-			atapio_read_sectors(get_first_sector_of_cluster((fat_BS*)boot_sector,entry->first_cluster_low_16), 1, cur_dir);
-			//printf("trying to load %s\n", paths[i]);
+			//load next directory
+			uint8_t* cur_dir=load_fat_cluster_chain(cluster);
+			//get location of next directory
 			entry=get_entry_from_directory((fat_BS*)boot_sector,cur_dir,paths[i]);
+			//save location and free unneeded directory
+			cluster=entry->first_cluster_low_16;
+			free(cur_dir);
 		}
 	}
-	uint16_t next_cluster=entry->first_cluster_low_16;
-
-	free(cur_dir);
 	free(paths);
-	return load_fat_cluster_chain(next_cluster);
+	return cluster;
+}
+//potential speedup to look for multiple sequential sectors to read with one command instead of sector by sector.
+uint8_t* read_file(char* filepath){
+	return load_fat_cluster_chain(get_file_base_cluster(filepath));
 }
 
-
+///todo add support for overwriting file
 void write_file(char* filepath, uint8_t* data, uint64_t size){
-	uint8_t* cur_dir=malloc(512);
-	//memcpy(cur_dir,root_directory,512);
 	int sections=0;
 	char** paths=split_string_by_char(filepath,'/',&sections);
-	
+
 	FAT_DIRECTORY_ENTRY* entry=get_entry_from_directory((fat_BS*)boot_sector,root_directory,paths[0]);
 	uint64_t entry_location;//=get_first_root_dir_sector((fat_BS*)boot_sector);
+	uint8_t* cur_dir;
 	for (int i = 1; i < sections; ++i){
 		if(strcmp(paths[i],"")){
 			entry_location=entry->first_cluster_low_16;
-			atapio_read_sectors(get_first_sector_of_cluster((fat_BS*)boot_sector,entry->first_cluster_low_16), 1, cur_dir);
+			cur_dir=load_fat_cluster_chain(entry_location);
 			printf("trying to load %s\n", paths[i]);
 			if(i<sections-1){
-				entry=get_entry_from_directory((fat_BS*)boot_sector,cur_dir,paths[i]);
+				free(cur_dir);
 			}
+			entry=get_entry_from_directory((fat_BS*)boot_sector,cur_dir,paths[i]);
 		}
 	}
-	printf("blank entry slot found\n");
 	//create new entry in our copy of the directory
 	entry=create_entry_in_directory((fat_BS*)boot_sector,cur_dir,paths[sections-1]);
 	memcpy(entry,paths[sections-1],11);
-			
-	printf("entry created\n");
+
 	//find a free cluster on the disk, update the fat table and write the location to the entry
 
 
 	uint64_t cluster=get_first_free_cluster((fat_BS*)boot_sector,FAT_TABLE_0);
-	printf("Cluster: %u \n",cluster);
-	printf("Next cluster: %u \n",get_fat_next_cluster((fat_BS*)boot_sector,FAT_TABLE_0,cluster));
 
 	entry->first_cluster_low_16=cluster;
 	entry->size=size;
 	uint64_t next_cluster=0;
 	uint64_t sectors_written=0;
 	if(size<=512){
-		printf("wrtietodisk\n");
 		set_fat_next_cluster((fat_BS*)boot_sector,FAT_TABLE_0, cluster,4095);
 		atapio_write_sectors(get_first_sector_of_cluster((fat_BS*)boot_sector,cluster), 1, data);
 	}
 	else{
-		while(size>512){			
-			printf("wrtietodisk2\n");
+		while(size>512){
 			next_cluster=get_first_free_cluster((fat_BS*)boot_sector,FAT_TABLE_0);
 			set_fat_next_cluster((fat_BS*)boot_sector,FAT_TABLE_0, next_cluster,4095);
 
 			set_fat_next_cluster((fat_BS*)boot_sector,FAT_TABLE_0, cluster,next_cluster);
-			printf("Cluster: %u \n",cluster);
-			
-			printf("Next cluster: %u \n",next_cluster);
-
-			printf("actual found: %u \n",get_fat_next_cluster((fat_BS*)boot_sector,FAT_TABLE_0,cluster));
-			printf("location: %x \n",get_first_sector_of_cluster((fat_BS*)boot_sector,cluster)*512);
 
 			atapio_write_sectors(get_first_sector_of_cluster((fat_BS*)boot_sector,cluster), 1, data+(512*sectors_written));
 			sectors_written++;
 			cluster=next_cluster;
 			size-=512;
 		}
-		printf("wrtietodisk3\n");
 		atapio_write_sectors(get_first_sector_of_cluster((fat_BS*)boot_sector,next_cluster), 1, data+(512*sectors_written));
 		sectors_written++;
-
 	}
 
-
-
 	//rewrite directory to include new entey
-	atapio_write_sectors(get_first_sector_of_cluster((fat_BS*)boot_sector,entry_location), 1, cur_dir);
-	printf("directory rewriten:%u\n",get_first_sector_of_cluster((fat_BS*)boot_sector,entry_location));
+	///todo add support for increasing size of directory
+	atapio_write_sectors(get_first_sector_of_cluster((fat_BS*)boot_sector,entry_location), get_cluster_chain_length(entry_location), cur_dir);
 
 	//overwrite disk's fat table and its duplicate just in case
 	atapio_write_sectors(get_first_fat_sector((fat_BS*)boot_sector),((fat_BS*)boot_sector)->table_size_16,FAT_TABLE_0);
 	atapio_write_sectors(get_first_fat_sector((fat_BS*)boot_sector)+9,((fat_BS*)boot_sector)->table_size_16,FAT_TABLE_0);
-	printf("fat tables rewriten\n");
-	printf("loc: %u",get_first_fat_sector((fat_BS*)boot_sector));
 
-	//write data to disk
-	printf("data writen\n");
-	//look for potenial crash
 	free(paths);
-	//sleep(1000);
-	printf("data writen\n");
-
+	free(cur_dir);
 }
 
 uint64_t get_filesize(char* filepath){
 
 	//uint8_t* file =malloc((entry->size&0xffffff00)+512);
+}
+
+void de_INIT_FILESYSTEM() {
+	free(boot_sector);
+	free(FAT_TABLE_0);
+	free(root_directory);
 }

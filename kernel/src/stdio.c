@@ -54,73 +54,63 @@ char* format_double(char* buf, double x, uint64_t precision){
 	return buf;
 }
 //no need to specify between 32 and 64 bit. It gets cast to 64 bit anyways
-void vsprintf(char* str, const char* format, va_list ap){
+int vsprintf(char* str, const char* format, va_list ap){
 	char* temp;
+	char* buf=str;
+
 	for (const char* inx = format; *inx; ++inx){
 		if(*inx=='%'){
 			switch(*++inx){
 				case 'p':
-					*str++='0';
-					*str++='x';
+					*buf++='0';
+					*buf++='x';
 				case 'x':
-					str=format_number(str,va_arg(ap,uint64_t),16);
+					buf=format_number(buf,va_arg(ap,uint64_t),16);
 					break;				
 					//i dont care enough about negative numbers for now
 				case 'u':case 'd':case 'i':
-					str=format_number(str,va_arg(ap,uint64_t),10);
+					buf=format_number(buf,va_arg(ap,uint64_t),10);
 					break;
 				case 'f':
-					str=format_double(str,va_arg(ap,double),6);
+					buf=format_double(buf,va_arg(ap,double),6);
 					break;
 				case 's':
 					temp=va_arg(ap,char*);
 					while(*temp){
-						*str++=*temp++;
+						*buf++=*temp++;
 					}	
 					break;
 				case 'c':
-					*str++=(char)va_arg(ap,int);
+					*buf++=(char)va_arg(ap,int);
 					break;
 
 			}
 		}
 		else{
-			*str++=*inx;
+			*buf++=*inx;
 		}
 	}
-	*str=0;
+	*buf=0;
 	va_end(ap);
+	return buf-str;
 }
-void sprintf(char* str, const char* format, ...){
+int sprintf(char* str, const char* format, ...){
 	va_list arg;
 	va_start (arg, format);
-	sprintf (str, format, arg);
+	int i = vsprintf (str, format, arg);
 	va_end (arg);
+	return i;
 }
-void old_printf(const char* format, ... ){
+int printf(const char* format, ... ){
 	char printf_buf[512];
 	va_list args;
 	va_start (args, format);
-	vsprintf(printf_buf, format, args);
-	va_end (args);
-	//aquire_lock();
-	//print(printf_buf);
-	//release_lock();
-}
-void printf(const char* format, ... ){
-	char printf_buf[512];
-	va_list args;
-	va_start (args, format);
-	vsprintf(printf_buf, format, args);
+	int i = vsprintf(printf_buf, format, args);
 	va_end (args);
 	aquire_lock(&stdout->io_lock);
-	//print(printf_buf);
-	/* (char* s=printf_buf; *s; ++s){
-		//*stdout->write_head++=*s;
-		fputc(*s,stdout);
-	}*/
 	fputs(printf_buf,stdout);
 	release_lock(&stdout->io_lock);
+	return i;
 }
 
 int fgetc(FILE* f){
@@ -133,7 +123,6 @@ int fputc(int c, FILE* f){
 
 int fputs(const char *str, FILE* f){
 	for (const char* s=str; *s; ++s){
-		//*stdout->write_head++=*s;
 		f->write(f,*s);
 	}
 	return 0;

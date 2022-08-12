@@ -86,7 +86,7 @@ void HANDLE_PS2_MOUSE(uint8_t frag){
 
 		//clear_mouse();
 		if (fragments[0]&LEFT_BTN){
-			putchar(k_context,mouse_x,mouse_y,'a');
+			render_char(k_context,mouse_x,mouse_y,'a');
 		}
 		move_mouse(mouse_x,mouse_y);
 	}

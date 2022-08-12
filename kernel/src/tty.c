@@ -6,13 +6,14 @@
 FILE* stdout;
 graphics_context* g;
 int saved_x=0,saved_y=0;
+extern graphics_context* k_context;
 
 
 void sync(FILE* f){
     while(f->write_head-f->read_head){
         char c=read(f);
         if(c!=27){
-            printchar(g,c);
+            printchar(k_context,c);
         }
         else{//escape sequence
             if(read(f)=='['){//required next character of ascii escape sequence
@@ -36,15 +37,15 @@ void sync(FILE* f){
                             second=true;
                             break;
                         case 'H':case'f':
-                            move_cursor(g,x,y);
+                            move_cursor(k_context,x,y);
                             break;
                         case 'A':
                             break;
                         case 's':
-                            get_cursor_pos(g,&saved_x,&saved_y);
+                            get_cursor_pos(k_context,&saved_x,&saved_y);
                             break;
                         case 'u':
-                            move_cursor(g,saved_x,saved_y);
+                            move_cursor(k_context,saved_x,saved_y);
                             break;
                         default:
                             break;
@@ -73,7 +74,7 @@ char read(FILE* f){
     return tmp;
 }
 
-tty init_tty_0(graphics_context* kg, FILE* stdout_0, char* buf, unsigned buf_size){
+tty init_tty_0(FILE* stdout_0, char* buf, unsigned buf_size){
     stdout=stdout_0;
     stdout->base=buf;
     stdout->end=stdout->base+buf_size;
@@ -84,7 +85,7 @@ tty init_tty_0(graphics_context* kg, FILE* stdout_0, char* buf, unsigned buf_siz
     stdout->read=read;
     stdout->sync=sync;
 
-    g=kg;
+    stdout->io_lock=false;
 }
 tty init_tty(graphics_context* kg){
 	stdout=calloc(sizeof(FILE));

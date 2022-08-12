@@ -3,12 +3,9 @@
 
 extern FILE* stdout;
 
-void printf(const char* str, ...);
+int printf(const char* str, ...);
 
-void sprintf(char* str, const char* format, ...);
-
-void old_printf(const char* str, ...);
-
+int sprintf(char* str, const char* format, ...);
 
 int fgetc(FILE* f);
 

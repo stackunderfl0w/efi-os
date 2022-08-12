@@ -6,7 +6,9 @@ uint64_t RESERVED_MEMORY;
 
 char* pages_used;
 uint64_t total_pages;
-PL4* KERNEL_PL4;
+Page_Table* KERNEL_PL4;
+
+void map_fb_pages(void* virtadr, void* physadr ,uint64_t pages);
 
 void INIT_PAGING(EFI_MEMORY_DESCRIPTOR* memMap, uint64_t Entries, uint64_t DescSize, Framebuffer* buf){
 	EFI_MEMORY_DESCRIPTOR* largest_segment;
@@ -49,22 +51,19 @@ void INIT_PAGING(EFI_MEMORY_DESCRIPTOR* memMap, uint64_t Entries, uint64_t DescS
 
 
 	LOCK_PAGES(&_KernelStart,kernel_size);
-	printf("Generating Kernel page table ");
+	printf("Generating Kernel page table\n");
 
 	KERNEL_PL4=REQUEST_PAGE();
-	//print("memseting kernel");
+	printf("memseting kernel\n");
 	memset(KERNEL_PL4,0,4096);
-	KERNEL_PL4->entries[0].value=0;
 
-	//print("maping display Framebuffer ");
+	printf("identity mapping mem\n");
+	map_pages(0,0,total_mem/4096);
 
-	for (uint64_t i = (uint64_t)buf->BaseAddress; i < (uint64_t)buf->BaseAddress+buf->BufferSize; i+=4096){
-		map_mem((void*)i,(void*)i);
-	}
+	printf("maping display Framebuffer, fb at:%p\n",buf->BaseAddress);
+	//map_pages(buf->BaseAddress,buf->BaseAddress,buf->BufferSize/4096);
+	map_fb_pages(buf->BaseAddress,buf->BaseAddress,buf->BufferSize/4096);
 
-	for (uint64_t i = 0; i < total_mem; i+=4096){
-		map_mem((void*)i,(void*)i);
-	}	
 
 	printf("Loading cr3");
 	asm ("mov %0, %%cr3" : : "r" (KERNEL_PL4));
@@ -149,78 +148,72 @@ uint64_t get_used_memory(){
 uint64_t get_reserved_memory(){
 	return RESERVED_MEMORY;
 }
-
-void map_mem(void* virtadr, void* physadr){
-	//virtadr is 64 bits. 4 level page table doesnt map top 12 bits.
-	//the last 12 bits are also not important as they are inside the page we are mapping.
+void map_mem_with_flags(void* virtadr, void* physadr,uint64_t flags){
+	//virtadr is 64 bits. 4 level page table only maps bottom 48 bits
+	//the bottom 12 bits are irelevant as they are inside the page we are mapping.
 	//the remaining 36 bits are split between the 4 levels.
+	//in 5 level paging another 9 bit level is added to make it 57 bit adressing
 	uint64_t virt=(uint64_t)virtadr;
-	virt >>= 12;
-	uint64_t PT_ofset = virt & 0x1ff;
-	virt >>= 9;
-	uint64_t PD_ofset = virt & 0x1ff;
-	virt >>= 9;
-	uint64_t PDP_ofset = virt & 0x1ff;
-	virt >>= 9;
-	uint64_t PL4_ofset = virt & 0x1ff;
-	Page_Table_Entry* PL4E=&KERNEL_PL4->entries[PL4_ofset];
-	//check if this part of virtual memory has been mapped yet
-	if (!PT_GET_FLAG(PL4E,PT_Present)){
+	//all the different page table levels have different names but seem to be structurally identical
+	uint64_t PL4_ofset = virt>>39 & 0x1ff;
+	uint64_t PDP_ofset = virt>>30 & 0x1ff;
+	uint64_t PD_ofset = virt>>21 & 0x1ff;
+	uint64_t PT_ofset = virt>>12 & 0x1ff;
 
-		void* temp=REQUEST_PAGE();
-		memset(temp,0,4096);
-		PT_SET_FLAG(PL4E,PT_Present);
-		PT_SET_FLAG(PL4E,PT_RW);
-		PT_SET_ADR(PL4E,(uint64_t)temp);
+	uint64_t offsets[4]={PL4_ofset,PDP_ofset,PD_ofset,PT_ofset};
 
+	Page_Table* current_PL=KERNEL_PL4;
+	Page_Table_Entry* current_entry;
 
+	//navigate down through the tables
+	for (int i = 0; i < 3; ++i){
+		//get next entry from current table
+		Page_Table_Entry* current_entry=&current_PL->entries[offsets[i]];
+		if (!PT_GET_FLAG(current_entry,PT_Present)){
+			void* temp=REQUEST_PAGE();
+			memset(temp,0,4096);
+			PT_SET_FLAG(current_entry,PT_Present);
+			PT_SET_FLAG(current_entry,PT_RW);
+			PT_SET_ADR(current_entry,(uint64_t)temp);
+		}
+		current_PL=(void*)PT_GET_ADR(current_entry);
 	}
-	PL3* PDP=(void*)PT_GET_ADR(PL4E);
 
+	Page_Table_Entry* PL1E=&current_PL->entries[PT_ofset];
 
-
-	Page_Table_Entry* PL3E=&PDP->entries[PDP_ofset];
-	if (!PT_GET_FLAG(PL3E,PT_Present)){
-		void* temp=REQUEST_PAGE();
-		memset(temp,0,4096);
-		PT_SET_FLAG(PL3E,PT_Present);
-		PT_SET_FLAG(PL3E,PT_RW);
-		PT_SET_ADR(PL3E,(uint64_t)temp);
-
-	}
-	PL2* PD=(void*)PT_GET_ADR(PL3E);
-
-
-
-	Page_Table_Entry* PL2E=&PD->entries[PD_ofset];
-	if (!PT_GET_FLAG(PL2E,PT_Present)){
-		void* temp=REQUEST_PAGE();
-		memset(temp,0,4096);
-		PT_SET_FLAG(PL2E,PT_Present);
-		PT_SET_FLAG(PL2E,PT_RW);
-		PT_SET_ADR(PL2E,(uint64_t)temp);
-
-	}
-	PL1* PT=(void*)PT_GET_ADR(PL2E);
-
-
-	Page_Table_Entry* PL1E=&PT->entries[PT_ofset];
-	
-	PT_SET_FLAG(PL1E,PT_Present);
-	PT_SET_FLAG(PL1E,PT_RW);
+	PT_SET_FLAG(PL1E,flags);
 	PT_SET_ADR(PL1E,(uint64_t)physadr);
 
 	//void* page=(void*)PT_GET_ADR(PL1E);
 }
-
-void PT_SET_FLAG(Page_Table_Entry* PT, char flag){
-	PT->value|= 1UL << flag;
+void map_mem(void* virtadr, void* physadr){
+	map_mem_with_flags(virtadr, physadr,PT_RW|PT_Present);
+}
+void map_pages(void* virtadr, void* physadr ,uint64_t pages){
+	for (int i = 0; i < pages; i++){
+		map_mem(virtadr+i*4096,physadr+i*4096);
+	}
+}
+//add framebuffer to memory map with pages marked as write combining? Further investigation needed
+void map_fb_pages(void* virtadr, void* physadr ,uint64_t pages){
+	for (int i = 0; i < pages; i++){
+		map_mem_with_flags(virtadr+i*4096,physadr+i*4096,PT_Present|PT_RW|PT_WriteThrough|PT_CacheDisabled|PT_PageAttributeTable);
+	}
+}
+//request pages to be mapped at location rouded up to page size
+void request_mapped_pages(void* virtadr, uint64_t bytes){
+	for (int i = 0; i < bytes; i+=4096){
+		map_mem(virtadr+i,REQUEST_PAGE());
+	}
+}
+void PT_SET_FLAG(Page_Table_Entry* PT, uint64_t flag){
+	PT->value|= flag;
 }
 void PT_RESET_FLAG(Page_Table_Entry* PT, char flag){
-	PT->value &= ~(1UL << flag);
+	PT->value &= ~flag;
 }
-bool PT_GET_FLAG(Page_Table_Entry* PT, char flag){
-	return (PT->value >> flag) & 1U;
+bool PT_GET_FLAG(Page_Table_Entry* PT, uint64_t flag){
+	return (PT->value & flag);
 }
 void PT_SET_ADR(Page_Table_Entry* PT, uint64_t adr){
 	PT->value&= 0xfff0000000000fff;

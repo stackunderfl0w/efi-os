@@ -34,4 +34,4 @@ void* intset(uint32_t *s, const uint32_t c, size_t n);
 #define MAX(a,b) (((a)>(b))?(a):(b))
 uint32_t crc32b(const void* data, size_t length);
 
-int memcmp (uint8_t* str1, uint8_t* str2, size_t count);
+int memcmp (const void* str1, const void* str2, size_t count);

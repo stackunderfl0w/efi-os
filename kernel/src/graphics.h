@@ -2,8 +2,6 @@
 #include <stdarg.h>
 #include "bitmap-font.h"
 #include "typedef.h"
-//#include "pit.h"
-#include "serial.h"
 
 typedef struct {
 	void* BaseAddress;
@@ -24,7 +22,7 @@ typedef struct {
 
 
 
-void putchar(graphics_context* g, UINT32 x, UINT32 y, CHAR8 chr);
+void render_char(graphics_context* g, UINT32 x, UINT32 y, CHAR8 chr);
 void clearchar(graphics_context* g, UINT32 x, UINT32 y);
 void deletechar(graphics_context* g);
 void printchar(graphics_context* g, char chr);
@@ -42,8 +40,7 @@ void cursor_up(graphics_context* g);
 void cursor_down(graphics_context* g);
 
 void move_mouse(int x, int y);
-void draw_mouse();
-void clear_mouse();
+void draw_mouse(Framebuffer* f);
 
 void get_display_resolution(Framebuffer* f, UINT32 *x, UINT32 *y);
 void scroll_console();
