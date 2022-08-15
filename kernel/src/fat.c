@@ -115,7 +115,7 @@ void INIT_FILESYSTEM(){
 	root_directory=malloc(512);
 	atapio_read_sectors(get_first_root_dir_sector(BS), 1, root_directory);
 }
-char* read_lfn_entry_name(char* buf, FAT_LONG_NAME_ENTRY* lfn){
+void read_lfn_entry_name(char* buf, FAT_LONG_NAME_ENTRY* lfn){
 	for (int i = 0; i < 5; ++i){
 		buf[i]=(char)lfn->first_5[i];
 	}
@@ -125,7 +125,17 @@ char* read_lfn_entry_name(char* buf, FAT_LONG_NAME_ENTRY* lfn){
 	for (int i = 0; i < 2; ++i){
 		buf[i+11]=(char)lfn->last_2[i];
 	}
-	return buf;
+}
+void read_f12_entry_name(char* buf, FAT_DIRECTORY_ENTRY* entry){
+	int index=0;
+	for(int i=0; i<11;i++){
+		if(entry->name[i]!=' ')
+			buf[index++]=entry->name[i];
+		//add a dot if there is a file extension
+		if(i==7&&entry->name[8])
+			buf[index++]='.';
+	}
+	buf[index++]=0;
 }
 FAT_DIRECTORY_ENTRY* get_next_fat_entry(FAT_DIRECTORY_ENTRY* entry, char* buf){
 
@@ -149,29 +159,11 @@ FAT_DIRECTORY_ENTRY* get_entry_from_directory(fat_BS* part, uint8_t* start_entry
 		}
 		else{
 			entry=(FAT_DIRECTORY_ENTRY*)&start_entry[i];
-			int index=0;
-			if(lfn_found){
-				lfn_found=false;
+			if(!lfn_found){
+				read_f12_entry_name(tmp_name,entry);
 			}
-			else{
-				memset(tmp_name,0,256);
-				for(int i=0; i<11;i++){
-					if(entry->name[i]!=' '){
-						if(entry->name[i]>='A'&&entry->name[i]<='Z'){
-							tmp_name[index++]=entry->name[i]+32;
-						}
-						else{
-							tmp_name[index++]=entry->name[i];
-						}
-					}
-					if(i==7){
-						if(entry->name[8]!=' '){
-							tmp_name[index++]='.';
-						}
-					}
-				}
-			}
-			if (!strcmp(tmp_name,name)){
+			lfn_found=false;
+			if (!strcmp_nc(tmp_name,name)){
 				return entry;
 			}
 		}
@@ -198,32 +190,11 @@ FAT_DIRECTORY_ENTRY* create_entry_in_directory(fat_BS* part, uint8_t* start_entr
 		}
 		else if(start_entry[i]){
 			entry=(FAT_DIRECTORY_ENTRY*)&start_entry[i];
-			memset(tmp_name,0,256);
-			int index=0;
-			if(lfn_found){
-				memcpy(tmp_name,tmp_long,256);
-				lfn_found=false;
+			if(!lfn_found){
+				read_f12_entry_name(tmp_name,entry);
 			}
-			else{
-				int idex=0;
-				for(int i=0; i<11;i++){
-
-					if(entry->name[i]!=' '){
-						if(entry->name[i]>='A'&&entry->name[i]<='Z'){
-							tmp_name[index++]=entry->name[i]+32;
-						}
-						else{
-							tmp_name[index++]=entry->name[i];
-						}
-					}
-					if(i==7){
-						if(entry->name[8]!=' '){
-							tmp_name[index++]='.';
-						}
-					}
-				}
-			}
-			if (!strcmp(tmp_name,name)){
+			lfn_found=false;
+			if (!strcmp_nc(tmp_name,name)){
 				return entry;
 			}
 		}
@@ -264,7 +235,7 @@ uint64_t get_file_base_cluster(char* filepath){
 	FAT_DIRECTORY_ENTRY* entry=get_entry_from_directory((fat_BS*)boot_sector,root_directory,paths[0]);
 	uint16_t cluster=entry->first_cluster_low_16;
 	for (int i = 1; i < sections; ++i){
-		if(strcmp(paths[i],"")){
+		if(strcmp_nc(paths[i],"")){
 			//load next directory
 			uint8_t* cur_dir=load_fat_cluster_chain(cluster);
 			//get location of next directory
@@ -294,7 +265,6 @@ void write_file(char* filepath, uint8_t* data, uint64_t size){
 		if(strcmp(paths[i],"")){
 			entry_location=entry->first_cluster_low_16;
 			cur_dir=load_fat_cluster_chain(entry_location);
-			printf("trying to load %s\n", paths[i]);
 			if(i<sections-1){
 				free(cur_dir);
 			}

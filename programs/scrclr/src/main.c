@@ -4,10 +4,11 @@ unsigned char x=0;
 
 void draw(char* buf){
 	while(true){
-		for (int i = 0; i < 100000; ++i)
+		for (int i = 0; i < 1000000; ++i)
 		{
 			buf[i]=x;
 		}
+		x+=257;
 	}
 }
 int _start(char* buf)

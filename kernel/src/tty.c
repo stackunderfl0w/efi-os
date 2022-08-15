@@ -58,9 +58,9 @@ void sync(FILE* f){
 }
 void write(FILE* f, char c){
     *f->write_head++=c;
-    if(f->write_head==f->end||c=='\n'){
+    //if(f->write_head==f->end||c=='\n'){
         sync(f);
-    }
+    //}
 }
 char read(FILE* f){
     if (f->read_head==f->write_head){
@@ -99,7 +99,6 @@ tty init_tty(graphics_context* kg){
     stdout->sync=sync;
 
     g=kg;
-
 }
 
 void tty_loop(tty this){

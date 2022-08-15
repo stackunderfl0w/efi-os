@@ -11,11 +11,13 @@ thread *current;
 bool scheduler_inited=false;
 extern void yield();
 extern graphics_context* k_context;
+extern graphics_context* global_context;
 
 void thread_function(){
 	int thread_id = current->tid;
 	while(1){
-		printf("Thread %u",thread_id);
+		printf("Thread %u %f\n",thread_id,TimeSinceBoot);
+		sleep(10);
 		//yield();
 	}
 }
@@ -30,29 +32,30 @@ void t3(){
 }
 void vsync(){
 	while(1){
-		//swap_buffer();
-		draw_mouse(k_context->buf);
-		sleep(100);
+		swap_buffer(global_context->buf,k_context->buf);
 	}
 }
 
 thread *new_threads[256];
-int num_threads=3;
+int num_threads=4;
 uint64_t cur_thread=0;
 
 
 thread* int_thread;
 void start_scheduler(){
+	asm("cli");
 	printf("start_scheduler\n");
-	new_threads[0]=new_thread(thread_function);
-	//new_threads[1]=new_thread(t3);
+	//new_threads[0] is base thread
 	new_threads[1]=new_thread(thread_function);
 	new_threads[2]=new_thread(thread_function);
-	new_threads[3]=new_thread(thread_function);
+	//new_threads[3]=new_thread(thread_function);
+	new_threads[3]=new_thread(vsync);
+
+	new_process("/resources/scrclr.elf", k_context->buf->BaseAddress);
 
 	scheduler_inited=true;
-	asm ("sti");
-	loop();
+	asm("sti");
+	//loop();
 
 }
 
@@ -64,7 +67,7 @@ void* get_next_thread(void *stack_ptr){
 		first=false;
 		current=new_threads[0];
 		cur_thread=0;
-		return current->RSP;
+		return stack_ptr;
 	}
 	current->RSP=stack_ptr;
 	cur_thread++;
@@ -76,17 +79,17 @@ void* get_next_thread(void *stack_ptr){
 void new_process(char* executable,void* ptr){
 	CHAR8* program_space=malloc(0x16000);
 
-	printf("space allocated at,%x",program_space);
+	printf("space allocated at,%x\n",program_space);
 
 	CHAR8* program =  read_file(executable);
 
 	Elf64_Ehdr* header=(Elf64_Ehdr*)program;
-	printf("Arch: %u\n\n",(long)header->e_machine);
+	/*printf("Arch: %u\n\n",(long)header->e_machine);
 	for (int i = 0; i < 32; ++i)
 	{
 		long x=program[i];
 		printf("%x,  ",x);
-	}
+	}*/
 
 
 	printf("entry: %u\n",header->e_entry);
@@ -105,32 +108,31 @@ void new_process(char* executable,void* ptr){
 			{
 				int pages = (phdr->p_memsz + 0x1000 - 1) / 0x1000;
 				Elf64_Addr segment = phdr->p_paddr;
-				printf("Kernel p_paddr %u \n",phdr->p_paddr);
+				//printf("prog p_paddr %u \n",phdr->p_paddr);
 
 				//SystemTable->BootServices->AllocatePages(AllocateAddress, EfiLoaderData, pages, &segment);
 				//map_mem(segment, REQUEST_PAGE());
-				printf("%x",program_space +(uint64_t)segment);
-				printf("%x",((uint64_t)segment));
+				//printf("%x",program_space +(uint64_t)segment);
+				//printf("%x",((uint64_t)segment));
 
 				UINTN size = phdr->p_filesz;
-				for (UINTN i = 0; i < size; ++i)
-				{
+				for (UINTN i = 0; i < size; ++i){
 					*(char*)(program_space+(uint64_t)segment+i)=program[phdr->p_offset+i];
 				}
 				break;
 			}
 		}
 	}
-	printf("Kernel e_entry %u \n",header->e_entry);
-	printf("Kernel entry %u \n",&header->e_entry);
+	//printf("prog e_entry %u \n",header->e_entry);
+	//printf("prog entry %u \n",&header->e_entry);
 
 
-	int (*KernelStart)() = ((__attribute__((sysv_abi)) int (*)() ) program_space+header->e_entry);
+	void (*prog_entry)() = ((__attribute__((sysv_abi)) void (*)() ) program_space+header->e_entry);
 
-	printf("Kernel start %u \n",KernelStart);
-	KernelStart(ptr);
-	//char* nel=calloc(1024);
+	//printf("prog start %u \n",prog_entry);
+	//prog_entry(ptr);
 
-	new_threads[num_threads++]=new_thread(thread_function);
+	new_threads[num_threads++]=new_thread(prog_entry);
+	((registers*)(new_threads[num_threads-1]->stack_ptr))->rdi=(uint64_t)ptr;
 
 }

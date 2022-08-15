@@ -45,6 +45,13 @@ int strcmp(const char* str1, const char* str2){
 	}
 	return str1[index]-str2[index];
 }
+int strcmp_nc(const char* str1, const char* str2){
+	int index=0;
+	while((str1[index]|32)==(str2[index]|32)&&str1[index]!=0){
+		index++;
+	}
+	return str1[index]-str2[index];
+}
 char** split_string_by_char(char* str, char seperator, int *section_count){
 	int index=0;
 	int n_index=0;

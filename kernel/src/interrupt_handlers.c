@@ -8,6 +8,8 @@
 #include "loop.h"
 #include "stdio.h"
 extern graphics_context* global_context;
+char buf[128];
+uint64_t cr0, cr2, cr3, err;
 
 __attribute__((interrupt)) void PageFault_Handler(struct interrupt_frame* frame){
 	//Panic("Page Fault Detected");
@@ -17,9 +19,22 @@ __attribute__((interrupt)) void PageFault_Handler(struct interrupt_frame* frame)
 	}
 	print(global_context,"PAGE FAULT DETECTED");
 
-	uint64_t err;
-	asm ("mov %%cr2, %0" : : "r" (err));
-	printf("%p\n",err);
+    asm volatile(
+        "mov %%cr0, %%rax\n\t"
+        "mov %%eax, %0\n\t"
+        "mov %%cr2, %%rax\n\t"
+        "mov %%eax, %1\n\t"
+        "mov %%cr3, %%rax\n\t"
+        "mov %%eax, %2\n\t"
+        "mov (%%rsp), %%rax\n\t"
+        "mov %%eax, %2\n\t"
+    : "=m" (cr0), "=m" (cr2), "=m" (cr3), "=m" (err)
+    : /* no input */
+    : "%rax"
+    );
+	//printf("%p\n",err);
+	sprintf(buf,"%p",cr2);
+	print(global_context,buf);
 	loop();
 }
 __attribute__((interrupt)) void GeneralFault_Handler(struct interrupt_frame* frame){

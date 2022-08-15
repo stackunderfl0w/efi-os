@@ -1,8 +1,8 @@
 #include "keyboard.h"
 #include "graphics.h"
+#include "ctype.h"
 extern graphics_context* k_context;
-bool isLeftShiftPressed;
-bool isRightShiftPressed;
+int modifiers=0;
 uint8_t previous_key=0;
 const char ASCIITable[] = {
 		 0 ,  0 , '1', '2',
@@ -63,19 +63,19 @@ void handle_key(unsigned char keycode){
 		switch (keycode){
 			case LeftShift:
 				final_keycode=KEYCODE_LSHIFT;
-				isLeftShiftPressed = true;
+				modifiers|=MODCODE_LSHIFT;
 				break;
 			case LeftShift + 0x80:
 				final_keycode=KEYCODE_LSHIFT;
-				isLeftShiftPressed = false;
+				modifiers&= ~MODCODE_LSHIFT;
 				break;
 			case RightShift:
 				final_keycode=KEYCODE_RSHIFT;
-				isRightShiftPressed = true;
+				modifiers|=MODCODE_RSHIFT;
 				break;
 			case RightShift + 0x80:
 				final_keycode=KEYCODE_RSHIFT;
-				isRightShiftPressed = false;
+				modifiers&= ~MODCODE_RSHIFT;
 				break;
 			case Enter:
 				final_keycode=KEYCODE_RETURN;
@@ -121,8 +121,8 @@ void handle_key(unsigned char keycode){
 			return;
 	}
 
-	char ascii = Translate(keycode, isLeftShiftPressed | isRightShiftPressed);
-	if (ascii != 0){
+	char ascii = Translate(keycode, modifiers&MODCODE_SHIFT);
+	if (isprint(ascii)){
 		printchar(k_context,ascii);
 	}
 }

@@ -104,10 +104,10 @@ global interupt3
 
 yield:
 	int 3
-	mov	rdi,fmt
-	mov	rsi,[rsp]
-	xor	rax,rax		; or can be  xor  rax,rax
-	call	printf		; Call C function
+	;mov	rdi,fmt
+	;mov	rsi,[rsp]
+	;xor	rax,rax		; or can be  xor  rax,rax
+	;call	printf		; Call C function
 	ret
 
 global yield

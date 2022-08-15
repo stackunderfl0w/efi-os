@@ -7,7 +7,7 @@ uint64_t RESERVED_MEMORY;
 char* pages_used;
 uint64_t total_pages;
 Page_Table* KERNEL_PL4;
-
+//note top half of 48 bit adress space must be acessed with top bits set. i.e.0xffff800000000000 instead of 0x800000000000
 void map_fb_pages(void* virtadr, void* physadr ,uint64_t pages);
 
 void INIT_PAGING(EFI_MEMORY_DESCRIPTOR* memMap, uint64_t Entries, uint64_t DescSize, Framebuffer* buf){
@@ -59,6 +59,9 @@ void INIT_PAGING(EFI_MEMORY_DESCRIPTOR* memMap, uint64_t Entries, uint64_t DescS
 
 	printf("identity mapping mem\n");
 	map_pages(0,0,total_mem/4096);
+
+	//map_pages(0xffff800000000000,0,total_mem/4096);
+
 
 	printf("maping display Framebuffer, fb at:%p\n",buf->BaseAddress);
 	//map_pages(buf->BaseAddress,buf->BaseAddress,buf->BufferSize/4096);

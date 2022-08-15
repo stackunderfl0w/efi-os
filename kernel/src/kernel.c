@@ -91,37 +91,30 @@ int _start(bootinfo *info){
 	printf("Used memory: %ukb\n",get_used_memory()/1024);
 	printf("Reserved memory: %ukb\n",get_reserved_memory()/1024);
 
+	void* kernel_heap=(void*)0x80000000000;
+	INIT_HEAP(kernel_heap,0x10);
+	printf("Kernel Heap initialized at %p\n",kernel_heap);
+	
+	INIT_FILESYSTEM();
 
-	void* heap_location=(void*)0x8000000000;
-	INIT_HEAP(heap_location,0x10);
-	printf("Kernel Heap initialized at %p\n",heap_location);
+	//new_process("/resources/scrclr.elf",info->buf->BaseAddress);
+
 
 	void* new_fb=(void*)0x7000000000;
 	request_mapped_pages(new_fb,info->buf->BufferSize);
 	Framebuffer fb=*info->buf;
 	fb.BaseAddress=new_fb;
-
-
     graphics_context kernel_graphics=init_text_overlay(&fb, info->font);
     k_context=&kernel_graphics;
 
 
 	printf("Enabling interupts");
 
-	asm("sti");
-	//for whatever reasons with no optimizations enabled sti corrupts float fl
-
-	float fl=123.456;
-	float g=123.456;
-
-	printf("%f\n",fl);
-	printf("%f\n",g);
-
-	INIT_FILESYSTEM();
-
-	//int file_entries;
-	printf("%u : %f\n",(uint64_t)fl,fl);
-	printf("%u : %f\n",(uint64_t)g,g);
+	start_scheduler();
+	while(true){
+		printf("the thread continues\n");
+		sleep(10);
+	}
 
 	sleep(1);
 
@@ -139,7 +132,6 @@ int _start(bootinfo *info){
 
 	INIT_RTC();
 
-	//new_process("/resources/SCRCLR  ELF",info->buf->BaseAddress);
 	//loop();
 
 

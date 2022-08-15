@@ -20,6 +20,8 @@ typedef signed long long ssize_t;
 typedef UINT64			EFI_PHYSICAL_ADDRESS;
 typedef UINT64			EFI_VIRTUAL_ADDRESS;
 
+#define incptr(p, n) ((void *)(((uintptr_t)(p)) + (n)))
+
 
 void *
 memset (void *dest, int val, size_t len);

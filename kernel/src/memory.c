@@ -46,9 +46,7 @@ void EXPAND_HEAP(uint64_t size){
 	heap_end+=0x1000*size;
 }
 void INIT_HEAP(void* adr, uint64_t pages){
-	for (int i = 0; i < pages; ++i){
-		map_mem(adr+(4096*i),REQUEST_PAGE());
-	}
+	request_mapped_pages(adr,4096*pages);
 	heap_start=adr;
 	heap_end=adr+(4096*pages);
 	last_hdr=adr;
