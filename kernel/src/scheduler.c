@@ -51,7 +51,7 @@ void start_scheduler(){
 	//new_threads[3]=new_thread(thread_function);
 	new_threads[3]=new_thread(vsync);
 
-	new_process("/resources/scrclr.elf", k_context->buf->BaseAddress);
+	//new_process("/resources/scrclr.elf", k_context->buf->BaseAddress);
 
 	scheduler_inited=true;
 	asm("sti");

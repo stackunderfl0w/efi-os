@@ -64,9 +64,9 @@ void INIT_PAGING(EFI_MEMORY_DESCRIPTOR* memMap, uint64_t Entries, uint64_t DescS
 
 
 	printf("maping display Framebuffer, fb at:%p\n",buf->BaseAddress);
-	//map_pages(buf->BaseAddress,buf->BaseAddress,buf->BufferSize/4096);
-	map_fb_pages(buf->BaseAddress,buf->BaseAddress,buf->BufferSize/4096);
-
+	//map_pages(buf->BaseAddress,buf->BaseAddress,buf->BufferSize/4096+1);
+	//printf("W:%u H:%u Bs:%u BS/4k:%u Ex:%u",buf->Width,buf->Height,buf->BufferSize,buf->BufferSize/4096,(buf->Height*buf->Width*4+4095)/4096);
+	map_fb_pages(buf->BaseAddress,buf->BaseAddress,(buf->BufferSize+4095)/4096);
 
 	printf("Loading cr3");
 	asm ("mov %0, %%cr3" : : "r" (KERNEL_PL4));
