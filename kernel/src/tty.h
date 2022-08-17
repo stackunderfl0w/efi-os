@@ -14,6 +14,6 @@ char read(FILE* f);
 
 
 tty init_tty();
-tty init_tty_0(FILE* stdout_0, char* buf, unsigned buf_size);
+tty init_tty_0(FILE* stdout_0, FILE* stdin_0, char* stdout_buf, char* stdin_buf, unsigned buf_size);
 
 void tty_loop(tty tt);

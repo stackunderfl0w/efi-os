@@ -3,89 +3,141 @@
 #include "file_struct.h"
 #include "graphics.h"
 #include "memory.h"
+#include "scheduler.h"
+#include "keyboard.h"
+#include "ctype.h"
 FILE* stdout;
+FILE* stdin;
 graphics_context* g;
 int saved_x=0,saved_y=0;
 extern graphics_context* k_context;
 
 
 void sync(FILE* f){
-    while(f->write_head-f->read_head){
-        char c=read(f);
-        if(c!=27){
-            printchar(k_context,c);
-        }
-        else{//escape sequence
-            if(read(f)=='['){//required next character of ascii escape sequence
-                bool reading=true;
-                int x=0,y=0;
-                bool second=false;
-                while (reading){
-                    reading=false;
-                    switch(c=read(f)){
-                        case '0'...'9':
-                            if(!second){
-                                x=x*10+(c-'0');
-                            }
-                            else{
-                                y=y*10+(c-'0');
-                            }
-                            reading=true;
-                            break;
-                        case ';':
-                            reading=true;
-                            second=true;
-                            break;
-                        case 'H':case'f':
-                            move_cursor(k_context,x,y);
-                            break;
-                        case 'A':
-                            break;
-                        case 's':
-                            get_cursor_pos(k_context,&saved_x,&saved_y);
-                            break;
-                        case 'u':
-                            move_cursor(k_context,saved_x,saved_y);
-                            break;
-                        default:
-                            break;
+	while(f->write_head-f->read_head){
+		char c=read(f);
+		if(c!=27){
+			printchar(k_context,c);
+		}
+		else{//escape sequence
+			if(read(f)=='['){//required next character of ascii escape sequence
+				bool reading=true;
+				int x=0,y=0;
+				bool second=false;
+				bool no_input=true;
+				while (reading){
+					reading=false;
+					switch(c=read(f)){
+						case '0'...'9':
+							if(!second){
+								x=x*10+(c-'0');
+							}
+							else{
+								y=y*10+(c-'0');
+							}
+							no_input=false;
+							reading=true;
+							break;
+						case ';':
+							reading=true;
+							second=true;
+							break;
+						case 'H':case'f':
+							move_cursor(k_context,x,y);
+							break;
+						case 'A':
+							cursor_up(k_context,no_input?1:x);
+							break;
+						case 'B':
+							cursor_down(k_context,no_input?1:x);
+							break;
+						case 'C':
+							cursor_right(k_context,no_input?1:x);
+							break;
+						case 'D':
+							cursor_left(k_context,no_input?1:x);
+							break;
+						case 's':
+							get_cursor_pos(k_context,&saved_x,&saved_y);
+							break;
+						case 'u':
+							move_cursor(k_context,saved_x,saved_y);
+							break;
+						default:
+							break;
 
-                    }
-                }
-            }
-        }
-    }
+					}
+				}
+			}
+		}
+	}
 }
 void write(FILE* f, char c){
-    *f->write_head++=c;
-    //if(f->write_head==f->end||c=='\n'){
-        sync(f);
-    //}
+	if(f->write_head==f->end||c=='\n'){
+		if(f->flags&IO_NO_SYNC){
+			release_lock(&f->io_lock);
+			while(f->write_head==f->end){
+				yield();
+			}
+			aquire_lock(&f->io_lock);
+		}
+		else
+			sync(f);
+	}
+	*f->write_head++=c;
 }
 char read(FILE* f){
-    if (f->read_head==f->write_head){
-        return 0;
-    }
-    char tmp=*f->read_head;
-    *f->read_head++=0;
-    if(f->read_head==f->write_head){
-        f->read_head=f->write_head=f->base;
-    }
-    return tmp;
+	if (f->read_head==f->write_head){
+		return 0;
+	}
+	char tmp=*f->read_head;
+	*f->read_head++=0;
+	if(f->read_head==f->write_head){
+		f->read_head=f->write_head=f->base;
+	}
+	return tmp;
+}
+void kb_callback(int keycode, int modifiers){
+	if(modifiers&MODCODE_KEYDOWN){
+		if(isalpha(keycode)||keycode=='\n'){
+			fputc(keycode,stdout);
+			fputc((char)keycode,stdin);
+		}
+	}
+}
+void stdin_sync(FILE* f){
+
 }
 
-tty init_tty_0(FILE* stdout_0, char* buf, unsigned buf_size){
-    stdout=stdout_0;
-    stdout->base=buf;
-    stdout->end=stdout->base+buf_size;
-    stdout->read_head=stdout->base;
-    stdout->write_head=stdout->base;
+tty init_tty_0(FILE* stdout_0, FILE* stdin_0, char* stdout_buf, char* stdin_buf, unsigned buf_size){
+	stdout=stdout_0;
+	stdout->base=stdout_buf;
+	stdout->end=stdout->base+buf_size;
+	stdout->read_head=stdout->base;
+	stdout->write_head=stdout->base;
 
-    stdout->write=write;
-    stdout->read=read;
-    stdout->sync=sync;
+	stdout->write=write;
+	stdout->read=read;
+	stdout->sync=sync;
 
-    stdout->io_lock=false;
+	stdout->io_lock=false;
+
+	stdout->flags=IO_UNBUFFERED;
+
+	stdin=stdin_0;
+	stdin->base=stdin_buf;
+	stdin->end=stdin->base+buf_size;
+	stdin->read_head=stdin->base;
+	stdin->write_head=stdin->base;
+
+	stdin->write=write;
+	stdin->read=read;
+	stdin->sync=stdin_sync;
+
+	stdin->io_lock=false;
+
+	stdin->flags=IO_UNBUFFERED|IO_NO_SYNC;
+	set_keyboard_callback(kb_callback);
 }
 tty init_tty(graphics_context* kg){
 	stdout=calloc(sizeof(FILE));
@@ -95,10 +147,10 @@ tty init_tty(graphics_context* kg){
 	stdout->write_head=stdout->base;
 
 	stdout->write=write;
-    stdout->read=read;
-    stdout->sync=sync;
+	stdout->read=read;
+	stdout->sync=sync;
 
-    g=kg;
+	g=kg;
 }
 
 void tty_loop(tty this){

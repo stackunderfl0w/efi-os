@@ -51,16 +51,17 @@ int _start(bootinfo *info){
 	//print_serial("hello world");
 
 	//manually create kernel stdout&tty so it can be created without heap and remains in scope
-    graphics_context global_graphics=init_text_overlay(info->buf, info->font);
+	graphics_context global_graphics=init_text_overlay(info->buf, info->font);
 	k_context=global_context=&global_graphics;
-	FILE std;
-	char std_buf[8192];
 
-    tty tty0=init_tty_0(&std,std_buf,8192);
+	//the boot thread has a minimum stack size of 128k as specified in the uefi standard. 
+	//Might as well makde use of that with some stack allocations
+	FILE stdout_0;
+	FILE stdin_0;
+	char stdout_buf[8192];
+	char stdin_buf[8192];
 
-
-
-	printchar(k_context,'a');
+	tty tty0=init_tty_0(&stdout_0,&stdin_0,stdout_buf,stdin_buf,8192);
 
 	printf("Bootloader exited successfully\n");
 
@@ -71,8 +72,11 @@ int _start(bootinfo *info){
 	printf("Interupts loaded\n");
 
 	//SET_PIT_DIVISOR(65535);
-	SET_PIT_FREQUENCY(100);
+	SET_PIT_FREQUENCY(1000);
 	printf("Pit set\n");
+
+	INIT_RTC();
+	printf("RTC date&time read");
 
 	INIT_PS2_MOUSE();
 	printf("PS2 mouse initialized\n");
@@ -96,6 +100,7 @@ int _start(bootinfo *info){
 	printf("Kernel Heap initialized at %p\n",kernel_heap);
 	
 	INIT_FILESYSTEM();
+	printf("Filesystem loaded\n");
 
 	//new_process("/resources/scrclr.elf",info->buf->BaseAddress);
 
@@ -104,33 +109,32 @@ int _start(bootinfo *info){
 	request_mapped_pages(new_fb,info->buf->BufferSize);
 	Framebuffer fb=*info->buf;
 	fb.BaseAddress=new_fb;
-    graphics_context kernel_graphics=init_text_overlay(&fb, info->font);
-    k_context=&kernel_graphics;
+	graphics_context kernel_graphics=init_text_overlay(&fb, info->font);
+	kernel_graphics.foreground_color=0x00ff00ff;
+	kernel_graphics.background_color=0xff00ff00;
+	k_context=&kernel_graphics;
 
 
 	printf("Enabling interupts");
+	swap_buffer(global_context->buf,k_context->buf);
 
 	start_scheduler();
-	while(true){
-		printf("the thread continues\n");
-		sleep(10);
-	}
+
+	printf("\n\n\n\n\n");
 
 	sleep(1);
 
 
 	//uint8_t* file = read_file("/resources/TEST    TXT");
-	//uint8_t* file = read_file("/resources/startup.txt");
+	uint8_t* file = read_file("/resources/startup.txt");
 
-	//uint8_t* font2 = read_file("/resources/zap-light16.psf");
+	uint8_t* font2 = read_file("/resources/zap-light16.psf");
 
-	//write_file("/resources/WRTTEST TXT",file,1024);
+	write_file("/resources/WRTTEST TXT",file,1024);
 
 	//bitmap_font loaded_font=load_font(font2);
 
 	//sleep(2000);
-
-	INIT_RTC();
 
 	//loop();
 
@@ -169,7 +173,7 @@ int _start(bootinfo *info){
 
 	swap_buffer(global_context->buf,k_context->buf);
 
-	//run_shell(info->buf, info->font);
+	run_shell(info->buf, info->font);
 
 
 	double last_frame[60];
@@ -181,8 +185,8 @@ int _start(bootinfo *info){
 		for (int i = 59; i > 0; --i){
 			last_frame[i]=last_frame[i-1];
 		}
-        last_frame[0]=TimeSinceBoot;
-    
+		last_frame[0]=TimeSinceBoot;
+	
 		swap_buffer(global_context->buf,k_context->buf);
 
 		draw_mouse(global_context->buf);
@@ -193,7 +197,7 @@ int _start(bootinfo *info){
 		if (count>10){
 			count=0;
 			//fps =(1/((last_frame[0]-last_frame[59]))*(60-1));
-        	fps =1/(last_frame[0]-last_frame[59])*59;
+			fps =1/(last_frame[0]-last_frame[59])*59;
 			memset(st,0,32);
 			sprintf(st,"%f",fps);
 		}

@@ -1,5 +1,7 @@
 #pragma once
 #include "graphics.h"
+extern bool scheduler_inited;
+extern void yield();
 
 
 void start_scheduler();

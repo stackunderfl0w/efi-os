@@ -32,10 +32,12 @@ void render_char(graphics_context* g, UINT32 x, UINT32 y, CHAR8 chr){
 	uint32_t y_vis=MIN(g->font->height,g->buf->Height-y);
 
 	for (uint32_t y2 = 0; y2 < y_vis; ++y2){
-		for (uint32_t x2 = 0; x2 < x_vis; ++x2)
-		{
+		for (uint32_t x2 = 0; x2 < x_vis; ++x2){
 			if ((g->font->buffer[g->font->bytesperglyph*chr+(y2*((g->font->width+7)/8))+x2/8]>>(7-(x2%8)))&0x1){
-				PlotPixel_32bpp(g->buf,x+x2,y+y2,0xffffffff);
+				PlotPixel_32bpp(g->buf,x+x2,y+y2,g->foreground_color);
+			}
+			else{
+				PlotPixel_32bpp(g->buf,x+x2,y+y2,g->background_color);
 			}
 		}
 	}
@@ -50,7 +52,7 @@ void clearchar(graphics_context* g,UINT32 x, UINT32 y){
 }
 
 void deletechar(graphics_context* g){
-	cursor_left(g);
+	cursor_left(g,1);
 	clearchar(g,g->cursor_x*g->font->width, g->cursor_y*g->font->height);
 }
 
@@ -101,7 +103,7 @@ void clrscr(Framebuffer* f, uint32_t color){
 }
 
 graphics_context init_text_overlay(Framebuffer* buf, bitmap_font* font){
-	graphics_context g={buf,font,(buf->Width/font->width),(buf->Height/font->height),0,0};
+	graphics_context g={buf,font,(buf->Width/font->width),(buf->Height/font->height),0,0,0xffffffff,0x00000000};
 	clrscr((&g)->buf,0x12121212);
 	return g;
 }
@@ -115,16 +117,16 @@ void get_cursor_pos(graphics_context* g, UINT32 *x, UINT32 *y){
 	*y=g->cursor_y;
 }
 
-void cursor_left(graphics_context* g){
+void cursor_left(graphics_context* g, uint64_t distance){
 	g->cursor_x=MAX(g->cursor_x,1)-1;//prevent underflow
 }
-void cursor_right(graphics_context* g){
+void cursor_right(graphics_context* g, uint64_t distance){
 	g->cursor_x=MIN(g->cursor_x+1,g->console_width);
 }
-void cursor_up(graphics_context* g){
+void cursor_up(graphics_context* g, uint64_t distance){
 	g->cursor_y=MAX(g->cursor_y,1)-1;//prevent underflow
 }
-void cursor_down(graphics_context* g){
+void cursor_down(graphics_context* g, uint64_t distance){
 	g->cursor_y=MIN(g->cursor_y+1,g->console_height);
 }
 

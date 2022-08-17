@@ -4,43 +4,33 @@
 #include "stdio.h"
 #include "loop.h"
 
-void aquire_lock(_Atomic volatile bool *lock){
-	while(*lock){
-		busyloop(1);
-	}
-	*lock=true;
-}
-void release_lock(_Atomic volatile bool *lock){
-	*lock=false;
-}
 //currently works with base 8, 10, and 16
 const char hex_ascii[16]="0123456789abcdef";
 char* format_number(char* buf, size_t n, size_t base){
-    //longest posible should be 21 characters. rounded up to 32
-    char tmp[32];
-    int i=0;
-    //fill temp buffer in reverse
-    if(base==16||base==8){
-        unsigned mask=base-1;
-        int shift=base==16?4:3;
-        do{
-            tmp[i++]=hex_ascii[n&mask];
-        }while(n>>=shift);
-
-    }
-        //treat unknown as base 10
-    else{
-        do{
-            tmp[i++]=(char)('0'+n%10);
-            n/=10;
-        }while(n);
-    }
-    //copy over to destination buffer
-    while(i){
-        *buf++=tmp[--i];
-    }
-    //return end of string
-    return buf;
+	//longest posible should be 21 characters. rounded up to 32
+	char tmp[32];
+	int i=0;
+	//fill temp buffer in reverse
+	if(base==16||base==8){
+		unsigned mask=base-1;
+		int shift=base==16?4:3;
+		do{
+			tmp[i++]=hex_ascii[n&mask];
+		}while(n>>=shift);
+	}
+	//treat unknown as base 10
+	else{
+		do{
+			tmp[i++]=(char)('0'+n%10);
+			n/=10;
+		}while(n);
+	}
+	//copy over to destination buffer
+	while(i){
+		*buf++=tmp[--i];
+	}
+	//return end of string
+	return buf;
 }
 char* format_double(char* buf, double x, uint64_t precision){
 	buf=format_number(buf,(uint64_t)x,10);
@@ -107,23 +97,39 @@ int printf(const char* format, ... ){
 	va_start (args, format);
 	int i = vsprintf(printf_buf, format, args);
 	va_end (args);
-	aquire_lock(&stdout->io_lock);
 	fputs(printf_buf,stdout);
-	release_lock(&stdout->io_lock);
 	return i;
 }
 
 int fgetc(FILE* f){
-    return f->read(f);
+	aquire_lock(&f->io_lock);
+	int c=f->read(f);
+	release_lock(&f->io_lock);
+	return c;
+
 }
 int fputc(int c, FILE* f){
+	aquire_lock(&f->io_lock);
 	f->write(f,(char)c);
+	if(f->flags&IO_UNBUFFERED||(f->flags&IO_LINE_BUFFERED&&c=='\n'))
+		f->sync(f);
+	release_lock(&f->io_lock);
 	return c;
 }
 
 int fputs(const char *str, FILE* f){
+	aquire_lock(&f->io_lock);
 	for (const char* s=str; *s; ++s){
 		f->write(f,*s);
+		if(f->flags&IO_LINE_BUFFERED&&*s=='\n')
+			f->sync(f);
 	}
+	if(f->flags&IO_UNBUFFERED)
+		f->sync(f);
+	release_lock(&f->io_lock);
 	return 0;
+}
+
+int fflush(FILE* f){
+	f->sync(f);
 }

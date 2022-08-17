@@ -2,6 +2,7 @@
 #include "fat.h"
 #include "stdio.h"
 #include "ctype.h"
+#include "scheduler.h"
 
 void run_cmd(char* cmd);
 
@@ -18,13 +19,15 @@ char* hostname="efios";
 
 void show_cursor(){
 	if(cursor_flash&&!cursor_present){
-		//printchar(0x18);
+		printf("%c\033[D",0x18);
 		cursor_present=true;
+		fflush(stdout);
 	}
 }
 void hide_cursor(){
 	if(cursor_present){
-		//deletechar();
+		printf(" \033[D");
+		fflush(stdout);
 		cursor_present=false;
 	}
 }
@@ -44,8 +47,10 @@ void print_character(char keycode){
 }
 void new_console_line(){
 	printf("\n[%s@%s: ~]$",username,hostname);
+	printf("\033[s\nhello1\033[uhello2\n");
+
 }
-void kb_callback(int keycode, int action){
+/*void kb_callback(int keycode, int action){
 	//printf("hi\n");
 	if (keycode!=0){
 		//printchar(keycode);
@@ -83,28 +88,50 @@ void kb_callback(int keycode, int action){
 			show_cursor();
 		}
 	}
-}
+}*/
 
 
 void run_shell(Framebuffer* buf, bitmap_font* font){
-	printf("\n[%s@%s: ~]$",username,hostname);
-	set_keyboard_callback(kb_callback);
+	//printf("\n[%s@%s: ~]$",username,hostname);
+	//set_keyboard_callback(kb_callback);
+	char cmd[1024];
+
+	int index=0;
+	char c=-1;
 
 	bool running=true;
 	cursor_active=true;
+
 	while(running){
-		sleep(500);
-		cursor_flash=true;
-		show_cursor();
-		sleep(500);
-		hide_cursor();
+		printf("[%s@%s: ~]$",username,hostname);
+		index=0;
+		memset(cmd,0,1024);
+		while(cmd[index-1]!=10){
+			if(c=fgetc(stdin)){
+				cmd[index++]=c;
+				if(c==10){
+					//printf("%u",c);
+				}
+			}
+			else{
+				yield();
+			}
+		}
+		cmd[index-1]=0;
+
+		run_cmd(cmd);
+		//sleep(500);
+		//cursor_flash=true;
+		//show_cursor();
+		//sleep(500);
+		//hide_cursor();
 	}
 }
 void run_cmd(char* cmd){
 	cursor_active=false;
 	if(cursor_present){
 		cursor_present=false;
-		//deletechar();
+		printf("\033[D ");
 	}
 	if(!strcmp(cmd,"free")){
 		printf("Free memory: %ukb\n",get_free_memory()/1024);

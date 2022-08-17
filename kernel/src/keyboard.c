@@ -1,6 +1,7 @@
 #include "keyboard.h"
 #include "graphics.h"
 #include "ctype.h"
+#include "stdio.h"
 extern graphics_context* k_context;
 int modifiers=0;
 uint8_t previous_key=0;
@@ -32,16 +33,16 @@ char Translate(uint8_t scancode, bool uppercase){
 bool callbacks_enabled=false;
 void (*callback)(int, int)=NULL; 
 
-void handle_key(unsigned char keycode){
-	//printf("%h",keycode);
-	//printchar('\n');
-	//return;
+void handle_key(uint8_t keycode){
+	//printf("%u\n",(uint64_t)keycode);
 	int final_keycode=0;
 	if (keycode==0xE0 && previous_key==0){
 		previous_key=keycode;
 		return;
 	}
-	int action=(keycode&0x80)/0x80;
+
+	modifiers&=~(MODCODE_KEYUP|MODCODE_KEYDOWN);
+	modifiers|=(keycode&0x80)?MODCODE_KEYUP:MODCODE_KEYDOWN;
 	if (previous_key==0xE0){
 		previous_key=0;
 		switch (keycode){
@@ -93,22 +94,22 @@ void handle_key(unsigned char keycode){
 	}
 
 	if(callbacks_enabled){
-		//printf("%u\n",final_keycode);
-		(*callback)(final_keycode,action);
+		//printf("\nKEY%u MOD%u\n",final_keycode,modifiers);
+		(*callback)(final_keycode,modifiers);
 		return;
 	}
 	switch(final_keycode){
 		case KEYCODE_LEFT:
-			cursor_left(k_context);
+			cursor_left(k_context,1);
 			return;
 		case KEYCODE_RIGHT:
-			cursor_right(k_context);
+			cursor_right(k_context,1);
 			return;
 		case KEYCODE_UP:
-			cursor_up(k_context);
+			cursor_up(k_context,1);
 			return;
 		case KEYCODE_DOWN:
-			cursor_down(k_context);
+			cursor_down(k_context,1);
 			return;
 		case KEYCODE_RETURN:
 			printchar(k_context,'\n');

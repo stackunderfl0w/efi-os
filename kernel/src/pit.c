@@ -1,4 +1,5 @@
 #include "pit.h"
+#include "scheduler.h"
 
 volatile double TimeSinceBoot = 0;
 uint16_t Divisor = 65535;
@@ -26,13 +27,14 @@ void PIT_TICK(){
 	if((uint64_t)TimeSinceBoot>old_time){
 		SYSTEM_TIME_INCREMENT();
 	}
-	//printchar('t');
 }
 
 void sleep(uint64_t miliseconds){
 	volatile double end=TimeSinceBoot+((double)miliseconds)/1000;
-	//volatile double time_to_sleep=;
 	while(TimeSinceBoot<end){
-		asm("hlt");
+		if(scheduler_inited)
+			yield();
+		else
+			asm("hlt");
 	}
 }
