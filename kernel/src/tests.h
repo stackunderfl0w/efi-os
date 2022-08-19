@@ -3,6 +3,32 @@
 #include "stdio.h"
 #include "fat.h"
 
+void test_ascii_colors(){
+			printf("\033[30m black\n"
+			"\033[31m red\n"
+			"\033[32m Green\n"
+			"\033[33m Yellow\n"
+			"\033[34m Blue\n"
+			"\033[35m Magenta\n"
+			"\033[36m Cyan\n"
+			"\033[37m White\n");
+		printf("\033[40m black\n"
+			"\033[41m red\n"
+			"\033[42m Green\n"
+			"\033[43m Yellow\n"
+			"\033[44m Blue\n"
+			"\033[45m Magenta\n"
+			"\033[46m Cyan\n"
+			"\033[47m White\n");
+		printf("\033[31;40m black\n"
+			"\033[32;41m red\n"
+			"\033[33;42m Green\n"
+			"\033[34;43m Yellow\n"
+			"\033[35;44m Blue\n"
+			"\033[36;45m Magenta\n"
+			"\033[37;46m Cyan\n"
+			"\033[30;47m White\n");
+}
 void test_ata_pio_read(){
 	uint8_t* sector_1=malloc(512);;
 
