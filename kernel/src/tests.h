@@ -1,7 +1,9 @@
 #pragma once
 #include "graphics.h"
+#include "serial.h"
 #include "stdio.h"
 #include "fat.h"
+#include "pit.h"
 
 void test_ascii_colors(){
 			printf("\033[30m black\n"
@@ -72,31 +74,23 @@ void test_benchmark_clrscr(){
 
 void test_heap(){
 	void* test_mal=calloc(0x200);
-	printchar('\n');
-	print(to_hstring((uint64_t)test_mal));
+	printf("\n%p\n",test_mal);
 
 	void* test_mal2=calloc(0x10);
-	printchar('\n');
-	print(to_hstring((uint64_t)test_mal2));
+	printf("\n%p\n",test_mal2);
 	free(test_mal);
 
 	void* test_mal3=calloc(0x20);
-	printchar('\n');
-	print(to_hstring((uint64_t)test_mal3));
-
+	printf("\n%p\n",test_mal3);
 
 	void* test_mal4=calloc(0x10000);
-	printchar('\n');
-	print(to_hstring((uint64_t)test_mal4));
-
+	printf("\n%p\n",test_mal4);
 
 	free(test_mal2);
 	free(test_mal3);
 	free(test_mal4);
 	void* test_mal5=calloc(0x1000);
-	printchar(' ');
-	print(to_hstring((uint64_t)test_mal5));
-	printchar(' ');
+	printf("\n%p\n",test_mal5);
 
 	double starttime=TimeSinceBoot;
 
@@ -105,10 +99,9 @@ void test_heap(){
 	}
 	double time_to_finish=TimeSinceBoot-starttime;
 
-	time=(uint64_t)(TimeSinceBoot*100);
-	print(to_string(time));
-	printchar('\n');
-	print("test realoc")
+	uint64_t time=(uint64_t)(TimeSinceBoot*100);
+	printf("%u\n",time);
+	printf("test realoc");
 	char* chr_ptr=malloc(13);
 	char* src="Hello there";
 	memcpy(chr_ptr,src,12);
@@ -120,8 +113,7 @@ void test_heap(){
 void test_paging(){
 	for (int i = 0; i < 6; ++i){
 		void* test = REQUEST_PAGE();
-		print(to_hstring((uint64_t)test));
-		printchar('\n');
+		printf("%u\n",test);
 	}
 
 	map_mem((void*)0x6000000000,REQUEST_PAGE());
@@ -130,19 +122,14 @@ void test_paging(){
 
 	*test=30000;
 
-	print(to_string(*test));
-	printchar('\n');
+	printf("%u\n",*test);
 
 
 	void* test_ptr = REQUEST_PAGE();
-	print(to_hstring((uint64_t)test_ptr));
-
-
-	printchar('\n');
+	printf("%p\n",test_ptr);
 }
 
 void test_benchmark_paging(){
-
 	double starttime=TimeSinceBoot;
 
 	for (int i = 0; i < 50000; ++i){
@@ -151,9 +138,8 @@ void test_benchmark_paging(){
 
 	double time_to_finish=TimeSinceBoot-starttime;
 
-	time=(uint64_t)(TimeSinceBoot*100);
-	print(to_string(time));
-	printchar('\n');
+	uint64_t time=(uint64_t)(TimeSinceBoot*100);
+	printf("%u\n",time);
 }
 void test_printf(){
 	printf("test printf\n");
@@ -168,13 +154,8 @@ void test_printf(){
 
 	printf("double %f kk\nff",doub);
 	printf("\033[s\nhello1\033[uhello2\n");
-
-
 }
-//asm ("movq %%rsp, %0" : "=r" (i) );
-
 void test_put(){
 	fputc(10, stdout);
 	fputs("eejfaousdnawndoianwdian",stdout);
-
 }

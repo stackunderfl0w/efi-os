@@ -46,7 +46,6 @@ graphics_context* global_context;
 
 int _start(bootinfo *info){
 	asm("cli");
-
 	//init_serial();
 	//print_serial("hello world");
 
@@ -55,7 +54,7 @@ int _start(bootinfo *info){
 	k_context=global_context=&global_graphics;
 
 	//the boot thread has a minimum stack size of 128k as specified in the uefi standard. 
-	//Might as well makde use of that with some stack allocations
+	//Might as well make use of that with some stack allocations
 	FILE stdout_0;
 	FILE stdin_0;
 	char stdout_buf[8192];
@@ -102,9 +101,6 @@ int _start(bootinfo *info){
 	INIT_FILESYSTEM();
 	printf("Filesystem loaded\n");
 
-	//new_process("/resources/scrclr.elf",info->buf->BaseAddress);
-
-
 	void* new_fb=(void*)0x7000000000;
 	request_mapped_pages(new_fb,info->buf->BufferSize);
 	Framebuffer fb=*info->buf;
@@ -139,28 +135,7 @@ int _start(bootinfo *info){
 	//loop();
 
 
-
-	/*
-
-	while(1){
-		//printf("second:%u minute:%u hour:%u day:%u month:%u year:%u\n",
-			//SYSTEM_TIME.second,SYSTEM_TIME.minute,SYSTEM_TIME.hour,SYSTEM_TIME.day,SYSTEM_TIME.month,SYSTEM_TIME.year);
-		//printf("Day of week: %s\n",days_of_the_week[dayofweek()]);
-		//printf("second:%u ",
-		//SYSTEM_TIME.second);
-		get_cursor_pos(&x, &y);
-
-		move_cursor(40, 0);
-		for(int i=0; i<40;i++){
-			deletechar();
-		}
-		printf("%s %u %s, %u:%u:%u", days_of_the_week[dayofweek()], SYSTEM_TIME.day, months_short[SYSTEM_TIME.month], SYSTEM_TIME.hour, SYSTEM_TIME.minute, SYSTEM_TIME.second );
-		move_cursor(x, y);
-
-		sleep(100);
-	}*/
-
-
+	
 	//printf("%x\n",info->rsdp);
 	//printf("%x\n", info->rsdp->RsdtAddress);
 	//busyloop(500000000);
@@ -169,46 +144,11 @@ int _start(bootinfo *info){
 
 
 
-
-
 	swap_buffer(global_context->buf,k_context->buf);
 
 	run_shell(info->buf, info->font);
 
 
-	double last_frame[60];
-	char st[32];
-	double fps;
-	int count=0;
-	while(1){
-		//memcpy(&last_frame[1],last_frame,59* sizeof(double));
-		for (int i = 59; i > 0; --i){
-			last_frame[i]=last_frame[i-1];
-		}
-		last_frame[0]=TimeSinceBoot;
-	
-		swap_buffer(global_context->buf,k_context->buf);
-
-		draw_mouse(global_context->buf);
-		int x=global_context->cursor_x,y=global_context->cursor_y;
-		global_context->cursor_x=10;
-		global_context->cursor_y=10;
-		count++;
-		if (count>10){
-			count=0;
-			//fps =(1/((last_frame[0]-last_frame[59]))*(60-1));
-			fps =1/(last_frame[0]-last_frame[59])*59;
-			memset(st,0,32);
-			sprintf(st,"%f",fps);
-		}
-		print(global_context,st);
-
-		sleep(0);
-	}
-	loop();
-	start_scheduler();
-	//nothing after this point should run as the sceduler esentially abandons this base thread
-	//maybe this sould be changed to salvage a bit of ram?
-	
+	loop();	
 	return 123;
 }
