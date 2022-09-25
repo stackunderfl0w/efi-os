@@ -91,7 +91,6 @@ void free(void* adr){
 }
 void* realloc(void* adr, uint64_t size){
 	char* loc = calloc(size);
-	printf("1");
 	HEAP_SEG_HEADER* cur=((HEAP_SEG_HEADER*)adr)-1;
 	memcpy(loc,adr,MIN(size,cur->len));
 	free(adr);

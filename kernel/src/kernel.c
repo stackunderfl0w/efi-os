@@ -20,6 +20,7 @@
 #include "stdio.h"
 #include "smp.h"
 #include "tty.h"
+#include "filesystem.h"
 
 typedef struct {
 	Framebuffer* buf;
@@ -42,6 +43,8 @@ extern "C"
 #endif
 graphics_context* k_context;
 graphics_context* global_context;
+
+process* current_process;
 
 
 int _start(bootinfo *info){
@@ -99,7 +102,27 @@ int _start(bootinfo *info){
 	printf("Kernel Heap initialized at %p\n",kernel_heap);
 	
 	INIT_FILESYSTEM();
-	printf("Filesystem loaded\n");
+	printf("Fat file system loaded\n");
+	file_table* placeholder=init_file_table();
+
+	vfs_node* root= vfs_create_root(0);
+	printf("Virtual file system starting up\n");
+
+	process p;
+	current_process=&p;
+	current_process->working_dir=root;
+	current_process->process_file_table=placeholder;
+
+	vfs_recursive_populate(root,"/",5);
+	printf("Virtual file system populated\n");
+
+	print_vfs_recursive(root,0);
+
+
+
+
+
+	//loop();
 
 	void* new_fb=(void*)0x7000000000;
 	request_mapped_pages(new_fb,info->buf->BufferSize);

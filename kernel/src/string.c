@@ -1,5 +1,5 @@
 #include "string.h"
-
+#include "memory.h"
 
 char* strstr(char* string, char* substring){
 	char *a, *b;
@@ -45,7 +45,7 @@ int strcmp(const char* str1, const char* str2){
 	}
 	return str1[index]-str2[index];
 }
-int strcmp_nc(const char* str1, const char* str2){
+int strcasecmp(const char* str1, const char* str2){
 	int index=0;
 	while((str1[index]|32)==(str2[index]|32)&&str1[index]!=0){
 		index++;
@@ -97,13 +97,10 @@ uint64_t strlen(char* str){
 }
 
 char* strcpy(char* dest, const char* src){
-	for (int i = 0; src[i]; ++i){
-		dest[i]=src[i];
+	char* d=dest;
+	while (*src){
+		*dest++ = *src++;
 	}
-	return dest;
+	*dest = 0;
+	return d;
 }
-/*char* memmove(char* dest, const char* src, uint64_t len){
-	if(dest<src){
-		memcpy(dest, src, len);
-	}
-}*/

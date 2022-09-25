@@ -37,3 +37,4 @@ void* intset(uint32_t *s, const uint32_t c, size_t n);
 uint32_t crc32b(const void* data, size_t length);
 
 int memcmp (const void* str1, const void* str2, size_t count);
+void* memmove (void *dest, const void *src, size_t n);

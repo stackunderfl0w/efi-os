@@ -2,6 +2,16 @@
 #include "typedef.h"
 #include "string.h"
 #include "ata-pio.h"
+#include "vfs.h"
+//READ_ONLY=0x01 HIDDEN=0x02 SYSTEM=0x04 VOLUME_ID=0x08 DIRECTORY=0x10 ARCHIVE=0x20 LFN=READ_ONLY|HIDDEN|SYSTEM|VOLUME_ID
+#define FAT12_READ_ONLY	0x01
+#define FAT12_HIDDEN	0x02
+#define FAT12_SYSTEM	0x04
+#define FAT12_VOLUME_ID	0x08
+#define FAT12_DIRECTORY	0x10
+#define FAT12_ARCHIVE	0x20
+#define FAT12_LFN		(FAT12_READ_ONLY|FAT12_HIDDEN|FAT12_SYSTEM|FAT12_VOLUME_ID)
+
 
 typedef struct{
 	char magic[3];
@@ -123,3 +133,7 @@ void write_file(char* filepath, uint8_t* data, uint64_t size);
 uint64_t get_filesize(char* filepath);
 
 void de_INIT_FILESYSTEM();
+
+void fat_populate_vfs_directory(vfs_node* dir, char* dir_path);
+
+uint8_t* load_fat_cluster_chain(uint16_t next_cluster);

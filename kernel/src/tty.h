@@ -8,9 +8,9 @@ typedef struct {
 	//FILE* stdout;
 }tty; 
 
-void sync(FILE* f);
-void write(FILE* f, char c);
-char read(FILE* f);
+void tty_sync(FILE* f);
+void tty_write(FILE* f, char c);
+char tty_read(FILE* f);
 
 
 tty init_tty();

@@ -13,21 +13,21 @@ int saved_x=0,saved_y=0;
 extern graphics_context* k_context;
 
 
-void sync(FILE* f){
+void tty_sync(FILE* f){
 	while(f->write_head-f->read_head){
-		char c=read(f);
+		char c=tty_read(f);
 		if(c!=27){
 			printchar(k_context,c);
 		}
 		else{//escape sequence
-			if(read(f)=='['){//required next character of ascii escape sequence
+			if(tty_read(f)=='['){//required next character of ascii escape sequence
 				bool reading=true;
 				int x=0,y=0;
 				bool second=false;
 				bool no_input=true;
 				while (reading){
 					reading=false;
-					switch(c=read(f)){
+					switch(c=tty_read(f)){
 						case '0'...'9':
 							if(!second){
 								x=x*10+(c-'0');
@@ -79,7 +79,7 @@ void sync(FILE* f){
 		}
 	}
 }
-void write(FILE* f, char c){
+void tty_write(FILE* f, char c){
 	if(f->write_head==f->end||c=='\n'){
 		if(f->flags&IO_NO_SYNC){
 			release_lock(&f->io_lock);
@@ -89,11 +89,11 @@ void write(FILE* f, char c){
 			aquire_lock(&f->io_lock);
 		}
 		else
-			sync(f);
+			tty_sync(f);
 	}
 	*f->write_head++=c;
 }
-char read(FILE* f){
+char tty_read(FILE* f){
 	if (f->read_head==f->write_head){
 		return 0;
 	}
@@ -123,9 +123,9 @@ tty init_tty_0(FILE* stdout_0, FILE* stdin_0, char* stdout_buf, char* stdin_buf,
 	stdout->read_head=stdout->base;
 	stdout->write_head=stdout->base;
 
-	stdout->write=write;
-	stdout->read=read;
-	stdout->sync=sync;
+	stdout->write=tty_write;
+	stdout->read=tty_read;
+	stdout->sync=tty_sync;
 
 	stdout->io_lock=false;
 
@@ -137,8 +137,8 @@ tty init_tty_0(FILE* stdout_0, FILE* stdin_0, char* stdout_buf, char* stdin_buf,
 	stdin->read_head=stdin->base;
 	stdin->write_head=stdin->base;
 
-	stdin->write=write;
-	stdin->read=read;
+	stdin->write=tty_write;
+	stdin->read=tty_read;
 	stdin->sync=stdin_sync;
 
 	stdin->io_lock=false;
@@ -153,9 +153,9 @@ tty init_tty(graphics_context* kg){
 	stdout->read_head=stdout->base;
 	stdout->write_head=stdout->base;
 
-	stdout->write=write;
-	stdout->read=read;
-	stdout->sync=sync;
+	stdout->write=tty_write;
+	stdout->read=tty_read;
+	stdout->sync=tty_sync;
 
 	g=kg;
 }

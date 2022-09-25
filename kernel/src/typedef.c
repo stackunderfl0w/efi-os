@@ -69,3 +69,18 @@ int memcmp(const void* str1, const void* str2, size_t count){
 		}
 	return 0;
 }
+void* memmove (void *dest, const void *src, size_t n){
+	const char *f = src;
+	char *t = dest;
+	//copy in reverse
+	if (src < dest){
+		f += n;
+		t += n;
+		while (n-- > 0)
+			*--t = *--f;
+	} 
+	else
+		while (n-- > 0)
+			*t++ = *f++;
+	return dest;
+}

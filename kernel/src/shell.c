@@ -3,7 +3,7 @@
 #include "stdio.h"
 #include "ctype.h"
 #include "scheduler.h"
-
+#include "paging.h"
 void run_cmd(char* cmd);
 
 char num_shift[10]={')','!','@','#','$','%','^','&','*','('};
