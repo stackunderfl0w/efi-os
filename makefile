@@ -28,6 +28,8 @@ boot: kernel bootloader
 	mcopy -i fat.img $(BL_DIR)/dat ::/resources
 	mcopy -i fat.img $(KER_DIR)/kernel.elf ::/
 	mcopy -i fat.img programs/scrclr/bin/scrclr.elf ::/resources/
+	mcopy -i fat.img programs/syscall_test/bin/syscall_test.elf ::/resources/
+
 	mcopy -i fat.img $(BL_DIR)/dat/resourcesresources ::/resources/resourcesresources
 
 	#mcopy -i fat.img programs/scrclr/bin/scrclr.elf ::/resources/resourcesresources/

@@ -67,6 +67,10 @@ __attribute__((interrupt)) void Mouse_Handler(struct interrupt_frame* frame){
 	PIC_EndSlave();
 }
 
+__attribute__((interrupt)) void test_handler(struct interrupt_frame* frame){
+	printf("test signal recieved");
+}
+
 /*__attribute__((interrupt)) void PIT_Handler(struct interrupt_frame* frame){
 	//print("keyboard");
 	//printchar('t');

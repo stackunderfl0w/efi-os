@@ -1,7 +1,5 @@
 #pragma once
-#include "io.h"
-#include "interrupt_handlers.h"
-#include "mouse.h"
+#include "typedef.h"
 #define INTERRUPT_GATE 0x8E
 #define TRAP_GATE 0x8F
 //64-bit Interrupt Gate: 0x8E (p=1, dpl=0b00, type=0b1110 => type_attributes=0b1000_1110=0x8E)
@@ -17,16 +15,9 @@ typedef struct  {
 	
 }__attribute__((packed)) IDT_ENTRY;
 
-void IDT_Set_Offset(IDT_ENTRY *entry, size_t adr){
-		entry->Offset_0 = (uint16_t)(adr&0xffff);
-		entry->Offset_1 = (uint16_t)(((adr>>16)&0xffff) );
-		entry->Offset_2 = (uint32_t)(((adr>>32)&0xffffffff));
-	}
-size_t IDT_Get_Offset(IDT_ENTRY *entry){
-	return  (size_t)entry->Offset_2<<32|
-			(size_t)entry->Offset_1<<16|
-			(size_t)entry->Offset_0;
-}
+void IDT_Set_Offset(IDT_ENTRY *entry, size_t adr);
+size_t IDT_Get_Offset(IDT_ENTRY *entry);
+
 //gate
 //bit 0-3 Type (interupt gate =0x8E, Trap gate =0x8F)
 //bit 4 zero
@@ -38,51 +29,15 @@ typedef struct {
 	uint64_t Offset;
 } __attribute__((packed))IDT_Descriptor;
 
-#define slots 0xFF
-IDT_ENTRY idt_entries[slots];
 
 
-void create_idt_entry(void* handler, uint8_t entryOffset, uint8_t type_attr, uint8_t selector){
-	IDT_ENTRY* interupt=&idt_entries[entryOffset];
-	IDT_Set_Offset(interupt,(uint64_t)handler);
-	interupt->Gate=type_attr;
-	interupt->Segment_Selector=selector;
-}
+void create_idt_entry(void* handler, uint8_t entryOffset, uint8_t type_attr, uint8_t selector);
 
 extern void Pit_Handler_Asm();
 extern void interupt3();
-void create_interrupts(){
-	for (uint32_t i = 0; i < sizeof(IDT_ENTRY)*slots; ++i){
-		*(((char*)idt_entries)+i)=0;
-	}
-	create_idt_entry((void*)interupt3, 0x03, INTERRUPT_GATE, 0x08);
-	create_idt_entry((void*)PageFault_Handler, 0x0E, INTERRUPT_GATE, 0x08);
-	create_idt_entry((void*)GeneralFault_Handler, 0x0D, INTERRUPT_GATE, 0x08);
-	create_idt_entry((void*)DoubleFault_Handler, 0x08, INTERRUPT_GATE, 0x08);
-	create_idt_entry((void*)Keyboard_Handler, 0x21, INTERRUPT_GATE, 0x08);
-	create_idt_entry((void*)Mouse_Handler, 0x2C, INTERRUPT_GATE, 0x08);
+extern void int80();
 
-	//create_idt_entry((void*)PIT_Handler, 0x20, INTERRUPT_GATE, 0x08);
-	create_idt_entry((void*)Pit_Handler_Asm, 0x20, INTERRUPT_GATE, 0x08);
-
-
-	IDT_Descriptor idt_descriptor;
-	
-	idt_descriptor.Size = sizeof(IDT_ENTRY)*slots - 1;
-	idt_descriptor.Offset=(uint64_t)&idt_entries[0];
-
-
-
-	asm ("lidt %0" : : "m" (idt_descriptor));
-
-	PIC_remap(PIC1,PIC1+8);
-	//InitPS2Mouse();
-	outb(PIC1_DATA, 0b11111000);
-	outb(PIC2_DATA, 0b11101111);
-
-	//outb(PIC1_DATA, 0b11111000);
-	//outb(PIC2_DATA, 0b11101111);
-}
+void create_interrupts();
 
 
 

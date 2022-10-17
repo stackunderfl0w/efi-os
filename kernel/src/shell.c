@@ -4,6 +4,8 @@
 #include "ctype.h"
 #include "scheduler.h"
 #include "paging.h"
+#include "filesystem.h"
+#include "memory.h"
 void run_cmd(char* cmd);
 
 char num_shift[10]={')','!','@','#','$','%','^','&','*','('};
@@ -50,50 +52,9 @@ void new_console_line(){
 	printf("\033[s\nhello1\033[uhello2\n");
 
 }
-/*void kb_callback(int keycode, int action){
-	//printf("hi\n");
-	if (keycode!=0){
-		//printchar(keycode);
-		//printf("%c %s\n",keycode,action==PRESS?"PRESSED":"UNPRESSED");
-	}
-	if(keycode==KEYCODE_LSHIFT){
-		isLeftShift=!(bool)action;
-	}
-	if(keycode==KEYCODE_RSHIFT){
-		isRightShift=!(bool)action;
-	}
-	if(action==PRESS){
-		if(isprint(keycode)){
-			hide_cursor();
-			print_character(keycode);
-			show_cursor();
-			cmd[cmd_index++]=keycode;
-		}
-		if(keycode==KEYCODE_BACKSPACE){
-			if(cmd_index>0){
-				hide_cursor();
-				//deletechar();
-				show_cursor();
-				cmd[--cmd_index]=0;
-			}
-		}
-		if(keycode==KEYCODE_RETURN){
-			hide_cursor();
-			printf("\n");
-			printf("%s\n",cmd);
-			run_cmd(cmd);
-			memset(cmd,0,4096);
-			cmd_index=0;
-			new_console_line();
-			show_cursor();
-		}
-	}
-}*/
-
 
 void run_shell(Framebuffer* buf, bitmap_font* font){
 	//printf("\n[%s@%s: ~]$",username,hostname);
-	//set_keyboard_callback(kb_callback);
 	char cmd[1024];
 
 	int index=0;
@@ -101,17 +62,24 @@ void run_shell(Framebuffer* buf, bitmap_font* font){
 
 	bool running=true;
 	cursor_active=true;
+	char pwd_buf[1024];
+
 
 	while(running){
-		printf("[%s@%s: ~]$",username,hostname);
+		//printf("[%s@%s: ~]$",username,hostname);
+		getcwd(pwd_buf,1024);
+
+		printf("[%s@%s: %s]$",username,hostname,pwd_buf);
+		//chdir("resources/resourcesresources");
 		index=0;
 		memset(cmd,0,1024);
 		while(cmd[index-1]!=10){
 			if(c=fgetc(stdin)){
 				cmd[index++]=c;
 				if(c==10){
-					//printf("%u",c);
 				}
+				//printf("%u",c);
+
 			}
 			else{
 				yield();
@@ -128,21 +96,32 @@ void run_shell(Framebuffer* buf, bitmap_font* font){
 	}
 }
 void run_cmd(char* cmd){
+	int argc;
+	char** argv=split_string_by_char(cmd,' ',&argc);
 	cursor_active=false;
 	if(cursor_present){
 		cursor_present=false;
 		printf("\033[D ");
 	}
-	if(!strcmp(cmd,"free")){
+	if(!strcmp(argv[0],"free")){
 		printf("Free memory: %ukb\n",get_free_memory()/1024);
 		printf("Used memory: %ukb\n",get_used_memory()/1024);
 		printf("Reserved memory: %ukb\n",get_reserved_memory()/1024);
 	}
-	else if(!strcmp(cmd,"ls")){
+	if(!strcmp(argv[0],"cd")){
+		if(argc>1){
+			if(chdir(argv[1])==-1){
+				printf("sh: cd: %s: No such file or directory",argv[1]);
+			}
+		}
+	}
+	else if(!strcmp(argv[0],"ls")){
 		int entries;
 		//char** files=read_directory("/",&entries);
 		
 	}
+
+	free(argv);
 
 
 	cursor_active=true;

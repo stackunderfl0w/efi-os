@@ -106,7 +106,7 @@ char tty_read(FILE* f){
 }
 void kb_callback(int keycode, int modifiers){
 	if(modifiers&MODCODE_KEYDOWN){
-		if(isalpha(keycode)||keycode=='\n'){
+		if(isprint(keycode)||keycode=='\n'){
 			fputc(keycode,stdout);
 			fputc((char)keycode,stdin);
 		}
@@ -129,6 +129,7 @@ tty init_tty_0(FILE* stdout_0, FILE* stdin_0, char* stdout_buf, char* stdin_buf,
 
 	stdout->io_lock=false;
 
+	//better for testing
 	stdout->flags=IO_UNBUFFERED;
 
 	stdin=stdin_0;
@@ -143,7 +144,7 @@ tty init_tty_0(FILE* stdout_0, FILE* stdin_0, char* stdout_buf, char* stdin_buf,
 
 	stdin->io_lock=false;
 
-	stdin->flags=IO_UNBUFFERED|IO_NO_SYNC;
+	stdin->flags=IO_LINE_BUFFERED;
 	set_keyboard_callback(kb_callback);
 }
 tty init_tty(graphics_context* kg){

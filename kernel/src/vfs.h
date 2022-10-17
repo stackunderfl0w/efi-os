@@ -49,10 +49,11 @@ void vfs_free(vfs_node* root);
 void vfs_mount_drive(uint64_t drive_id, char* path);
 void vfs_create_file(char* filename);
 
+vfs_node* vfs_get_single_entry_from_dir(vfs_node* dir, const char* filename);
 vfs_node* vfs_get_entry_from_dir(vfs_node* dir, const char* filename);
 
 
-vfs_node * vfs_open_file(vfs_node *cur, char* filepath);
+vfs_node * vfs_open_file(vfs_node *cur, const char* filepath);
 void vfs_close_file(vfs_node* file);
 
 uint64_t vfs_create_pipe(char* filename);

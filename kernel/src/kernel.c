@@ -118,10 +118,7 @@ int _start(bootinfo *info){
 
 	print_vfs_recursive(root,0);
 
-
-
-
-
+	detect_cores((void*)(uint64_t)info->rsdp->RsdtAddress);
 	//loop();
 
 	void* new_fb=(void*)0x7000000000;
@@ -129,8 +126,8 @@ int _start(bootinfo *info){
 	Framebuffer fb=*info->buf;
 	fb.BaseAddress=new_fb;
 	graphics_context kernel_graphics=init_text_overlay(&fb, info->font);
-	kernel_graphics.foreground_color=0x00ff00ff;
-	kernel_graphics.background_color=0xff00ff00;
+	kernel_graphics.foreground_color=0x00ffffff;
+	kernel_graphics.background_color=0x00000000;
 	k_context=&kernel_graphics;
 
 
@@ -139,6 +136,12 @@ int _start(bootinfo *info){
 
 	start_scheduler();
 
+	new_process("/resources/syscall_test.elf", k_context->buf->BaseAddress);
+
+	while(1){
+		yield();
+	}
+	//loop();
 	printf("\n\n\n\n\n");
 
 	sleep(1);

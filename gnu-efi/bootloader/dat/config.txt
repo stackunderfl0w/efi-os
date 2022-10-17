@@ -1,6 +1,6 @@
 #resolution
-1600
-900
+1280
+720
 #font
 resources\ter-powerline-v28n.psf
 resources\zap-light16.psf

@@ -11,7 +11,6 @@ typedef struct{
 	thread* threads[256];
 	vfs_node* working_dir;
 	file_table* process_file_table;
-
 }process;
 
 struct thread{

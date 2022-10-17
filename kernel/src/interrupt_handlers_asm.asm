@@ -1,10 +1,11 @@
 [bits 64]
-fmt:    db "from asm %x", 10, 0          ; The printf format, "\n",'0'
+fmt:    db "from asm %x",10,10,10, 0          ; The printf format, "\n",'0'
 extern printf
 extern loop
 extern PIT_TICK
 extern PIC_EndMaster
 extern get_next_thread
+
 
 %macro pushall64 0
 ;stack frame
@@ -109,5 +110,29 @@ yield:
 	;xor	rax,rax		; or can be  xor  rax,rax
 	;call	printf		; Call C function
 	ret
-
 global yield
+
+int80:
+	;rbx,r12,r13,r14,r15,rbp
+	;pushall64
+	;push rdi
+	push rbx
+	push r12
+	push r13
+	push r14 
+	push r15
+
+	mov	rsi,rdi
+	mov	rdi,fmt
+	xor	rax,rax		; or can be  xor  rax,rax
+	call	printf		; Call C function
+
+	pop r15
+	pop r14
+	pop r13
+	pop r12
+	pop rbx
+	;pop rdi
+	;popall64
+	iretq
+global int80

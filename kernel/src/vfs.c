@@ -17,7 +17,7 @@ vfs_node* vfs_create_root(uint64_t root_drive){
 	root->flags=VFS_DIRECTORY|VFS_MOUNT|VFS_ROOT;
 	root->drive_id=root_drive;
 	root->children= create_sorted_list((int (*)(void *, void *)) cmp_vfs_node_by_filename);
-	root->parent=NULL;
+	root->parent=root;
 	return root;
 }
 
@@ -39,7 +39,7 @@ void vfs_create_file(char* filename){
 
 }
 
-vfs_node* vfs_get_entry_from_dir(vfs_node* dir, const char* filename){
+vfs_node* vfs_get_single_entry_from_dir(vfs_node* dir, const char* filename){
 	if(!(dir->flags&VFS_DIRECTORY))
 		return NULL;
 	if(!strcmp(filename,"."))
@@ -54,12 +54,10 @@ vfs_node* vfs_get_entry_from_dir(vfs_node* dir, const char* filename){
 	}
 	return NULL;
 }
-
-vfs_node * vfs_open_file(vfs_node *cur, char* filepath){
-	//vfs_node* cur;
+vfs_node* vfs_get_entry_from_dir(vfs_node *cur, const char* filepath){
 	char cur_file_name[256]={0};
 
-	char* f=filepath;
+	const char* f=filepath;
 	f=*f=='/'?f+1:f;
 	//Originally I attempted to do this with strchr and strncpy but this seems simpler with fewer edge cases
 	int idx=0;
@@ -71,7 +69,7 @@ vfs_node * vfs_open_file(vfs_node *cur, char* filepath){
 			cur_file_name[idx] = 0;
 			idx = 0;
 			//printf("%s\n", cur_file_name);
-			cur = vfs_get_entry_from_dir(cur, cur_file_name);
+			cur = vfs_get_single_entry_from_dir(cur, cur_file_name);
 			if (!cur)
 				return NULL;
 			if (!*f)//don't see a better way to deal with this for the time being
@@ -79,6 +77,11 @@ vfs_node * vfs_open_file(vfs_node *cur, char* filepath){
 			f++;
 		}
 	}
+	return cur;
+}
+
+vfs_node * vfs_open_file(vfs_node *cur, const char* filepath){
+	cur= vfs_get_entry_from_dir(cur,filepath);
 	if(!cur->open_references){
 		//cur->data_cache=cur->seek_head=malloc((cur->size&0x1ff)+512);
 		cur->data_cache=cur->seek_head=load_fat_cluster_chain(cur->location);
@@ -105,13 +108,22 @@ uint64_t vfs_close_pipe(char* filename){
 
 int vfs_get_full_filepath(vfs_node* node, char* buf, uint64_t max_size){
 	int index=0;
-	if(node->parent){
+	if(!(node->flags&VFS_ROOT)){
 		index=vfs_get_full_filepath(node->parent,buf,max_size);
 	}
-	if((index+strlen(node->name)<max_size)){
+	else{
+		buf[index]='/';
+		buf[index+1]=0;
+		return 1;
+	}	
+	if((index+1+strlen(node->name)<max_size)){
+		if(!(node->parent->flags&VFS_ROOT)){
+			buf[index]='/';
+			index++;
+		}
 		strcpy(buf+index,node->name);
 	}
-	return index+ strlen(node->name);
+	return (int)(index+ strlen(node->name));
 }
 void print_vfs_recursive(vfs_node* dir, int level){
 	for (int i = 0; i < level; ++i) {
