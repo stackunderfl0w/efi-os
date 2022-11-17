@@ -8,7 +8,7 @@ uint64_t ioapic_ptr=0;      // pointer to the IO APIC MMIO registers
 extern void core_wakeup();
 
 void detect_cores(uint8_t *rsdt){
-	printf("core wakeup %x\n",core_wakeup);
+	kprintf("core wakeup %x\n",core_wakeup);
 	uint8_t *ptr, *ptr2;
 	uint32_t len;
 
@@ -23,23 +23,23 @@ void detect_cores(uint8_t *rsdt){
 			for(ptr += 44; ptr < ptr2; ptr += ptr[1]) {
 				switch(ptr[0]) {
 					case 0: if(ptr[4] & 1) lapic_ids[numcore++] = ptr[3];// break; // found Processor Local APIC
-					printf("found Processor Local APIC\n%p\n",lapic_ptr);
+					kprintf("found Processor Local APIC\n%p\n",lapic_ptr);
 					break;
 					case 1: ioapic_ptr = (uint64_t)*((uint32_t*)(ptr+4)); //break;  // found IOAPIC
-					printf("found IOAPIC\n");
+					kprintf("found IOAPIC\n");
 					break;
 					case 5: lapic_ptr = *((uint64_t*)(ptr+4)); //break;             // found 64 bit LAPIC
-					printf("found 64 bit LAPIC\n");
+					kprintf("found 64 bit LAPIC\n");
 					break;
 				}
 			}
 			break;
 		}
 	}
-	printf("Found %u cores, IOAPIC %p, LAPIC %p, Processor IDs:", numcore, ioapic_ptr, lapic_ptr);
+	kprintf("Found %u cores, IOAPIC %p, LAPIC %p, Processor IDs:", numcore, ioapic_ptr, lapic_ptr);
 	for(int i = 0; i < numcore; i++)
-		printf(" %u", lapic_ids[i]);
-	printf("\n");
+		kprintf(" %u", lapic_ids[i]);
+	kprintf("\n");
 }
 /*
 3.6.5 APIC Memory Mapping

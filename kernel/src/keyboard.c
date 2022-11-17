@@ -34,7 +34,7 @@ bool callbacks_enabled=false;
 void (*callback)(int, int)=NULL; 
 
 void handle_key(uint8_t keycode){
-	//printf("%u\n",(uint64_t)keycode);
+	//kprintf("%u\n",(uint64_t)keycode);
 	int final_keycode=0;
 	if (keycode==0xE0 && previous_key==0){
 		previous_key=keycode;
@@ -94,7 +94,7 @@ void handle_key(uint8_t keycode){
 	}
 
 	if(callbacks_enabled){
-		//printf("\nKEY%u MOD%u\n",final_keycode,modifiers);
+		//kprintf("\nKEY%u MOD%u\n",final_keycode,modifiers);
 		(*callback)(final_keycode,modifiers);
 		return;
 	}

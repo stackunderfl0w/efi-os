@@ -22,14 +22,14 @@ void INIT_PAGING(EFI_MEMORY_DESCRIPTOR* memMap, uint64_t Entries, uint64_t DescS
 			}
 		}
 	}
-	printf("largest_segment:%u\n",largest_segment_size);
+	kprintf("largest_segment:%u\n",largest_segment_size);
 
 	uint64_t total_mem=	getMemorySize(memMap, Entries, DescSize);
 	FREE_MEMORY=total_mem;
 	//print("placing page table man at ");
 	pages_used=(char*)largest_segment->PhysicalStart;
 	total_pages=total_mem/4096 +1;
-	printf("Total memory pages:%u",total_pages);
+	kprintf("Total memory pages:%u",total_pages);
 	//maybe speed up with a memset
 	for (uint64_t i = 0; i < total_pages; ++i){
 		pages_used[i]=0;
@@ -47,30 +47,30 @@ void INIT_PAGING(EFI_MEMORY_DESCRIPTOR* memMap, uint64_t Entries, uint64_t DescS
 	}
 
 	uint64_t kernel_size=((uint64_t)&_KernelEnd-(uint64_t)&_KernelStart)/4096;
-	printf("kernel_size: %u\n",kernel_size);
+	kprintf("kernel_size: %u\n",kernel_size);
 
 
 	LOCK_PAGES(&_KernelStart,kernel_size);
-	printf("Generating Kernel page table\n");
+	kprintf("Generating Kernel page table\n");
 
 	KERNEL_PL4=REQUEST_PAGE();
-	printf("memseting kernel\n");
+	kprintf("memseting kernel\n");
 	memset(KERNEL_PL4,0,4096);
 
-	printf("identity mapping mem\n");
+	kprintf("identity mapping mem\n");
 	map_pages(0,0,total_mem/4096);
 
 	//map_pages(0xffff800000000000,0,total_mem/4096);
 
 
-	printf("maping display Framebuffer, fb at:%p\n",buf->BaseAddress);
+	kprintf("maping display Framebuffer, fb at:%p\n",buf->BaseAddress);
 	//map_pages(buf->BaseAddress,buf->BaseAddress,buf->BufferSize/4096+1);
-	//printf("W:%u H:%u Bs:%u BS/4k:%u Ex:%u",buf->Width,buf->Height,buf->BufferSize,buf->BufferSize/4096,(buf->Height*buf->Width*4+4095)/4096);
+	//kprintf("W:%u H:%u Bs:%u BS/4k:%u Ex:%u",buf->Width,buf->Height,buf->BufferSize,buf->BufferSize/4096,(buf->Height*buf->Width*4+4095)/4096);
 	map_fb_pages(buf->BaseAddress,buf->BaseAddress,(buf->BufferSize+4095)/4096);
 
-	printf("Loading cr3");
+	kprintf("Loading cr3");
 	asm ("mov %0, %%cr3" : : "r" (KERNEL_PL4));
-	printf("cr3 loaded\n");
+	kprintf("cr3 loaded\n");
 }
 //index that should not be after first free page
 uint64_t page_index=0;

@@ -4,9 +4,9 @@
 extern FILE* stdout;
 extern FILE* stdin;
 
-int printf(const char* str, ...);
+int kprintf(const char* str, ...);
 
-int sprintf(char* str, const char* format, ...);
+int ksprintf(char* str, const char* format, ...);
 
 int fgetc(FILE* f);
 

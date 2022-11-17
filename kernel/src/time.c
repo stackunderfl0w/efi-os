@@ -59,10 +59,10 @@ void INIT_RTC(){
 	}
 
 
-	//printf("second:%u\nminute:%u\nhour:%u\nday:%u\nmonth:%u\nyear:%u\n",
+	//kprintf("second:%u\nminute:%u\nhour:%u\nday:%u\nmonth:%u\nyear:%u\n",
 		//SYSTEM_TIME.second,SYSTEM_TIME.minute,SYSTEM_TIME.hour,SYSTEM_TIME.day,SYSTEM_TIME.month,SYSTEM_TIME.year);
 
-	//printf("%u %u %u", SYSTEM_TIME.year, SYSTEM_TIME.month, SYSTEM_TIME.day);
+	//kprintf("%u %u %u", SYSTEM_TIME.year, SYSTEM_TIME.month, SYSTEM_TIME.day);
 
 }
 void SYSTEM_TIME_INCREMENT(){

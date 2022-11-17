@@ -1,6 +1,6 @@
 [bits 64]
-fmt:    db "from asm %x",10,10,10, 0          ; The printf format, "\n",'0'
-extern printf
+fmt:    db "from asm %x",10,10,10, 0          ; The kprintf format, "\n",'0'
+extern kprintf
 extern loop
 extern PIT_TICK
 extern PIC_EndMaster
@@ -77,7 +77,7 @@ Pit_Handler_Asm:
 	;mov	rdi,fmt
 	;mov	rsi,[rsp+r14]
 	;xor	rax,rax		; or can be  xor  rax,rax
-	;call	printf		; Call C function
+	;call	kprintf		; Call C function
 	;add r14,8
 	;dec r15
 	;jnz prt
@@ -108,7 +108,7 @@ yield:
 	;mov	rdi,fmt
 	;mov	rsi,[rsp]
 	;xor	rax,rax		; or can be  xor  rax,rax
-	;call	printf		; Call C function
+	;call	kprintf		; Call C function
 	ret
 global yield
 
@@ -125,7 +125,7 @@ int80:
 	mov	rsi,rdi
 	mov	rdi,fmt
 	xor	rax,rax		; or can be  xor  rax,rax
-	call	printf		; Call C function
+	call	kprintf		; Call C function
 
 	pop r15
 	pop r14

@@ -50,7 +50,7 @@ gdt_desc:                       ; The GDT descriptor
 bits 32
 section .smp.protected
 extern KERNEL_PL4
-extern printf
+extern kprintf
 smp_protected_entry:
     mov ax, 0x10
     mov ds, ax
@@ -89,14 +89,14 @@ _ap_start:
     hlt
     jmp _ap_start.loop
 BITS 64
-fmt:    db "from asm %x", 10, 0          ; The printf format, "\n",'0'
-extern printf
+fmt:    db "from asm %x", 10, 0          ; The kprintf format, "\n",'0'
+extern kprintf
 
 loup:
     mov rdi,fmt
     mov rsi,[rsp]
     xor rax,rax     ; or can be  xor  rax,rax
-    call    printf      ; Call C function
+    call    kprintf      ; Call C function
 
     jmp loup
 

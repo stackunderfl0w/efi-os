@@ -68,7 +68,7 @@ vfs_node* vfs_get_entry_from_dir(vfs_node *cur, const char* filepath){
 		if ((*f == '/') || *f == 0) {
 			cur_file_name[idx] = 0;
 			idx = 0;
-			//printf("%s\n", cur_file_name);
+			//kprintf("%s\n", cur_file_name);
 			cur = vfs_get_single_entry_from_dir(cur, cur_file_name);
 			if (!cur)
 				return NULL;
@@ -127,9 +127,9 @@ int vfs_get_full_filepath(vfs_node* node, char* buf, uint64_t max_size){
 }
 void print_vfs_recursive(vfs_node* dir, int level){
 	for (int i = 0; i < level; ++i) {
-		printf("\t");
+		kprintf("\t");
 	}
-	printf("\033[3%um%s\n",dir->flags&VFS_DIRECTORY?2:3,dir->name);
+	kprintf("\033[3%um%s\n",dir->flags&VFS_DIRECTORY?2:3,dir->name);
 	if(dir->flags&VFS_DIRECTORY){
 		for (int i = 0; i <dir->children->size ; ++i) {
 			print_vfs_recursive(dir->children->data[i],level+1);
@@ -149,7 +149,7 @@ void vfs_recursive_populate(vfs_node* root, char* path, int max_level){
 			vfs_node* cur=root->children->data[i];
 			strcpy(dir+pathlen,cur->name);
 			strcpy(dir+ strlen(dir),"/");
-			//printf("%s\n",dir);
+			//kprintf("%s\n",dir);
 			vfs_recursive_populate(cur,dir,max_level-1);
 		}
 	}

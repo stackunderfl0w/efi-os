@@ -32,8 +32,8 @@ __attribute__((interrupt)) void PageFault_Handler(struct interrupt_frame* frame)
     : /* no input */
     : "%rax"
     );
-	//printf("%p\n",err);
-	sprintf(buf,"%p",cr2);
+	//kprintf("%p\n",err);
+	ksprintf(buf,"%p",cr2);
 	print(global_context,buf);
 	loop();
 }
@@ -68,7 +68,7 @@ __attribute__((interrupt)) void Mouse_Handler(struct interrupt_frame* frame){
 }
 
 __attribute__((interrupt)) void test_handler(struct interrupt_frame* frame){
-	printf("test signal recieved");
+	kprintf("test signal recieved");
 }
 
 /*__attribute__((interrupt)) void PIT_Handler(struct interrupt_frame* frame){
@@ -77,7 +77,7 @@ __attribute__((interrupt)) void test_handler(struct interrupt_frame* frame){
 	PIT_TICK();
 	PIC_EndMaster();
 	//handle_scheduler();
-	printf("\nip %u\ncs %u\nflags %u\nsp %u\nss %u\nerr %u\npad %u\npad2 %u",frame->ip,frame->cs,frame->flags,frame->sp,frame->ss,frame->err,frame->pad,frame->pad2);
+	kprintf("\nip %u\ncs %u\nflags %u\nsp %u\nss %u\nerr %u\npad %u\npad2 %u",frame->ip,frame->cs,frame->flags,frame->sp,frame->ss,frame->err,frame->pad,frame->pad2);
 	asm volatile("cli");
 	loop();
 }*/

@@ -21,14 +21,14 @@ char* hostname="efios";
 
 void show_cursor(){
 	if(cursor_flash&&!cursor_present){
-		printf("%c\033[D",0x18);
+		kprintf("%c\033[D",0x18);
 		cursor_present=true;
 		fflush(stdout);
 	}
 }
 void hide_cursor(){
 	if(cursor_present){
-		printf(" \033[D");
+		kprintf(" \033[D");
 		fflush(stdout);
 		cursor_present=false;
 	}
@@ -37,24 +37,24 @@ void hide_cursor(){
 void print_character(char keycode){
 	if(isLeftShift||isRightShift){
 		if (isalpha(keycode)){
-			printf("%c",keycode-32);
+			kprintf("%c",keycode-32);
 		}
 		else if(isdigit(keycode)){
-			printf("%c",num_shift[keycode-0x30]);
+			kprintf("%c",num_shift[keycode-0x30]);
 		}
 	}
 	else{
-		printf("%c",keycode);
+		kprintf("%c",keycode);
 	}
 }
 void new_console_line(){
-	printf("\n[%s@%s: ~]$",username,hostname);
-	printf("\033[s\nhello1\033[uhello2\n");
+	kprintf("\n[%s@%s: ~]$",username,hostname);
+	kprintf("\033[s\nhello1\033[uhello2\n");
 
 }
 
 void run_shell(Framebuffer* buf, bitmap_font* font){
-	//printf("\n[%s@%s: ~]$",username,hostname);
+	//kprintf("\n[%s@%s: ~]$",username,hostname);
 	char cmd[1024];
 
 	int index=0;
@@ -66,10 +66,10 @@ void run_shell(Framebuffer* buf, bitmap_font* font){
 
 
 	while(running){
-		//printf("[%s@%s: ~]$",username,hostname);
+		//kprintf("[%s@%s: ~]$",username,hostname);
 		getcwd(pwd_buf,1024);
 
-		printf("[%s@%s: %s]$",username,hostname,pwd_buf);
+		kprintf("[%s@%s: %s]$",username,hostname,pwd_buf);
 		//chdir("resources/resourcesresources");
 		index=0;
 		memset(cmd,0,1024);
@@ -78,7 +78,7 @@ void run_shell(Framebuffer* buf, bitmap_font* font){
 				cmd[index++]=c;
 				if(c==10){
 				}
-				//printf("%u",c);
+				//kprintf("%u",c);
 
 			}
 			else{
@@ -101,17 +101,17 @@ void run_cmd(char* cmd){
 	cursor_active=false;
 	if(cursor_present){
 		cursor_present=false;
-		printf("\033[D ");
+		kprintf("\033[D ");
 	}
 	if(!strcmp(argv[0],"free")){
-		printf("Free memory: %ukb\n",get_free_memory()/1024);
-		printf("Used memory: %ukb\n",get_used_memory()/1024);
-		printf("Reserved memory: %ukb\n",get_reserved_memory()/1024);
+		kprintf("Free memory: %ukb\n",get_free_memory()/1024);
+		kprintf("Used memory: %ukb\n",get_used_memory()/1024);
+		kprintf("Reserved memory: %ukb\n",get_reserved_memory()/1024);
 	}
 	if(!strcmp(argv[0],"cd")){
 		if(argc>1){
 			if(chdir(argv[1])==-1){
-				printf("sh: cd: %s: No such file or directory",argv[1]);
+				kprintf("sh: cd: %s: No such file or directory",argv[1]);
 			}
 		}
 	}

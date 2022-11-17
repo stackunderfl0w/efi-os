@@ -310,7 +310,7 @@ void write_file(char* filepath, uint8_t* data, uint64_t size){
 		if(strcasecmp(paths[i],"")){
 			entry_location=entry->first_cluster_low_16;
 			cur_dir=load_fat_cluster_chain(entry_location);
-			//printf("trying to load %s\n", paths[i]);
+			//kprintf("trying to load %s\n", paths[i]);
 			if(i<sections-1){
 				free(cur_dir);
 			}

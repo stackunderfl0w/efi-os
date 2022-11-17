@@ -44,7 +44,7 @@ char* format_double(char* buf, double x, uint64_t precision){
 	return buf;
 }
 //no need to specify between 32 and 64 bit. It gets cast to 64 bit anyways
-int vsprintf(char* str, const char* format, va_list ap){
+int kvsprintf(char* str, const char* format, va_list ap){
 	char* temp;
 	char* buf=str;
 
@@ -84,20 +84,20 @@ int vsprintf(char* str, const char* format, va_list ap){
 	va_end(ap);
 	return buf-str;
 }
-int sprintf(char* str, const char* format, ...){
+int ksprintf(char* str, const char* format, ...){
 	va_list arg;
 	va_start (arg, format);
-	int i = vsprintf (str, format, arg);
+	int i = kvsprintf (str, format, arg);
 	va_end (arg);
 	return i;
 }
-int printf(const char* format, ... ){
-	char printf_buf[512];
+int kprintf(const char* format, ... ){
+	char kprintf_buf[512];
 	va_list args;
 	va_start (args, format);
-	int i = vsprintf(printf_buf, format, args);
+	int i = kvsprintf(kprintf_buf, format, args);
 	va_end (args);
-	fputs(printf_buf,stdout);
+	fputs(kprintf_buf,stdout);
 	return i;
 }
 

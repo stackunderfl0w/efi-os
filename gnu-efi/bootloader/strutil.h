@@ -39,7 +39,7 @@ int atoi(const char* buf){
 		index++;
 	}
 	while(buf[index]>='0'&&buf[index]<='9'&&index<20){
-		//printf("index %c \n",buf[index]);
+		//kprintf("index %c \n",buf[index]);
 
 		output*=10;
 		output+=buf[index++]-'0';
@@ -73,7 +73,7 @@ CHAR8** split_string_by_char(CHAR8* str, CHAR8 seperator, int *section_count){
 
 	CHAR8** sections=AllocatePool(n_count*sizeof(CHAR8*)+strlen(str)+1);
 	CHAR8* start = ((CHAR8*)sections)+(n_count*sizeof(CHAR8*));
-	//printf("bytes used: %d\n",(int)(n_count*sizeof(CHAR8*)+strlen(str))+1);
+	//kprintf("bytes used: %d\n",(int)(n_count*sizeof(CHAR8*)+strlen(str))+1);
 
 	*section_count=n_count;
 	sections[0]=&start[index];

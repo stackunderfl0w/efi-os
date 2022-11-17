@@ -65,48 +65,48 @@ int _start(bootinfo *info){
 
 	tty tty0=init_tty_0(&stdout_0,&stdin_0,stdout_buf,stdin_buf,8192);
 
-	printf("Bootloader exited successfully\n");
+	kprintf("Bootloader exited successfully\n");
 
 	INIT_GDT();
-	printf("GDT loaded\n");
+	kprintf("GDT loaded\n");
 	
 	create_interrupts();
-	printf("Interupts loaded\n");
+	kprintf("Interupts loaded\n");
 
 	//SET_PIT_DIVISOR(65535);
 	SET_PIT_FREQUENCY(1000);
-	printf("Pit set\n");
+	kprintf("Pit set\n");
 
 	INIT_RTC();
-	printf("RTC date&time read");
+	kprintf("RTC date&time read");
 
 	INIT_PS2_MOUSE();
-	printf("PS2 mouse initialized\n");
+	kprintf("PS2 mouse initialized\n");
 
-	printf("Frambuffer base:%u\n",(uint64_t)info->buf->BaseAddress);
+	kprintf("Frambuffer base:%u\n",(uint64_t)info->buf->BaseAddress);
 
 	uint32_t numEntries=info->map_size/info->map_desc_size;
 	uint64_t memsize=getMemorySize(info->mem_map,numEntries,info->map_desc_size);
 
-	printf("Total memory:%u(%uMB)\n",memsize,memsize/(1024*1024));
+	kprintf("Total memory:%u(%uMB)\n",memsize,memsize/(1024*1024));
 
 	INIT_PAGING(info->mem_map,numEntries,info->map_desc_size,info->buf);
-	printf("Paging initialized\n");
+	kprintf("Paging initialized\n");
 
-	printf("Free memory: %ukb\n",get_free_memory()/1024);
-	printf("Used memory: %ukb\n",get_used_memory()/1024);
-	printf("Reserved memory: %ukb\n",get_reserved_memory()/1024);
+	kprintf("Free memory: %ukb\n",get_free_memory()/1024);
+	kprintf("Used memory: %ukb\n",get_used_memory()/1024);
+	kprintf("Reserved memory: %ukb\n",get_reserved_memory()/1024);
 
 	void* kernel_heap=(void*)0x80000000000;
 	INIT_HEAP(kernel_heap,0x10);
-	printf("Kernel Heap initialized at %p\n",kernel_heap);
+	kprintf("Kernel Heap initialized at %p\n",kernel_heap);
 	
 	INIT_FILESYSTEM();
-	printf("Fat file system loaded\n");
+	kprintf("Fat file system loaded\n");
 	file_table* placeholder=init_file_table();
 
 	vfs_node* root= vfs_create_root(0);
-	printf("Virtual file system starting up\n");
+	kprintf("Virtual file system starting up\n");
 
 	process p;
 	current_process=&p;
@@ -114,7 +114,7 @@ int _start(bootinfo *info){
 	current_process->process_file_table=placeholder;
 
 	vfs_recursive_populate(root,"/",5);
-	printf("Virtual file system populated\n");
+	kprintf("Virtual file system populated\n");
 
 	print_vfs_recursive(root,0);
 
@@ -131,7 +131,7 @@ int _start(bootinfo *info){
 	k_context=&kernel_graphics;
 
 
-	printf("Enabling interupts");
+	kprintf("Enabling interupts");
 	swap_buffer(global_context->buf,k_context->buf);
 
 	start_scheduler();
@@ -142,7 +142,7 @@ int _start(bootinfo *info){
 		yield();
 	}
 	//loop();
-	printf("\n\n\n\n\n");
+	kprintf("\n\n\n\n\n");
 
 	sleep(1);
 
@@ -162,11 +162,11 @@ int _start(bootinfo *info){
 
 
 	
-	//printf("%x\n",info->rsdp);
-	//printf("%x\n", info->rsdp->RsdtAddress);
+	//kprintf("%x\n",info->rsdp);
+	//kprintf("%x\n", info->rsdp->RsdtAddress);
 	//busyloop(500000000);
 	//detect_cores((void*)(uint64_t)info->rsdp->RsdtAddress);
-	//printf("%x\n",info->rsdp);
+	//kprintf("%x\n",info->rsdp);
 
 
 
