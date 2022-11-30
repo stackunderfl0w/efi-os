@@ -20,6 +20,8 @@ typedef signed long long ssize_t;
 typedef UINT64			EFI_PHYSICAL_ADDRESS;
 typedef UINT64			EFI_VIRTUAL_ADDRESS;
 
+#define ROUND_4K(x) ((x+4095)&~0xfff)
+
 #define incptr(p, n) ((void *)(((uintptr_t)(p)) + (n)))
 
 

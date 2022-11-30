@@ -59,6 +59,10 @@ void vfs_close_file(vfs_node* file);
 uint64_t vfs_create_pipe(char* filename);
 uint64_t vfs_close_pipe(char* filename);
 
+int64_t vfs_file_read(vfs_node* file, void *buf,size_t offset,size_t count);
+int64_t vfs_file_write(vfs_node* file, const void *buf,size_t offset, size_t count);
+
+
 int vfs_get_full_filepath(vfs_node* node, char* buf, uint64_t max_size);
 
 void print_vfs_recursive(vfs_node* dir, int level);

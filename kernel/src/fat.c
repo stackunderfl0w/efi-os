@@ -3,8 +3,8 @@
 #include "ctype.h"
 #include "stdio.h"
 #include "stdlib.h"
-#include "vfs.h"
 #include "memory.h"
+#include "string.h"
 
 #define FAT12 1
 #define FAT16 2

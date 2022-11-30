@@ -60,10 +60,14 @@ void printchar(graphics_context* g, char chr){
 	if (chr=='\n'){
 		g->cursor_x=0;
 		g->cursor_y++;
+		if(g->cursor_y>=g->console_height){
+			g->cursor_y--;
+			scroll_console(g);       
+		}
 		return;
 	}
 	if(g->cursor_y>=g->console_height){
-		g->cursor_y--;
+		g->cursor_y=g->console_height;
 		scroll_console(g);       
 	}
 	//save and calculate new position before printing char for multithreading

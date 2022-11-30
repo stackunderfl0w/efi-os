@@ -1,6 +1,13 @@
 #include "string.h"
 #include "memory.h"
 
+char *strchr(const char *s, int c){
+	for (;*s; ++s) {
+		if (*s == c)
+			return ((char *)s);
+	}
+	return NULL;
+}
 char* strstr(char* string, char* substring){
 	char *a, *b;
 	b = substring;
@@ -103,4 +110,16 @@ char* strcpy(char* dest, const char* src){
 	}
 	*dest = 0;
 	return d;
+}
+char* strncpy(char* dest, const char* src, size_t n){
+	char*d=dest;
+	while(n-->0){
+		if((*d++=*src++)==0){
+			//reached end, fill rest with null;
+			while(n--){
+				*d++=0;
+			}
+		}
+	}
+	return dest;
 }

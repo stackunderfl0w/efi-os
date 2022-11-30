@@ -108,7 +108,7 @@ void kb_callback(int keycode, int modifiers){
 	if(modifiers&MODCODE_KEYDOWN){
 		if(isprint(keycode)||keycode=='\n'){
 			fputc(keycode,stdout);
-			fputc((char)keycode,stdin);
+			//fputc((char)keycode,stdin);
 		}
 	}
 }

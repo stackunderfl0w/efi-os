@@ -3,6 +3,8 @@
 #include "file_table.h"
 
 
+
+
 //get current working directory
 char *getcwd(char *buf, size_t size);
 //create a directory
@@ -46,13 +48,13 @@ int close(int fd);
 //read from a file descriptor
 ssize_t read(int fd, void *buf, size_t count);
 //write to a file descriptor
-//ssize_t write(int fd, const void *buf, size_t count);
+ssize_t write(int fd, const void *buf, size_t count);
 //manipulate file descriptor
 int fcntl(int fd, int cmd);
 //get file status
-int fstat(int filedes, struct stat *buf);
+int fstat(int fd, struct stat *buf);
 //reposition read/write file offset
-//off_t lseek(int fildes, off_t offset, int whence);
+off_t lseek(int fd, off_t offset, int whence);
 //duplicate a file descriptor
 int dup(int oldfd);
 //duplicate a file descriptor
