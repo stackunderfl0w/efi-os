@@ -104,15 +104,15 @@ uint8_t* root_directory;
 
 //will later diferentiate fs types but hardcoded to fat12 for now
 void INIT_FILESYSTEM(){
-	boot_sector=malloc(512);
+	boot_sector=kmalloc(512);
 	atapio_read_sectors(0, 1, boot_sector);
 	fs_type=ident_fat((fat_BS*)boot_sector);
 	BS=(fat_BS*) boot_sector;
 
-	FAT_TABLE_0=malloc(512*BS->table_size_16);
+	FAT_TABLE_0=kmalloc(512*BS->table_size_16);
 	atapio_read_sectors(get_first_fat_sector(BS),(uint8_t)BS->table_size_16,FAT_TABLE_0);
 
-	root_directory=malloc(512*get_root_dir_sectors(BS));
+	root_directory=kmalloc(512*get_root_dir_sectors(BS));
 	atapio_read_sectors(get_first_root_dir_sector(BS), get_root_dir_sectors(BS), root_directory);
 }
 void read_lfn_entry_name(char* buf, FAT_LONG_NAME_ENTRY* lfn){
@@ -221,11 +221,11 @@ uint64_t get_cluster_chain_length(uint16_t next_cluster){
 uint8_t* load_fat_cluster_chain(uint16_t next_cluster){
 	//check if we are trying to access the root directory
 	if(next_cluster==0){
-		uint8_t* file=malloc(512*get_root_dir_sectors(BS));
+		uint8_t* file=kmalloc(512*get_root_dir_sectors(BS));
 		memcpy(file,root_directory,512*get_root_dir_sectors(BS));
 		return file;
 	}
-	uint8_t* file =malloc(512*get_cluster_chain_length(next_cluster));
+	uint8_t* file =kmalloc(512*get_cluster_chain_length(next_cluster));
 	int c_index=0;
 	while (next_cluster!=4095){
 		atapio_read_sectors(get_first_sector_of_cluster((fat_BS*)boot_sector,next_cluster), 1, file+(512*c_index));
@@ -382,7 +382,7 @@ void fat_populate_vfs_directory(vfs_node* dir, char* dir_path){
 			if(strcmp(tmp_name,".")==0|strcmp(tmp_name,"..")==0){
 				continue;
 			}
-			vfs_node* n=malloc(sizeof(vfs_node));
+			vfs_node* n=kmalloc(sizeof(vfs_node));
 			strcpy(n->name,tmp_name);
 			n->size=entry->size;
 			n->drive_id=0;

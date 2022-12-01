@@ -80,7 +80,7 @@ char** split_string_by_char(char* str, char seperator, int *section_count){
 	//kprintf("1:%u 2:%u 3:%u",(uint64_t)n_count,sizeof(char*),strlen(str));
 	//kprintf("bytes used: %u\n",((uint64_t)n_count*sizeof(char*)+strlen(str))+1);
 
-	char** sections=calloc(n_count*sizeof(char*)+strlen(str)+1);
+	char** sections=kcalloc(n_count*sizeof(char*)+strlen(str)+1);
 	char* start = ((char*)sections)+(n_count*sizeof(char*));
 
 	*section_count=n_count;

@@ -12,7 +12,7 @@ int cmp_vfs_node_by_filename(vfs_node* first, vfs_node* second){
 }
 
 vfs_node* vfs_create_root(uint64_t root_drive){
-	vfs_node* root=malloc(sizeof(vfs_node));
+	vfs_node* root=kmalloc(sizeof(vfs_node));
 	strcpy(root->name,"/");
 	root->size=0;
 	root->flags=VFS_DIRECTORY|VFS_MOUNT|VFS_ROOT;
@@ -77,7 +77,7 @@ vfs_node* vfs_get_entry_from_dir(vfs_node *cur, const char* filepath){
 vfs_node * vfs_open_file(vfs_node *cur, const char* filepath){
 	cur= vfs_get_entry_from_dir(cur,filepath);
 	if(!cur->open_references){
-		//cur->data_cache=cur->seek_head=malloc((cur->size&0x1ff)+512);
+		//cur->data_cache=cur->seek_head=kmalloc((cur->size&0x1ff)+512);
 		cur->data_cache=load_fat_cluster_chain(cur->location);
 	}
 	cur->open_references++;
@@ -119,7 +119,7 @@ int64_t vfs_file_write(vfs_node* file, const void *buf,size_t offset, size_t cou
 	if(offset+count>ROUND_4K(file->size)){
 		//map new pages
 		//or in testing just realocate
-		realloc(file->data_cache,ROUND_4K(file->size)+4096);
+		krealloc(file->data_cache,ROUND_4K(file->size)+4096);
 	}
 	if(offset+count>file->size){
 		file->size=offset+count;
@@ -167,7 +167,7 @@ void vfs_recursive_populate(vfs_node* root, char* path, int max_level){
 	if(!max_level)
 		return;
 	uint64_t pathlen= strlen(path);
-	char* dir=malloc(pathlen+257);
+	char* dir=kmalloc(pathlen+257);
 	strcpy(dir,path);
 	for (int i = 0; i < root->children->size; ++i) {
 		if(((vfs_node*)root->children->data[i])->flags&VFS_DIRECTORY){

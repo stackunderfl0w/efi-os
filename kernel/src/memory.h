@@ -13,10 +13,10 @@ struct HEAP_SEG_HEADER{
 
 void INIT_HEAP(void* adr, uint64_t pages);
 
-void* malloc(uint64_t size);
+void* kmalloc(uint64_t size);
 
-void* calloc(uint64_t size);
+void* kcalloc(uint64_t size);
 
-void* realloc(void* adr, uint64_t size);
+void* krealloc(void* adr, uint64_t size);
 
 void free(void* adr);

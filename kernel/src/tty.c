@@ -148,8 +148,8 @@ tty init_tty_0(FILE* stdout_0, FILE* stdin_0, char* stdout_buf, char* stdin_buf,
 	set_keyboard_callback(kb_callback);
 }
 tty init_tty(graphics_context* kg){
-	stdout=calloc(sizeof(FILE));
-	stdout->base=calloc(8192);
+	stdout=kcalloc(sizeof(FILE));
+	stdout->base=kcalloc(8192);
 	stdout->end=stdout->base+8192;
 	stdout->read_head=stdout->base;
 	stdout->write_head=stdout->base;

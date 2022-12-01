@@ -32,7 +32,7 @@ void test_ascii_colors(){
 			"\033[30;47m White\n");
 }
 void test_ata_pio_read(){
-	uint8_t* sector_1=malloc(512);;
+	uint8_t* sector_1=kmalloc(512);;
 
 	//atapio_software_reset(ATAPIO_REGULAR_STATUS_REGISTER_PORT);
 
@@ -73,40 +73,40 @@ void test_benchmark_clrscr(){
 }
 
 void test_heap(){
-	void* test_mal=calloc(0x200);
+	void* test_mal=kcalloc(0x200);
 	kprintf("\n%p\n",test_mal);
 
-	void* test_mal2=calloc(0x10);
+	void* test_mal2=kcalloc(0x10);
 	kprintf("\n%p\n",test_mal2);
 	free(test_mal);
 
-	void* test_mal3=calloc(0x20);
+	void* test_mal3=kcalloc(0x20);
 	kprintf("\n%p\n",test_mal3);
 
-	void* test_mal4=calloc(0x10000);
+	void* test_mal4=kcalloc(0x10000);
 	kprintf("\n%p\n",test_mal4);
 
 	free(test_mal2);
 	free(test_mal3);
 	free(test_mal4);
-	void* test_mal5=calloc(0x1000);
+	void* test_mal5=kcalloc(0x1000);
 	kprintf("\n%p\n",test_mal5);
 
 	double starttime=TimeSinceBoot;
 
 	for (int i = 0; i < 1000; ++i){
-		void* tmp =malloc(0x100);
+		void* tmp =kmalloc(0x100);
 	}
 	double time_to_finish=TimeSinceBoot-starttime;
 
 	uint64_t time=(uint64_t)(TimeSinceBoot*100);
 	kprintf("%u\n",time);
 	kprintf("test realoc");
-	char* chr_ptr=malloc(13);
+	char* chr_ptr=kmalloc(13);
 	char* src="Hello there";
 	memcpy(chr_ptr,src,12);
 	kprintf(chr_ptr);
-	realloc(chr_ptr,256);
+	krealloc(chr_ptr,256);
 	kprintf(chr_ptr);
 }
 

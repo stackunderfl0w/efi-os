@@ -4,9 +4,9 @@
 #define VECTOR_BASE_CAPACITY 1
 
 sorted_list* create_sorted_list(int (*element_cmp)(void*,void*)){
-	sorted_list* l= malloc(sizeof(sorted_list));
+	sorted_list* l= kmalloc(sizeof(sorted_list));
 	l->capacity=VECTOR_BASE_CAPACITY;
-	l->data=(malloc(VECTOR_BASE_CAPACITY * sizeof(void*)));
+	l->data=(kmalloc(VECTOR_BASE_CAPACITY * sizeof(void*)));
 	l->cmp=element_cmp;
 	l->size=0;
 	return l;
@@ -17,7 +17,7 @@ void sorted_list_free(sorted_list* l) {
 }
 
 void resize_sorted_list(sorted_list* l, uint64_t new_size){
-	l->data=realloc(l->data,sizeof(void*)*new_size);
+	l->data=krealloc(l->data,sizeof(void*)*new_size);
 	l->capacity=new_size;
 }
 

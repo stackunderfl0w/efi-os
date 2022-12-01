@@ -55,7 +55,7 @@ void INIT_HEAP(void* adr, uint64_t pages){
 	last_hdr->free=true;
 	last_hdr->len=(4096*pages)-sizeof(HEAP_SEG_HEADER);
 }
-void* malloc(uint64_t size){
+void* kmalloc(uint64_t size){
 	HEAP_SEG_HEADER* cur=heap_start;
 	while(true){
 		if(cur->free){
@@ -71,10 +71,10 @@ void* malloc(uint64_t size){
 		cur=cur->next_hdr;
 	}
 	EXPAND_HEAP(size);
-	return malloc(size);
+	return kmalloc(size);
 }
-void* calloc(uint64_t size){
-	void* adr=malloc(size);
+void* kcalloc(uint64_t size){
+	void* adr=kmalloc(size);
 	memset (adr,0,size);
 	return adr;
 }
@@ -89,8 +89,8 @@ void free(void* adr){
 		JOIN_HEAP_NEXT_SEGMENT(cur);
 	}
 }
-void* realloc(void* adr, uint64_t size){
-	char* loc = calloc(size);
+void* krealloc(void* adr, uint64_t size){
+	char* loc = kcalloc(size);
 	HEAP_SEG_HEADER* cur=((HEAP_SEG_HEADER*)adr)-1;
 	memcpy(loc,adr,MIN(size,cur->len));
 	free(adr);

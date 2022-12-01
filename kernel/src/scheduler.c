@@ -96,7 +96,7 @@ void* get_next_thread(void *stack_ptr){
 }
 
 void new_process(char* executable,void* ptr){
-	CHAR8* program_space=malloc(0x16000);
+	CHAR8* program_space=kmalloc(0x16000);
 
 	kprintf("space allocated at,%x\n",program_space);
 

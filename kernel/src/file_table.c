@@ -8,7 +8,7 @@ int file_entry_cmp(file_table_entry* first, file_table_entry* second){
 	return first->fd-second->fd;
 }
 file_table* init_file_table(){
-	file_table* ft=malloc(sizeof(file_table));
+	file_table* ft=kmalloc(sizeof(file_table));
 	ft->entries=create_sorted_list((int (*)(void *, void *)) file_entry_cmp);
 	ft->next_id=0;
 	return ft;
@@ -58,7 +58,7 @@ int file_fstat(file_table* ft,int fd, struct stat *stat_buf) {
 	return 0;
 }
 int create_file_table_entry(file_table* ft, vfs_node* file){
-	file_table_entry* fe=malloc(sizeof(file_table_entry));
+	file_table_entry* fe=kmalloc(sizeof(file_table_entry));
 	*fe=(file_table_entry){.fd=ft->next_id++,.base=file,.seek_offset=0};
 	//fe->fd=ft->next_id++;
 	//fe->base=file;
