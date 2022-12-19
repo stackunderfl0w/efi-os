@@ -5,31 +5,7 @@ int strcmp(const CHAR8* str1, const CHAR8* str2){
 	}
 	return str1[index]-str2[index];
 }
-CHAR8* strstr(CHAR8* string, CHAR8* substring){
-	CHAR8 *a, *b;
 
-
-	b = substring;
-	if (*b == 0) {
-	return string;
-	}
-	for ( ; *string != 0; string += 1) {
-	if (*string != *b) {
-		continue;
-	}
-	a = string;
-	while (1) {
-		if (*b == 0) {
-		return string;
-		}
-		if (*a++ != *b++) {
-		break;
-		}
-	}
-	b = substring;
-	}
-	return NULL;
-}
 int atoi(const char* buf){
 	unsigned long long output=0;
 	int index=0;
@@ -39,8 +15,6 @@ int atoi(const char* buf){
 		index++;
 	}
 	while(buf[index]>='0'&&buf[index]<='9'&&index<20){
-		//kprintf("index %c \n",buf[index]);
-
 		output*=10;
 		output+=buf[index++]-'0';
 	}
@@ -54,7 +28,6 @@ uint64_t strlen(CHAR8* str){
 CHAR8** split_string_by_char(CHAR8* str, CHAR8 seperator, int *section_count){
 	int index=0;
 	int n_index=0;
-	int w_index=0;
 
 	int n_count=0;
 	while(str[index]){
@@ -73,7 +46,6 @@ CHAR8** split_string_by_char(CHAR8* str, CHAR8 seperator, int *section_count){
 
 	CHAR8** sections=AllocatePool(n_count*sizeof(CHAR8*)+strlen(str)+1);
 	CHAR8* start = ((CHAR8*)sections)+(n_count*sizeof(CHAR8*));
-	//kprintf("bytes used: %d\n",(int)(n_count*sizeof(CHAR8*)+strlen(str))+1);
 
 	*section_count=n_count;
 	sections[0]=&start[index];
@@ -90,4 +62,10 @@ CHAR8** split_string_by_char(CHAR8* str, CHAR8 seperator, int *section_count){
 	str[index]=0;
 
 	return sections;
+}
+UINTN strncmp(CHAR8* a, CHAR8* b, UINTN length){
+	for (UINTN i = 0; i < length; i++){
+		if (*a != *b) return *a-*b;
+	}
+	return 0;
 }

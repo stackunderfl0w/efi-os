@@ -59,8 +59,6 @@ vfs_node* vfs_get_entry_from_dir(vfs_node *cur, const char* filepath){
 	char cur_file_name[256]={0};
 
 	const char* f=filepath;
-	//f=*f=='/'?f+1:f;
-	//Originally I attempted to do this with strchr and strncpy but this seems simpler with fewer edge cases
 	while(f){
 		while(*f=='/')
 			f++;

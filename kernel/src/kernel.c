@@ -1,5 +1,4 @@
 #include "typedef.h"
-#include <elf.h>
 #include "bitmap-font.h"
 #include "graphics.h"
 #include "gdt.h"
@@ -66,6 +65,9 @@ int _start(bootinfo *info){
 	tty tty0=init_tty_0(&stdout_0,&stdin_0,stdout_buf,stdin_buf,8192);
 
 	kprintf("Bootloader exited successfully\n");
+	kprintf("Current stack at about %p\n",stdout_buf);
+	kprintf("_start located at %p\n",_start);
+	//loop();
 
 	INIT_GDT();
 	kprintf("GDT loaded\n");
