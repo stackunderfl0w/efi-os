@@ -6,6 +6,10 @@ extern PIT_TICK
 extern PIC_EndMaster
 extern get_next_thread
 
+extern open
+extern read
+extern write
+
 
 %macro pushall64 0
 ;stack frame
@@ -112,27 +116,76 @@ yield:
 	ret
 global yield
 
+;SYSTEMCALLS
+;RAX call number
+;ARGUMENTS
+;	RDI
+;	RSI
+;	RDX
+;	R10
+;	R8
+;	R9
+
+; might as well try to line things up for some potential compatibility later
+;https://blog.rchapman.org/posts/Linux_System_Call_Table_for_x86_64/
 int80:
 	;rbx,r12,r13,r14,r15,rbp
 	;pushall64
-	;push rdi
+	push rsp
+	push rbp
+	push rsi
+	push rdi
 	push rbx
 	push r12
 	push r13
 	push r14 
 	push r15
 
-	mov	rsi,rdi
-	mov	rdi,fmt
-	xor	rax,rax		; or can be  xor  rax,rax
+	cmp rax, 0
+
+	je read_80
+
+	cmp rax, 1
+
+	je write_80
+
+	cmp rax, 2
+
+	je open_80
+
+	cmp rax, 99
+
+	je print_80
+
+
+	read_80:
+		call read
+		jmp end_80
+	write_80:
+		call write
+		jmp end_80
+	open_80:
+		call open
+		jmp end_80
+
+
+	print_80:
+
+	;mov	rsi,rdi
+	;mov	rdi,fmt
+	xor	rax,rax
 	call	kprintf		; Call C function
 
+	end_80:
 	pop r15
 	pop r14
 	pop r13
 	pop r12
 	pop rbx
-	;pop rdi
+	pop rdi
+	pop rsi
+	pop rbp
+	pop rsp
 	;popall64
 	iretq
 global int80

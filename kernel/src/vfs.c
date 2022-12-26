@@ -92,11 +92,20 @@ void vfs_close_file(vfs_node* file){
 	}
 }
 
-uint64_t vfs_create_pipe(char* filename){
-
+uint64_t vfs_create_pipe(vfs_node *cur, const char* filename){
+	vfs_node* n=kmalloc(sizeof(vfs_node));
+	strcpy(n->name,filename);
+	n->size=-1;
+	n->drive_id=0;
+	n->flags=VFS_FILE|VFS_PIPE|VFS_VOLATILE;
+	n->open_references=0;
+	n->block_size=512;
+	n->parent=cur;
+	sorted_list_insert(cur->children,n);
+	return 0;
 }
 
-uint64_t vfs_close_pipe(char* filename){
+uint64_t vfs_close_pipe(vfs_node *cur, const char* filename){
 
 }
 ///todo check for file boundaries and add error codes

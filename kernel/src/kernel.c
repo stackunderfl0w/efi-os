@@ -120,7 +120,7 @@ int _start(bootinfo *info){
 
 	print_vfs_recursive(root,0);
 
-	detect_cores((void*)(uint64_t)info->rsdp->RsdtAddress);
+	//detect_cores((void*)(uint64_t)info->rsdp->RsdtAddress);
 	//loop();
 
 	void* new_fb=(void*)0x7000000000;
@@ -133,12 +133,65 @@ int _start(bootinfo *info){
 	k_context=&kernel_graphics;
 
 
-	kprintf("Enabling interupts");
+	kprintf("Enabling interupts\n");
 	swap_buffer(global_context->buf,k_context->buf);
-
+	
 	start_scheduler();
+	//uint8_t* file = read_file("/resources/startup.txt");
+	//kprintf("%s\n",file);
+
+
+
+	int f=open("/resources/resourcesresources/config.txt",0);
+	//int f2=open("/resources/resourcesresources/config.txt",0);;
+
+
+
+
+	struct stat stat1;
+
+	fstat(f,&stat1);
+
+	kprintf("%u\n",stat1.st_size);
+
+
+	char* t= kcalloc(stat1.st_size+1);
+
+	read(f,(uint8_t*)t,stat1.st_size);
+
+	t[stat1.st_size]=0;
+
+	kprintf("Before modification: %s\n",t);
+
+	lseek(f,SEEK_CUR,-11);
+	write(f,"12345678901234567890",20);
+	lseek(f,SEEK_SET,0);
+	fstat(f,&stat1);
+	char* t2= kmalloc(stat1.st_size+1);
+	read(f,t2,stat1.st_size);
+
+	t2[stat1.st_size]=0;
+	kprintf("After modification: %s\n",t2);
+
+
+	close(f);
+
+
+
+
+
+
+
+
+
+
+
+
+
+	kprintf("1\n");
 
 	new_process("/resources/syscall_test.elf", k_context->buf->BaseAddress);
+	kprintf("2\n");
 
 	while(1){
 		yield();
@@ -150,11 +203,11 @@ int _start(bootinfo *info){
 
 
 	//uint8_t* file = read_file("/resources/TEST    TXT");
-	uint8_t* file = read_file("/resources/startup.txt");
+	//uint8_t* file = read_file("/resources/startup.txt");
 
-	uint8_t* font2 = read_file("/resources/zap-light16.psf");
+	//uint8_t* font2 = read_file("/resources/zap-light16.psf");
 
-	write_file("/resources/WRTTEST TXT",file,1024);
+	//write_file("/resources/WRTTEST TXT",file,1024);
 
 	//bitmap_font loaded_font=load_font(font2);
 

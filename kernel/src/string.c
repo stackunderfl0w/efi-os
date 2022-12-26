@@ -116,7 +116,7 @@ char* strncpy(char* dest, const char* src, size_t n){
 	while(n-->0){
 		if((*d++=*src++)==0){
 			//reached end, fill rest with null;
-			while(n--){
+			while(--n){
 				*d++=0;
 			}
 		}
