@@ -6,7 +6,7 @@
 #include "stdio.h"
 #include "memory.h"
 #include "string.h"
-
+#include "circular_buffer.h"
 int cmp_vfs_node_by_filename(vfs_node* first, vfs_node* second){
 	return strcmp(first->name,second->name);
 }
@@ -71,18 +71,21 @@ vfs_node* vfs_get_entry_from_dir(vfs_node *cur, const char* filepath){
 	}
 	return cur;
 }
-
-vfs_node * vfs_open_file(vfs_node *cur, const char* filepath){
-	cur= vfs_get_entry_from_dir(cur,filepath);
-	if(!cur->open_references){
-		//cur->data_cache=cur->seek_head=kmalloc((cur->size&0x1ff)+512);
-		cur->data_cache=load_fat_cluster_chain(cur->location);
-	}
-	cur->open_references++;
-	return cur;
+vfs_node* vfs_open(vfs_node *cur, const char* filepath){
+    cur= vfs_get_entry_from_dir(cur,filepath);
+    if(!cur->open_references){
+        if(cur->flags&VFS_PIPE){
+            cur->data_cache=(uint8_t*)cb_init(4096);
+        }
+        else{
+            cur->data_cache=load_fat_cluster_chain(cur->location);
+        }
+    }
+    cur->open_references++;
+    return cur;
 }
 
-void vfs_close_file(vfs_node* file){
+void vfs_close(vfs_node* file){
 	if(file->open_references>0){
 		if(--file->open_references==0){
 			//write to disk
@@ -94,31 +97,28 @@ void vfs_close_file(vfs_node* file){
 
 uint64_t vfs_create_pipe(vfs_node *cur, const char* filename){
 	vfs_node* n=kmalloc(sizeof(vfs_node));
-	strcpy(n->name,filename);
-	n->size=-1;
-	n->drive_id=0;
+	strncpy(n->name,filename,256);
+	n->size=0;
 	n->flags=VFS_FILE|VFS_PIPE|VFS_VOLATILE;
 	n->open_references=0;
-	n->block_size=512;
 	n->parent=cur;
 	sorted_list_insert(cur->children,n);
 	return 0;
 }
-
-uint64_t vfs_close_pipe(vfs_node *cur, const char* filename){
-
-}
 ///todo check for file boundaries and add error codes
 int64_t vfs_file_read(vfs_node* file, void *buf,size_t offset,size_t count){
-	if(offset+count<=file->size){
-		memcpy(buf,file->data_cache+offset,count);
-		return (int64_t)count;
-	}
-	else{
-		memcpy(buf,file->data_cache+offset,file->size-offset);
-		//return 0 for end of file
-		return 0;
-	}
+    if(offset+count>file->size){
+        count=file->size-offset;
+    }
+    memcpy(buf,file->data_cache+offset,count);
+    return (int64_t)count;
+}
+//the file size of a pipe is how many characters are in the pipe. Reading from it removes the input.
+int64_t vfs_pipe_read(vfs_node* file, void *buf,size_t count){
+    return (int64_t)cb_pop((circular_buffer*)file->data_cache,buf,count);
+}
+int64_t vfs_pipe_write(vfs_node* file, const void *buf,size_t count){
+    return (int64_t)cb_push((circular_buffer*)file->data_cache,buf,count);
 }
 ///todo
 int64_t vfs_file_write(vfs_node* file, const void *buf,size_t offset, size_t count){
@@ -126,7 +126,11 @@ int64_t vfs_file_write(vfs_node* file, const void *buf,size_t offset, size_t cou
 	if(offset+count>ROUND_4K(file->size)){
 		//map new pages
 		//or in testing just realocate
-		krealloc(file->data_cache,ROUND_4K(file->size)+4096);
+        void* new_cache=krealloc(file->data_cache,ROUND_4K(file->size)+4096);
+        if(new_cache){
+            file->data_cache=new_cache;
+        }
+        ///todo else some kind of future memory panic
 	}
 	if(offset+count>file->size){
 		file->size=offset+count;
@@ -134,7 +138,24 @@ int64_t vfs_file_write(vfs_node* file, const void *buf,size_t offset, size_t cou
 	memcpy(file->data_cache+offset,buf,count);
 	return (int64_t)count;
 }
-
+int64_t vfs_read(vfs_node* file, void *buf,size_t offset,size_t count){
+    if(file->flags&VFS_PIPE){
+        return vfs_pipe_read(file,buf,count);
+    }
+    if(file->flags&VFS_FILE){
+        return vfs_file_read(file,buf,offset,count);
+    }
+    return -1;
+}
+int64_t vfs_write(vfs_node* file, const void *buf,size_t offset, size_t count){
+    if(file->flags&VFS_PIPE){
+        return vfs_pipe_write(file,buf,count);
+    }
+    if(file->flags&VFS_FILE){
+        return vfs_file_write(file,buf,offset,count);
+    }
+    return -1;
+}
 
 int vfs_get_full_filepath(vfs_node* node, char* buf, uint64_t max_size){
 	int index=0;
@@ -151,7 +172,7 @@ int vfs_get_full_filepath(vfs_node* node, char* buf, uint64_t max_size){
 			buf[index]='/';
 			index++;
 		}
-		strcpy(buf+index,node->name);
+		strncpy(buf+index,node->name,256);
 	}
 	return (int)(index+ strlen(node->name));
 }
@@ -179,7 +200,7 @@ void vfs_recursive_populate(vfs_node* root, char* path, int max_level){
 	for (int i = 0; i < root->children->size; ++i) {
 		if(((vfs_node*)root->children->data[i])->flags&VFS_DIRECTORY){
 			vfs_node* cur=root->children->data[i];
-			strcpy(dir+pathlen,cur->name);
+			strncpy(dir+pathlen,cur->name,256);
 			strcpy(dir+ strlen(dir),"/");
 			//kprintf("%s\n",dir);
 			vfs_recursive_populate(cur,dir,max_level-1);

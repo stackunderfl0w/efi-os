@@ -28,7 +28,7 @@ int chdir(const char *path){
 }
 
 int open(const char *pathname, int flags){
-	vfs_node* file= vfs_open_file(current_process->working_dir,pathname);
+	vfs_node* file= vfs_open(current_process->working_dir,pathname);
 	if(!file)
 		return -1;
 	return create_file_table_entry(current_process->process_file_table,file);
@@ -37,7 +37,7 @@ int open(const char *pathname, int flags){
 int close(int fd){
 	file_table_entry tmp={fd,0};
 	file_table_entry* file = sorted_list_get(current_process->process_file_table->entries, (void *)&tmp);
-	vfs_close_file(file->base);
+    vfs_close(file->base);
 	remove_file_table_entry(current_process->process_file_table,fd);
 	return 0;
 }

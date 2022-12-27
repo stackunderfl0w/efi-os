@@ -17,8 +17,9 @@ int64_t file_read(file_table* ft, int fd, uint8_t* buf, uint64_t len){
 	file_table_entry tmp={fd,0};
 	file_table_entry* file = sorted_list_get(ft->entries, (void *)&tmp);
 	///todo deal with future error codes
-	int64_t read = vfs_file_read(file->base,buf,file->seek_offset,len);
-	file->seek_offset+=read;
+	int64_t read = vfs_read(file->base,buf,file->seek_offset,len);
+
+    file->seek_offset+=read;
 	if(read==0){
 		file->seek_offset=file->base->size;
 	}
@@ -29,7 +30,7 @@ int64_t file_write(file_table* ft, int fd, const uint8_t* buf, uint64_t len){
 	file_table_entry tmp={fd,0};
 	file_table_entry* file = sorted_list_get(ft->entries, (void *)&tmp);
 	///todo deal with future error codes
-	int64_t written = vfs_file_write(file->base,buf,file->seek_offset,len);
+	int64_t written = vfs_write(file->base,buf,file->seek_offset,len);
 	file->seek_offset+=written;
 	return written;
 }
@@ -41,7 +42,7 @@ int64_t file_seek(file_table* ft,int fd, off_t offset, int whence){
 	switch (offset) {
 		case SEEK_SET: intended= whence;break;
 		case SEEK_CUR: intended+=whence;break;
-		case SEEK_END: intended=file->base->size+whence;break;
+		case SEEK_END: intended=(int64_t)file->base->size+whence;break;
 		default:return -1;
 	}
 	///todo add errno once implemented
@@ -53,6 +54,7 @@ int64_t file_seek(file_table* ft,int fd, off_t offset, int whence){
 int file_fstat(file_table* ft,int fd, struct stat *stat_buf) {
 	file_table_entry tmp={fd,0};
 	file_table_entry* file = sorted_list_get(ft->entries, (void *)&tmp);
+
 	stat_buf->st_ino=(uint64_t)file->base;
 	stat_buf->st_size=file->base->size;
 	return 0;
@@ -60,25 +62,15 @@ int file_fstat(file_table* ft,int fd, struct stat *stat_buf) {
 int create_file_table_entry(file_table* ft, vfs_node* file){
 	file_table_entry* fe=kmalloc(sizeof(file_table_entry));
 	*fe=(file_table_entry){.fd=ft->next_id++,.base=file,.seek_offset=0};
-	//fe->fd=ft->next_id++;
-	//fe->base=file;
-	//fe->seek_offset=0;
+
 	sorted_list_insert(ft->entries,fe);
 	return fe->fd;
 }
 int remove_file_table_entry(file_table* ft,int fd){
 	file_table_entry tmp={fd,0};
 	file_table_entry* file = sorted_list_get(ft->entries, (void *)&tmp);
-	vfs_close_file(file->base);
+    vfs_close(file->base);
 	sorted_list_remove(ft->entries,file);
 	free(file);
+    return 0;
 }
-
-
-
-
-
-
-
-
-
