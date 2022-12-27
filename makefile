@@ -1,4 +1,4 @@
-.PHONY: all kernel bootloader $(PROGRAMS) clean boot qemu virt
+.PHONY: all kernel bootloader gnu-efi $(PROGRAMS) clean boot qemu virt
 
 BL_DIR:= gnu-efi/bootloader
 BL_BIN:= gnu-efi/x86_64/bootloader
@@ -12,7 +12,7 @@ kernel:
 	$(MAKE) -C kernel
 gnu-efi:
 	$(MAKE) -C gnu-efi
-bootloader: gnu-efi
+bootloader:
 	$(MAKE) -C gnu-efi bootloader
 
 $(PROGRAMS):
