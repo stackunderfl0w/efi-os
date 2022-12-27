@@ -1,4 +1,3 @@
-
 GNUEFI = ../gnu-efi
 OVMFDIR = ../OVMFbin
 LDS = kernel.ld
@@ -23,20 +22,21 @@ OBJ_FILES += $(patsubst $(SRC_DIR)/%.asm,$(OBJ_DIR)/%.o,$(SRC_FILES_ASM))
 CFLAGS := -ffreestanding -fshort-wchar -mno-red-zone -fno-omit-frame-pointer  -fno-stack-protector -Ofast -mtune=native
 LDFLAGS:= -T $(LDS) -static -Bsymbolic -nostdlib
 
-all: program link
+all: program
 
-program: $(OBJ_FILES)
-	$(shell mkdir -p $(DIRS))
+program: directories $(OBJ_FILES)
+	ld $(LDFLAGS) -o $(BUILD_DIR)/$(EXECUTABLE).elf $(OBJ_FILES)
+
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	gcc $(CFLAGS) -c -o $@ $<
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	gcc $(CFLAGS) -c -o $@ $<
-
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.asm
 	nasm $^ -f elf64 -o $@
-	
-link: program
-	ld $(LDFLAGS) -o $(BUILD_DIR)/$(EXECUTABLE).elf $(OBJ_FILES)
+
+directories:
+	@mkdir -p $(DIRS)
+
 clean:
 	rm -f $(OBJ_DIR)/*.o $(OBJ_DIR)/*.so $(OBJ_DIR)/*.o
 	rm -f $(BUILD_DIR)/*.elf

@@ -1,4 +1,3 @@
-
 GNUEFI = ../gnu-efi
 OVMFDIR = ../OVMFbin
 LDS = kernel.ld
@@ -22,24 +21,26 @@ OBJ_FILES += $(patsubst $(SRC_DIR)/%.asm,$(OBJ_DIR)/%.o,$(SRC_FILES_ASM))
 CFLAGS := -std=gnu11 -ffreestanding -fshort-wchar -mno-red-zone -fno-omit-frame-pointer -fno-stack-protector -Ofast -mtune=native
 LDFLAGS:= -T $(LDS) -static -Bsymbolic -nostdlib
 
-all: kernel link
+all: kernel
 
-kernel: $(OBJ_FILES)
-	$(shell mkdir -p $(DIRS))
+kernel: directories $(OBJ_FILES)
+	ld $(LDFLAGS) -o $(BUILD_DIR)/kernel.elf $(OBJ_FILES)
+
 $(OBJ_DIR)/interrupt_handlers.o: $(SRC_DIR)/interrupt_handlers.c
 	$(CC) -mno-red-zone -mgeneral-regs-only -ffreestanding -c $^ -o $@
 $(OBJ_DIR)/loop.o: $(SRC_DIR)/loop.c
 	$(CC) -ffreestanding -c $^ -o $@
+
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	$(CC) $(CFLAGS) -c -o $@ $<
-
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.asm
 	$(ASMC) $^ -f elf64 -o $@
-	
-link: kernel
-	ld $(LDFLAGS) -o $(BUILD_DIR)/kernel.elf $(OBJ_FILES)
+
+directories:
+	@mkdir -p bin lib src
+
 clean:
 	rm -f $(OBJ_DIR)/*.o $(OBJ_DIR)/*.so $(OBJ_DIR)/*.o
 	rm -f $(BUILD_DIR)/*.elf
