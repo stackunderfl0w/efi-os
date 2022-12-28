@@ -41,11 +41,11 @@ extern "C" {
 
 extern "C" 
 #endif
-graphics_context* k_context;
 graphics_context* global_context;
+graphics_context* current_context;
 
 process* current_process;
-
+tty tty0;
 
 int _start(bootinfo *info){
 	asm("cli");
@@ -54,19 +54,13 @@ int _start(bootinfo *info){
 
 	//manually create kernel stdout&tty so it can be created without heap and remains in scope
 	graphics_context global_graphics=init_text_overlay(info->buf, info->font);
-	k_context=global_context=&global_graphics;
 
-	//the boot thread has a minimum stack size of 128k as specified in the uefi standard. 
-	//Might as well make use of that with some stack allocations
-	FILE stdout_0;
-	FILE stdin_0;
-	char stdout_buf[8192];
-	char stdin_buf[8192];
+	global_context=current_context=&global_graphics;
 
-	tty tty0=init_tty_0(&stdout_0,&stdin_0,stdout_buf,stdin_buf,8192);
+	tty0=init_tty_0(&global_graphics);
 
 	kprintf("Bootloader exited successfully\n");
-	kprintf("Current stack at about %p\n",stdout_buf);
+	kprintf("Current stack at about %p\n",tty0);
 	kprintf("_start located at %p\n",_start);
 	//loop();
 
@@ -131,11 +125,12 @@ int _start(bootinfo *info){
 	graphics_context kernel_graphics=init_text_overlay(&fb, info->font);
 	kernel_graphics.foreground_color=0x00ffffff;
 	kernel_graphics.background_color=0x00000000;
-	k_context=&kernel_graphics;
+	current_context=&kernel_graphics;
+	tty0.g=&kernel_graphics;
 
 
 	kprintf("Enabling interupts\n");
-	swap_buffer(global_context->buf,k_context->buf);
+	swap_buffer(global_context->buf,current_context->buf);
 	
 	start_scheduler();
 	//uint8_t* file = read_file("/resources/startup.txt");
@@ -180,7 +175,7 @@ int _start(bootinfo *info){
 
 
 
-	new_process("/resources/syscall_test.elf", k_context->buf->BaseAddress);
+	//new_process("/resources/syscall_test.elf", current_context->buf->BaseAddress);
 
 	while(1){
 		yield();
@@ -208,10 +203,6 @@ int _start(bootinfo *info){
 	//busyloop(500000000);
 	//detect_cores((void*)(uint64_t)info->rsdp->RsdtAddress);
 	//kprintf("%x\n",info->rsdp);
-
-
-
-	swap_buffer(global_context->buf,k_context->buf);
 
 	run_shell(info->buf, info->font);
 

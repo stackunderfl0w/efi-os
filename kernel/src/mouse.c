@@ -1,5 +1,5 @@
 #include "mouse.h"
-extern graphics_context* k_context;
+extern graphics_context* current_context;
 
 uint32_t display_width=0,display_height=0;
 
@@ -44,7 +44,7 @@ void INIT_PS2_MOUSE(){
 
 	PS2_WAIT_READ();
 	inb(0x60);
-	get_display_resolution(k_context->buf,&display_width, &display_height);
+	get_display_resolution(current_context->buf,&display_width, &display_height);
 
 }
 
@@ -86,7 +86,7 @@ void HANDLE_PS2_MOUSE(uint8_t frag){
 
 		//clear_mouse();
 		if (fragments[0]&LEFT_BTN){
-			render_char(k_context,mouse_x,mouse_y,'a');
+			render_char(current_context,mouse_x,mouse_y,'a');
 		}
 		move_mouse(mouse_x,mouse_y);
 	}

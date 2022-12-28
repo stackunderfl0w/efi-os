@@ -23,13 +23,13 @@ void show_cursor(){
 	if(cursor_flash&&!cursor_present){
 		kprintf("%c\033[D",0x18);
 		cursor_present=true;
-		fflush(stdout);
+		//fflush(stdout);
 	}
 }
 void hide_cursor(){
 	if(cursor_present){
 		kprintf(" \033[D");
-		fflush(stdout);
+		//fflush(stdout);
 		cursor_present=false;
 	}
 }
@@ -73,7 +73,7 @@ void run_shell(Framebuffer* buf, bitmap_font* font){
 		//chdir("resources/resourcesresources");
 		index=0;
 		memset(cmd,0,1024);
-		while(cmd[index-1]!=10){
+		/*while(cmd[index-1]!=10){
 			if(c=fgetc(stdin)){
 				cmd[index++]=c;
 				if(c==10){
@@ -87,7 +87,7 @@ void run_shell(Framebuffer* buf, bitmap_font* font){
 		}
 		cmd[index-1]=0;
 
-		run_cmd(cmd);
+		run_cmd(cmd);*/
 		//sleep(500);
 		//cursor_flash=true;
 		//show_cursor();

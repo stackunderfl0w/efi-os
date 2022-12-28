@@ -3,6 +3,8 @@
 #include "stdlib.h"
 #include "stdio.h"
 #include "loop.h"
+#include "tty.h"
+extern tty tty0;
 
 //currently works with base 8, 10, and 16
 const char hex_ascii[16]="0123456789abcdef";
@@ -97,39 +99,7 @@ int kprintf(const char* format, ... ){
 	va_start (args, format);
 	int i = kvsprintf(kprintf_buf, format, args);
 	va_end (args);
-	fputs(kprintf_buf,stdout);
+	//fputs(kprintf_buf,stdout);
+	tty_write(&tty0,kprintf_buf);
 	return i;
-}
-
-int fgetc(FILE* f){
-	aquire_lock(&f->io_lock);
-	int c=f->read(f);
-	release_lock(&f->io_lock);
-	return c;
-
-}
-int fputc(int c, FILE* f){
-	aquire_lock(&f->io_lock);
-	f->write(f,(char)c);
-	if(f->flags&IO_UNBUFFERED||(f->flags&IO_LINE_BUFFERED&&c=='\n'))
-		f->sync(f);
-	release_lock(&f->io_lock);
-	return c;
-}
-
-int fputs(const char *str, FILE* f){
-	aquire_lock(&f->io_lock);
-	for (const char* s=str; *s; ++s){
-		f->write(f,*s);
-		if(f->flags&IO_LINE_BUFFERED&&*s=='\n')
-			f->sync(f);
-	}
-	if(f->flags&IO_UNBUFFERED)
-		f->sync(f);
-	release_lock(&f->io_lock);
-	return 0;
-}
-
-int fflush(FILE* f){
-	f->sync(f);
 }

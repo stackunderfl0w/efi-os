@@ -2,7 +2,6 @@
 #include "graphics.h"
 #include "ctype.h"
 #include "stdio.h"
-extern graphics_context* k_context;
 int modifiers=0;
 uint8_t previous_key=0;
 const char ASCIITable[] = {
@@ -98,7 +97,7 @@ void handle_key(uint8_t keycode){
 		(*callback)(final_keycode,modifiers);
 		return;
 	}
-	switch(final_keycode){
+	/*switch(final_keycode){
 		case KEYCODE_LEFT:
 			cursor_left(k_context,1);
 			return;
@@ -125,7 +124,7 @@ void handle_key(uint8_t keycode){
 	char ascii = Translate(keycode, modifiers&MODCODE_SHIFT);
 	if (isprint(ascii)){
 		printchar(k_context,ascii);
-	}
+	}*/
 }
 
 void set_keyboard_callback(void (*cb)(int,int)){

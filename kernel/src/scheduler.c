@@ -9,15 +9,15 @@
 #include <elf.h>
 thread *current;
 bool scheduler_inited=false;
-extern graphics_context* k_context;
 extern graphics_context* global_context;
+extern graphics_context* current_context;
 
 void thread_function(){
 	int thread_id = current->tid;
 	while(1){
 		kprintf("Thread %u %f\n",thread_id,TimeSinceBoot);
-		sleep(10);
-		//yield();
+		//sleep(10);
+		yield();
 	}
 }
 void t3(){
@@ -39,7 +39,7 @@ void vsync(){
 			last_frame[i]=last_frame[i-1];
 		}
 		last_frame[0]=TimeSinceBoot;
-		swap_buffer(global_context->buf,k_context->buf);
+		swap_buffer(global_context->buf,current_context->buf);
 		int x=global_context->cursor_x,y=global_context->cursor_y;
 		global_context->cursor_x=10;
 		global_context->cursor_y=global_context->console_height-1;
@@ -56,7 +56,7 @@ void vsync(){
 }
 
 thread *new_threads[256];
-int num_threads=2;
+int num_threads=4;
 uint64_t cur_thread=0;
 
 
@@ -66,8 +66,8 @@ void start_scheduler(){
 	kprintf("start_scheduler\n");
 	//new_threads[0] is base thread
 	//new_threads[1]=new_thread(thread_function);
-	//new_threads[2]=new_thread(thread_function);
-	//new_threads[3]=new_thread(thread_function);
+	new_threads[2]=new_thread(thread_function);
+	new_threads[3]=new_thread(thread_function);
 	new_threads[1]=new_thread(vsync);
 
 	//ew_process("/resources/scrclr.elf", k_context->buf->BaseAddress);

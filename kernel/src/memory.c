@@ -1,6 +1,5 @@
 #include "memory.h"
-#include "stdio.h"
-extern graphics_context* k_context;
+extern graphics_context* global_context;
 
 HEAP_SEG_HEADER* last_hdr;
 void* heap_start;
@@ -41,7 +40,7 @@ void EXPAND_HEAP(uint64_t size){
 		last_hdr->len+=0x1000*size;
 	}
 	else{
-		print(k_context,"err");
+		print(global_context,"err");
 	}
 	heap_end+=0x1000*size;
 }
