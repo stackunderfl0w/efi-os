@@ -1,6 +1,5 @@
 #pragma once
 #include "typedef.h"
-#include "paging.h"
 //needed to include pointer to same type
 typedef struct HEAP_SEG_HEADER HEAP_SEG_HEADER;
 

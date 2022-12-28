@@ -1,4 +1,5 @@
 #include "ata-pio.h"
+#include "io.h"
 
 void atapio_bsy_wait(){   //Wait for bsy to be 0
 	while(inb(ATAPIO_REGULAR_STATUS_REGISTER_PORT)&ATAPIO_STATUS_BSY);

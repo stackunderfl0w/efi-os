@@ -12,8 +12,8 @@ void* memcpy (void *dest, const void *src, size_t len){
 		*d++ = *s++;
 	return dest;
 }
-wchar_t* wmemset (wchar_t *s, wchar_t c, size_t n){
-	wchar_t *wp = s;
+wchar* wmemset (wchar *s, wchar c, size_t n){
+	wchar *wp = s;
 	while (n >= 4){
 		wp[0] = c;
 		wp[1] = c;

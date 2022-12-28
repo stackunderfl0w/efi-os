@@ -1,4 +1,5 @@
 #include "time.h"
+#include "io.h"
 
 volatile time SYSTEM_TIME;
 #define CMOS_COMMAND 	0x70

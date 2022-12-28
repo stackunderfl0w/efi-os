@@ -1,6 +1,5 @@
 #pragma once
 #include "typedef.h"
-#include "graphics.h"
 typedef struct {
 	UINT32							Type;			// EFI_MEMORY_TYPE, Field size is 32 bits followed by 32 bit pad
 	UINT32							Pad;

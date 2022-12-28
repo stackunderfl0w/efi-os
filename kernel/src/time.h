@@ -1,7 +1,5 @@
 #pragma once
 #include "typedef.h"
-#include "io.h"
-//#include "graphics.h"
 
 typedef struct{
 	uint8_t second;

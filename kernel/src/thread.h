@@ -1,6 +1,5 @@
 #pragma once
 #include "typedef.h"
-#include "vfs.h"
 #include "file_table.h"
 
 struct process;

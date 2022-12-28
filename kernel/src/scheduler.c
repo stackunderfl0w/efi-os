@@ -6,7 +6,7 @@
 #include "memory.h"
 #include "fat.h"
 #include "graphics.h"
-#include <elf.h>
+#include "elf.h"
 thread *current;
 bool scheduler_inited=false;
 extern graphics_context* global_context;

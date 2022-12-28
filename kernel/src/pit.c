@@ -1,5 +1,7 @@
 #include "pit.h"
 #include "scheduler.h"
+#include "io.h"
+#include "time.h"
 
 volatile double TimeSinceBoot = 0;
 uint16_t Divisor = 65535;

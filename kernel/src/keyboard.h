@@ -1,7 +1,5 @@
 #pragma once
 #include "typedef.h"
-#include "graphics.h"
-
 
 
 #define LeftShift	0x2A

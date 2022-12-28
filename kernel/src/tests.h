@@ -4,6 +4,9 @@
 #include "stdio.h"
 #include "fat.h"
 #include "pit.h"
+#include "memory.h"
+#include "ata-pio.h"
+#include "paging.h"
 
 void test_ascii_colors(){
 			kprintf("\033[30m black\n"
@@ -32,7 +35,7 @@ void test_ascii_colors(){
 			"\033[30;47m White\n");
 }
 void test_ata_pio_read(){
-	uint8_t* sector_1=kmalloc(512);;
+	uint8_t* sector_1=(uint8_t*)kmalloc(512);;
 
 	//atapio_software_reset(ATAPIO_REGULAR_STATUS_REGISTER_PORT);
 
@@ -154,8 +157,4 @@ void test_kprintf(){
 
 	kprintf("double %f kk\nff",doub);
 	kprintf("\033[s\nhello1\033[uhello2\n");
-}
-void test_put(){
-	fputc(10, stdout);
-	fputs("eejfaousdnawndoianwdian",stdout);
 }

@@ -1,6 +1,5 @@
 #pragma once
 #include "typedef.h"
-#include "graphics.h"
 struct interrupt_frame{
 	uint64_t ip;
 	uint64_t cs;

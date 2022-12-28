@@ -1,6 +1,5 @@
 #pragma once
-#include <stdint.h>
-
+#include "typedef.h"
 typedef struct  {
 	uint16_t Limit0;
 	uint16_t Base0;
@@ -28,13 +27,7 @@ typedef struct {
 
 extern GDT Default_GDT;
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 void LoadGDT(GDT_Descriptor* gdtDescriptor);
 
 void INIT_GDT();
-#ifdef __cplusplus
-}
-#endif
+

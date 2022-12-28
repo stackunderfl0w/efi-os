@@ -1,4 +1,5 @@
 #include "memory.h"
+#include "paging.h"
 extern graphics_context* global_context;
 
 HEAP_SEG_HEADER* last_hdr;

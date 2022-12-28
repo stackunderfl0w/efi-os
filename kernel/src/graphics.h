@@ -1,7 +1,6 @@
 #pragma once
-#include <stdarg.h>
-#include "bitmap-font.h"
 #include "typedef.h"
+#include "bitmap-font.h"
 
 typedef struct {
 	void* BaseAddress;

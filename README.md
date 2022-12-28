@@ -1,6 +1,6 @@
 # efi-os
 Unnamed 64bit x86 Hobby operating system with a custom uefi bootloader\
-written in gnu c11 with nasm x64 assembly where necessary\
+written in gnu c99 with nasm x64 assembly where necessary\
 gnu-efi - Bootloader library and implementation\
 kernel - kernel code\
 OVMFbin - uefi files for qemu\

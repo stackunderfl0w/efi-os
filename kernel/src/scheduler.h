@@ -1,5 +1,5 @@
 #pragma once
-#include "graphics.h"
+#include "typedef.h"
 extern bool scheduler_inited;
 extern void yield();
 

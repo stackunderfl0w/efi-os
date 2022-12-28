@@ -6,6 +6,7 @@
 #include "paging.h"
 #include "filesystem.h"
 #include "memory.h"
+#include "string.h"
 void run_cmd(char* cmd);
 
 char num_shift[10]={')','!','@','#','$','%','^','&','*','('};

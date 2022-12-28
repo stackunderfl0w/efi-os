@@ -1,3 +1,4 @@
+#pragma once
 #include "typedef.h"
 static inline int isupper(int c){
 	return (uint32_t)c-'A'<26;

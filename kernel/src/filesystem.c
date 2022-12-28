@@ -1,7 +1,3 @@
-//
-// Created by pat on 9/22/22.
-//
-
 #include "filesystem.h"
 #include "vfs.h"
 #include "thread.h"

@@ -1,7 +1,3 @@
-//
-// Created by pat on 9/11/22.
-//
-
 #include "file_table.h"
 #include "memory.h"
 int file_entry_cmp(file_table_entry* first, file_table_entry* second){

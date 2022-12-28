@@ -1,4 +1,5 @@
 #include "serial.h"
+#include "io.h"
 
 int init_serial() {
 	outb(PORT + 1, 0x00);	// Disable all interrupts

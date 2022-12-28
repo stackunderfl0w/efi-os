@@ -21,6 +21,7 @@
 #include "tty.h"
 #include "filesystem.h"
 #include "process.h"
+#include "loop.h"
 
 typedef struct {
 	Framebuffer* buf;
@@ -31,16 +32,7 @@ typedef struct {
 	RSDPDescriptor* rsdp;
 }bootinfo;
 
-#ifndef __cplusplus
-#include "loop.h"
 
-#else
-extern "C" {
-#include "loop.h"
-}
-
-extern "C" 
-#endif
 graphics_context* global_context;
 graphics_context* current_context;
 

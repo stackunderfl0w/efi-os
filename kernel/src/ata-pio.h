@@ -1,5 +1,5 @@
 #pragma once
-#include "io.h"
+#include "typedef.h"
 // ATA bus I/O ports
 #define ATAPIO_DATA_REGISTER_PORT 0x1F0
 #define ATAPIO_ERR_INFO_PORT 0x1F0

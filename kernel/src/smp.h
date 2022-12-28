@@ -1,6 +1,5 @@
 #pragma once
 #include "typedef.h"
-#include "graphics.h"
 typedef struct{
  char Signature[8];
  uint8_t Checksum;
