@@ -5,6 +5,7 @@
 #include "filesystem.h"
 #include "vfs.h"
 #include "thread.h"
+#include "process.h"
 
 //ANALOG FOR INTERRUPT SERVICE ROUTINES
 

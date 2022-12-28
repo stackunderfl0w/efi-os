@@ -56,6 +56,8 @@ void INIT_HEAP(void* adr, uint64_t pages){
 	last_hdr->len=(4096*pages)-sizeof(HEAP_SEG_HEADER);
 }
 void* kmalloc(uint64_t size){
+	if(!size)
+		return NULL;
 	HEAP_SEG_HEADER* cur=heap_start;
 	while(true){
 		if(cur->free){

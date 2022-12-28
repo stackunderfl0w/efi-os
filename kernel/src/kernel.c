@@ -20,6 +20,7 @@
 #include "smp.h"
 #include "tty.h"
 #include "filesystem.h"
+#include "process.h"
 
 typedef struct {
 	Framebuffer* buf;
@@ -179,26 +180,11 @@ int _start(bootinfo *info){
 
 
 
-
-
-
-
-
-
-
-
-
-	kprintf("1\n");
-
 	new_process("/resources/syscall_test.elf", k_context->buf->BaseAddress);
-	kprintf("2\n");
 
 	while(1){
 		yield();
 	}
-	//loop();
-	kprintf("\n\n\n\n\n");
-
 	sleep(1);
 
 

@@ -1,29 +1,21 @@
 #pragma once
 #include "typedef.h"
-
 #include "vfs.h"
 #include "file_table.h"
 
-typedef struct thread thread;
+struct process;
 
 typedef struct{
-	uint64_t pid;
-	thread* threads[256];
-	vfs_node* working_dir;
-	file_table* process_file_table;
-}process;
-
-struct thread{
 	uint64_t tid;
-	process* parent_process;
+	struct process* parent_process;
 	void* stack_ptr;
 	void* RSP;
 	uint64_t state;
-};
+}thread;
 
 
 typedef struct {
-	uint64_t rax;
+	uint64_t rax;//rsp
 	uint64_t rbx;
 	uint64_t rcx;
 	uint64_t rdx;
