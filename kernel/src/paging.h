@@ -7,6 +7,36 @@
 #define MEMORY_LOCKED		0b01
 #define MEMORY_RESERVED		0b10
 
+#define PT_Present				1
+#define PT_RW					1<<1
+#define PT_UserSuper			1<<2
+#define PT_WriteThrough			1<<3
+#define PT_CacheDisabled		1<<4
+#define PT_Accessed				1<<5
+#define PT_Dirty				1<<6
+#define PT_PageAttributeTable 	1<<7
+#define PT_LargerPages			1<<7
+#define PT_Global				1<<8
+
+#define PT_Custom0				1<<9
+#define PT_Custom1				1<<10
+#define PT_Custom2				1<<11
+
+#define PT_ExecuteDisable 		1<<63
+
+
+typedef struct {
+	uint64_t value;
+}Page_Table_Entry;
+
+typedef struct {
+	Page_Table_Entry entries[512];
+}Page_Table;
+
+extern uint64_t _KernelStart;
+extern uint64_t _KernelEnd;
+
+
 void INIT_PAGING(EFI_MEMORY_DESCRIPTOR* memMap, uint64_t Entries, uint64_t DescSize, Framebuffer* buf);
 
 void* REQUEST_PAGE();
@@ -28,52 +58,6 @@ uint64_t get_free_memory();
 uint64_t get_used_memory();
 uint64_t get_reserved_memory();
 
-extern uint64_t _KernelStart;
-extern uint64_t _KernelEnd;
-
-#define PT_Present				1
-#define PT_RW					1<<1
-#define PT_UserSuper			1<<2
-#define PT_WriteThrough			1<<3
-#define PT_CacheDisabled		1<<4
-#define PT_Accessed				1<<5
-#define PT_Dirty				1<<6
-#define PT_PageAttributeTable 	1<<7
-#define PT_LargerPages			1<<7
-#define PT_Global				1<<8
-
-#define PT_Custom0				1<<9
-#define PT_Custom1				1<<10
-#define PT_Custom2				1<<11
-
-#define PT_ExecuteDisable 		1<<63
-
-
-/*enum PAGE_FLAGS{
-	PT_Present,
-	PT_RW,
-	PT_UserSuper,
-	PT_WriteThrough,
-	PT_CacheDisabled,
-	PT_Accessed,
-	PT_Dirty,
-	PT_PageAttributeTable=7,
-	PT_LargerPages = 7,
-	PT_Custom0 = 9,
-	PT_Custom1,
-	PT_Custom2,
-	PT_NX = 63
-};*/
-
-
-typedef struct {
-	uint64_t value;
-}Page_Table_Entry;
-
-typedef struct {
-	Page_Table_Entry entries[512];
-}Page_Table;
-
 
 void PT_SET_FLAG(Page_Table_Entry* PT, uint64_t flag);
 bool PT_GET_FLAG(Page_Table_Entry* PT, uint64_t flag);
@@ -82,4 +66,6 @@ uint64_t PT_GET_ADR(Page_Table_Entry* PT);
 
 void map_mem(void* virtadr, void* physadr);
 void map_pages(void* virtadr, void* physadr ,uint64_t pages);
+void map_allocated_mem(void* virtadr);
+
 extern Page_Table* KERNEL_PL4;

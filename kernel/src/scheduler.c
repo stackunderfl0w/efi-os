@@ -11,6 +11,7 @@ thread *current;
 bool scheduler_inited=false;
 extern graphics_context* global_context;
 extern graphics_context* current_context;
+extern int disable_double_buffer;
 
 void thread_function(){
 	int thread_id = current->tid;
@@ -29,34 +30,46 @@ void t3(){
 		//sleep(1);
 	}
 }
+void sacrificial(){
+	asm volatile("cli");
+	kprintf("sac thread started");
+	return;
+}
 void vsync(){
 	double last_frame[60];
 	char st[32];
 	double fps;
 	int count=0;
 	while(1){
-		for (int i = 59; i > 0; --i){
-			last_frame[i]=last_frame[i-1];
+		if(!disable_double_buffer){
+			for (int i = 59; i > 0; --i){
+				last_frame[i]=last_frame[i-1];
+			}
+			last_frame[0]=TimeSinceBoot;
+			swap_buffer(global_context->buf,current_context->buf);
+			int x=global_context->cursor_x,y=global_context->cursor_y;
+			global_context->cursor_x=10;
+			global_context->cursor_y=global_context->console_height-1;
+			count++;
+			if (count>10){
+				count=0;
+				//fps =(1/((last_frame[0]-last_frame[59]))*(60-1));
+				fps =1/(last_frame[0]-last_frame[59])*59;
+				memset(st,0,32);
+				ksprintf(st,"%f",fps);
+			}
+			print(global_context,st);
+			global_context->cursor_x=x;
+			global_context->cursor_y=y;
 		}
-		last_frame[0]=TimeSinceBoot;
-		swap_buffer(global_context->buf,current_context->buf);
-		int x=global_context->cursor_x,y=global_context->cursor_y;
-		global_context->cursor_x=10;
-		global_context->cursor_y=global_context->console_height-1;
-		count++;
-		if (count>10){
-			count=0;
-			//fps =(1/((last_frame[0]-last_frame[59]))*(60-1));
-			fps =1/(last_frame[0]-last_frame[59])*59;
-			memset(st,0,32);
-			ksprintf(st,"%f",fps);
+		else{
+			draw_mouse(global_context->buf);
 		}
-		print(global_context,st);
 	}
 }
 
 thread *new_threads[256];
-int num_threads=4;
+int num_threads=3;
 uint64_t cur_thread=0;
 
 
@@ -66,15 +79,21 @@ void start_scheduler(){
 	kprintf("start_scheduler\n");
 	//new_threads[0] is base thread
 	//new_threads[1]=new_thread(thread_function);
-	new_threads[2]=new_thread(thread_function);
-	new_threads[3]=new_thread(thread_function);
+	//new_threads[2]=new_thread(thread_function);
+	//new_threads[3]=new_thread(thread_function);
 	new_threads[1]=new_thread(vsync);
+	new_threads[2]=new_thread(sacrificial);
+	((registers*)new_threads[2]->RSP)->rax=0x8772;
+	//kprintf("sac thread return placed at %p",&((registers*)new_threads[2]->RSP)->err);
 
 	//ew_process("/resources/scrclr.elf", k_context->buf->BaseAddress);
 
 	scheduler_inited=true;
 	asm("sti");
 	//loop();
+
+}
+void placeholder(){
 
 }
 
@@ -92,6 +111,10 @@ void* get_next_thread(void *stack_ptr){
 	cur_thread++;
 	current=new_threads[cur_thread%num_threads];
 	cur_thread%=num_threads;
+		if(((registers*)current->RSP)->rax==0x8772){
+		placeholder();
+	}
+
 	return current->RSP;
 }
 

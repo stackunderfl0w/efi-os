@@ -1,14 +1,20 @@
 [bits 64]
 fmt:    db "from asm %x",10,10,10, 0          ; The kprintf format, "\n",'0'
+pf_fmt: db "PAGE FAULT DETECTED%p",10,0
+gf_fmt: db "GENERAL FAULT DETECTED%p",10,0
+
 extern kprintf
 extern loop
 extern PIT_TICK
 extern PIC_EndMaster
 extern get_next_thread
 
+extern request_mapped_pages
+
 extern open
 extern read
 extern write
+extern fstat
 
 
 %macro pushall64 0
@@ -64,7 +70,7 @@ Pit_Handler_Asm:
 	call PIC_EndMaster
 
 
-;call sceduler and get pointer for next
+;call scheduler and get pointer for next
 	;uint64_t ip; rsp+128
 	;uint64_t cs; rsp+136
 	;uint64_t flags; rsp+144
@@ -97,6 +103,35 @@ Pit_Handler_Asm:
 	iretq
 
 global Pit_Handler_Asm
+
+PageFault_Handler:
+	pushall64
+	mov	rdi,pf_fmt
+	mov	rsi,cr2
+	xor	rax,rax
+	call	kprintf
+	mov rdi,cr2
+	mov rsi,4096
+	call request_mapped_pages
+	popall64
+	add rsp,8;clear error code
+	call loop
+	iretq
+
+global PageFault_Handler
+
+GeneralFault_Handler:
+	pushall64
+	mov	rdi,gf_fmt
+	mov	rsi,rsp
+	xor	rax,rax
+	call	kprintf		; Call C function
+	call loop
+	popall64
+	iretq
+
+global GeneralFault_Handler
+
 
 interupt3:
 	pushall64

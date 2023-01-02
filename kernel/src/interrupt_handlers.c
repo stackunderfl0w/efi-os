@@ -8,18 +8,9 @@
 #include "loop.h"
 #include "stdio.h"
 extern graphics_context* global_context;
-char buf[128];
 uint64_t cr0, cr2, cr3, err;
-
-__attribute__((interrupt)) void PageFault_Handler(struct interrupt_frame* frame){
-	//Panic("Page Fault Detected");
-	move_cursor(global_context,60,0);
-	for (int i = 0; i < 19; ++i){
-		deletechar(global_context);
-	}
-	print(global_context,"PAGE FAULT DETECTED");
-
-    asm volatile(
+static inline void get_regs(){
+	asm volatile(
         "mov %%cr0, %%rax\n\t"
         "mov %%eax, %0\n\t"
         "mov %%cr2, %%rax\n\t"
@@ -32,20 +23,30 @@ __attribute__((interrupt)) void PageFault_Handler(struct interrupt_frame* frame)
     : /* no input */
     : "%rax"
     );
+} 
+
+/*__attribute__((interrupt)) void PageFault_Handler(struct interrupt_frame* frame){
+	//Panic("Page Fault Detected");
+	//move_cursor(global_context,60,0);
+	//for (int i = 0; i < 19; ++i){
+	//	deletechar(global_context);
+	//}
+	kprintf("PAGE FAULT DETECTED");
+	get_regs();
+    
 	//kprintf("%p\n",err);
-	ksprintf(buf,"%p",cr2);
-	print(global_context,buf);
-	loop();
-}
-__attribute__((interrupt)) void GeneralFault_Handler(struct interrupt_frame* frame){
-	move_cursor(global_context,29,0);
-	for (int i = 0; i < 19; ++i){
-		deletechar(global_context);
-	}
+	kprintf("%p",cr2);
+	//loop();
+}*/
+/*__attribute__((interrupt)) void GeneralFault_Handler(struct interrupt_frame* frame){
+	//move_cursor(global_context,29,0);
+	//for (int i = 0; i < 19; ++i){
+	//	deletechar(global_context);
+	//}
 	print(global_context,"GENERAL FAULT DETECTED");
 	//while(1);
 	loop();
-}
+}*/
 __attribute__((interrupt)) void DoubleFault_Handler(struct interrupt_frame* frame){
 	move_cursor(global_context,29,0);
 	for (int i = 0; i < 19; ++i){

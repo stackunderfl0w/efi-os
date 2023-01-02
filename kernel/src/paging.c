@@ -11,7 +11,7 @@ Page_Table* KERNEL_PL4;
 void map_fb_pages(void* virtadr, void* physadr ,uint64_t pages);
 
 void INIT_PAGING(EFI_MEMORY_DESCRIPTOR* memMap, uint64_t Entries, uint64_t DescSize, Framebuffer* buf){
-	EFI_MEMORY_DESCRIPTOR* largest_segment;
+	EFI_MEMORY_DESCRIPTOR* largest_segment=NULL;
 	uint64_t largest_segment_size=0;
 	for (int i = 0; i < Entries; ++i){
 		EFI_MEMORY_DESCRIPTOR* desc = (EFI_MEMORY_DESCRIPTOR*)((uint64_t)memMap + (i * DescSize));
@@ -166,7 +166,6 @@ void map_mem_with_flags(void* virtadr, void* physadr,uint64_t flags){
 	uint64_t offsets[4]={PL4_ofset,PDP_ofset,PD_ofset,PT_ofset};
 
 	Page_Table* current_PL=KERNEL_PL4;
-	Page_Table_Entry* current_entry;
 
 	//navigate down through the tables
 	for (int i = 0; i < 3; ++i){

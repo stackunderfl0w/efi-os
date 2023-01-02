@@ -7,18 +7,18 @@ section .smp
 align 4096
 
 core_wakeup:
-    cli                     ; Disable interrupts, we want to be left alone
+    ; cli                     ; Disable interrupts, we want to be left alone
 
-    xor ax, ax
-    mov ds, ax              ; Set DS-register to 0 - used by lgdt
+    ; xor ax, ax
+    ; mov ds, ax              ; Set DS-register to 0 - used by lgdt
 
-    lgdt [gdt_desc]         ; Load the GDT descriptor
+    ; lgdt [gdt_desc]         ; Load the GDT descriptor
 
-    mov eax, cr0            ; Copy the contents of CR0 into EAX
-    or eax, 1               ; Set bit 0
-    mov cr0, eax            ; Copy the contents of EAX into CR0
+    ; mov eax, cr0            ; Copy the contents of CR0 into EAX
+    ; or eax, 1               ; Set bit 0
+    ; mov cr0, eax            ; Copy the contents of EAX into CR0
 
-    jmp 08h:smp_protected_entry
+    ; jmp 08h:smp_protected_entry
 GLOBAL core_wakeup
 gdt:                    ; Address for the GDT
 gdt_null:               ; Null Segment

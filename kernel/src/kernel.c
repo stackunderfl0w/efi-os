@@ -38,9 +38,11 @@ graphics_context* current_context;
 
 process* current_process;
 tty tty0;
+int disable_double_buffer;
 
 int _start(bootinfo *info){
 	asm("cli");
+	disable_double_buffer=1;
 	//init_serial();
 	//print_serial("hello world");
 
@@ -109,30 +111,38 @@ int _start(bootinfo *info){
 
 	//detect_cores((void*)(uint64_t)info->rsdp->RsdtAddress);
 	//loop();
-
-	void* new_fb=(void*)0x7000000000;
-	request_mapped_pages(new_fb,info->buf->BufferSize);
-	Framebuffer fb=*info->buf;
-	fb.BaseAddress=new_fb;
-	graphics_context kernel_graphics=init_text_overlay(&fb, info->font);
-	kernel_graphics.foreground_color=0x00ffffff;
-	kernel_graphics.background_color=0x00000000;
-	current_context=&kernel_graphics;
-	tty0.g=&kernel_graphics;
+	if (!disable_double_buffer){
+		void* new_fb=(void*)0x7000000000;
+		request_mapped_pages(new_fb,info->buf->BufferSize);
+		Framebuffer fb=*info->buf;
+		fb.BaseAddress=new_fb;
+		graphics_context kernel_graphics=init_text_overlay(&fb, info->font);
+		kernel_graphics.foreground_color=0x00ffffff;
+		kernel_graphics.background_color=0x00000000;
+		current_context=&kernel_graphics;
+		tty0.g=&kernel_graphics;
+	}
 
 
 	kprintf("Enabling interupts\n");
-	swap_buffer(global_context->buf,current_context->buf);
-	
 	start_scheduler();
+	kprintf("test page allocation\n");
+	sleep(200);
+	//uint64_t* test_loc=(uint64_t*)0x40000000;
+
+	//*test_loc=90194102;
+
+	//kprintf("survived\n");
+
+	loop();
+	//swap_buffer(global_context->buf,current_context->buf);
+	
 	//uint8_t* file = read_file("/resources/startup.txt");
 	//kprintf("%s\n",file);
 
 
 
-	int f=open("/resources/resourcesresources/config.txt",0);
-	//int f2=open("/resources/resourcesresources/config.txt",0);;
-
+	/*int f=open("/resources/resourcesresources/config.txt",0);
 
 
 
@@ -162,7 +172,7 @@ int _start(bootinfo *info){
 	kprintf("After modification: %s\n",t2);
 
 
-	close(f);
+	close(f);*/
 
 
 

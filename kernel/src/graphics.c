@@ -192,10 +192,6 @@ void scroll_console(graphics_context* g){
 	exit_critical(flags);
 }
 
-double last_frame[60];
-char st[32];
-double fps;
-
 void swap_buffer(Framebuffer* dest,Framebuffer* src){
 	//swap fb in 2 chunks to render mouse while swapping to avoid flickering
 	uint64_t* midpoint=(dest->BaseAddress+dest->PixelsPerScanLine*MIN(mouse_cursor_y+16,dest->Height)*4);
