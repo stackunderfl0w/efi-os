@@ -32,8 +32,7 @@ int open(const char *pathname, int flags){
 }
 
 int close(int fd){
-	file_table_entry tmp={fd,0};
-	file_table_entry* file = sorted_list_get(current_process->process_file_table->entries, (void *)&tmp);
+	file_table_entry* file = sorted_list_get(current_process->process_file_table->entries, (void *)(uint64_t)fd);
     vfs_close(file->base);
 	remove_file_table_entry(current_process->process_file_table,fd);
 	return 0;

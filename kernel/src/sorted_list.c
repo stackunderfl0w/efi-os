@@ -3,11 +3,12 @@
 #include "stdio.h"
 #define VECTOR_BASE_CAPACITY 1
 
-sorted_list* create_sorted_list(int (*element_cmp)(void*,void*)){
+sorted_list* create_sorted_list(int (*element_cmp)(void*,void*),int (*search_cmp)(void*,void*)){
 	sorted_list* l= kmalloc(sizeof(sorted_list));
 	l->capacity=VECTOR_BASE_CAPACITY;
 	l->data=(kmalloc(VECTOR_BASE_CAPACITY * sizeof(void*)));
 	l->cmp=element_cmp;
+	l->search_cmp=search_cmp;
 	l->size=0;
 	return l;
 }
@@ -21,14 +22,10 @@ void resize_sorted_list(sorted_list* l, uint64_t new_size){
 	l->capacity=new_size;
 }
 
-void reserve_sorted_list(sorted_list* l, uint64_t size){
-	resize_sorted_list(l,size);
-}
-
 uint64_t sorted_list_search(sorted_list* l, void* search){
 	uint64_t min=0,max=l->size,c_idx=min+max/2;
 	while (min!=max){
-		int x=l->cmp(l->data[c_idx],search);
+		int x=l->search_cmp(l->data[c_idx],search);
 		if(!x)
 			return c_idx;
 		else if(x<0)
@@ -37,7 +34,7 @@ uint64_t sorted_list_search(sorted_list* l, void* search){
 			max=c_idx;
 		c_idx=(min+max)/2;
 	}
-	return(min+max)/2;
+	return min;
 }
 
 void sorted_list_insert(sorted_list* l, void* element){
@@ -61,6 +58,6 @@ void sorted_list_remove(sorted_list *l, void *element) {
 
 void* sorted_list_get(sorted_list* l, void* search){
 	uint64_t idx= sorted_list_search(l, search);
-	return !l->cmp(l->data[idx],search)?l->data[idx]:NULL;
+	return !l->search_cmp(l->data[idx],search)?l->data[idx]:NULL;
 }
 

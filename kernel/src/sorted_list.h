@@ -3,12 +3,13 @@
 
 typedef struct{
 	int (*cmp)(void*,void*);
+	int (*search_cmp)(void*,void*);
 	void ** data;
 	uint64_t size;
 	uint64_t capacity;
 }sorted_list;
 
-sorted_list* create_sorted_list(int (*element_cmp)(void*,void*));
+sorted_list* create_sorted_list(int (*element_cmp)(void*,void*),int (*search_cmp)(void*,void*));
 
 void sorted_list_free(sorted_list* l);
 

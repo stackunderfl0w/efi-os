@@ -137,12 +137,10 @@ void read_f12_entry_name(char* buf, FAT_DIRECTORY_ENTRY* entry){
 	}
 	buf[index++]=0;
 }
-FAT_DIRECTORY_ENTRY* get_next_fat_entry(FAT_DIRECTORY_ENTRY* entry, char* buf){
 
-}
 FAT_DIRECTORY_ENTRY* get_entry_from_directory(fat_BS* part, unsigned char* start_entry,char* name){
 	char tmp_name[256];
-	FAT_DIRECTORY_ENTRY* entry;
+	FAT_DIRECTORY_ENTRY* entry=NULL;
 	bool lfn_found=false;
 	for (uint64_t i = 0; start_entry[i]; i+=32){
 		if(start_entry[i]==0xE5){
@@ -173,7 +171,7 @@ FAT_DIRECTORY_ENTRY* get_entry_from_directory(fat_BS* part, unsigned char* start
 
 FAT_DIRECTORY_ENTRY* create_entry_in_directory(fat_BS* part, uint8_t* start_entry, char* name){
 	char tmp_long[256],tmp_name[256];
-	FAT_DIRECTORY_ENTRY* entry;
+	FAT_DIRECTORY_ENTRY* entry=NULL;
 	bool lfn_found=false;
 	for (uint64_t i = 0; i<512; i+=32){
 		if(start_entry[i]==0xE5){
@@ -239,7 +237,7 @@ void write_fat_cluster_chain(uint16_t cluster, uint8_t* data, uint64_t size){
 	if(cluster==0){
 		memcpy(root_directory,data,512*get_root_dir_sectors(BS));
 	}
-	uint64_t len= get_cluster_chain_length(cluster);
+	//uint64_t len= get_cluster_chain_length(cluster);
 	uint64_t next_cluster=0;
 	uint64_t sectors_written=0;
 	if(size<=512){
@@ -305,7 +303,7 @@ void write_file(char* filepath, uint8_t* data, uint64_t size){
 
 	FAT_DIRECTORY_ENTRY* entry=get_entry_from_directory((fat_BS*)boot_sector,root_directory,paths[0]);
 	uint64_t entry_location;//=get_first_root_dir_sector((fat_BS*)boot_sector);
-	uint8_t* cur_dir;
+	uint8_t* cur_dir=NULL;
 	for (int i = 1; i < sections; ++i){
 		if(strcasecmp(paths[i],"")){
 			entry_location=entry->first_cluster_low_16;
@@ -379,7 +377,7 @@ void fat_populate_vfs_directory(vfs_node* dir, char* dir_path){
 				read_f12_entry_name(tmp_name,entry);
 			}
 			lfn_found=false;
-			if(strcmp(tmp_name,".")==0|strcmp(tmp_name,"..")==0){
+			if((strcmp(tmp_name,".")==0)|(strcmp(tmp_name,"..")==0)){
 				continue;
 			}
 			vfs_node* n=kmalloc(sizeof(vfs_node));
@@ -392,7 +390,7 @@ void fat_populate_vfs_directory(vfs_node* dir, char* dir_path){
 			//if it's not a directory lets just say it's a file.
 			n->flags|=entry->attributes&FAT12_DIRECTORY?VFS_DIRECTORY:VFS_FILE;
 			if(n->flags&VFS_DIRECTORY){
-				n->children= create_sorted_list(dir->children->cmp);
+				n->children= create_sorted_list(dir->children->cmp,dir->children->search_cmp);
 			}
 			n->open_references=0;
 			n->block_size=512;

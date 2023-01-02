@@ -142,19 +142,18 @@ int80:
 	push r15
 
 	cmp rax, 0
-
 	je read_80
 
 	cmp rax, 1
-
 	je write_80
 
 	cmp rax, 2
-
 	je open_80
 
-	cmp rax, 99
+	cmp rax, 4
+	je fstat_80
 
+	cmp rax, 99
 	je print_80
 
 
@@ -166,6 +165,9 @@ int80:
 		jmp end_80
 	open_80:
 		call open
+		jmp end_80
+	fstat_80:
+		call fstat
 		jmp end_80
 
 

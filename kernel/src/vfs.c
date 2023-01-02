@@ -10,6 +10,9 @@
 int cmp_vfs_node_by_filename(vfs_node* first, vfs_node* second){
 	return strcmp(first->name,second->name);
 }
+int search_cmp_vfs_node(vfs_node* first, char* second){
+	return strcmp(first->name,second);
+}
 
 vfs_node* vfs_create_root(uint64_t root_drive){
 	vfs_node* root=kmalloc(sizeof(vfs_node));
@@ -17,7 +20,7 @@ vfs_node* vfs_create_root(uint64_t root_drive){
 	root->size=0;
 	root->flags=VFS_DIRECTORY|VFS_MOUNT|VFS_ROOT;
 	root->drive_id=root_drive;
-	root->children= create_sorted_list((int (*)(void *, void *)) cmp_vfs_node_by_filename);
+	root->children= create_sorted_list((int (*)(void *, void *)) cmp_vfs_node_by_filename,(int (*)(void *, void *)) search_cmp_vfs_node);
 	root->parent=root;
 	return root;
 }

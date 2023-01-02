@@ -16,7 +16,7 @@ SRC_FILES_ASM := $(wildcard $(SRC_DIR)/*.asm)
 OBJ_FILES := $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRC_FILES_C))
 OBJ_FILES += $(patsubst $(SRC_DIR)/%.asm,$(OBJ_DIR)/%.o,$(SRC_FILES_ASM))
 
-CFLAGS := -std=gnu99 -ffreestanding -fshort-wchar -mno-red-zone -fno-omit-frame-pointer -fno-stack-protector -Ofast -mtune=native
+CFLAGS := -g -Wall -std=gnu99 -ffreestanding -fno-builtin -mno-red-zone -fno-omit-frame-pointer -fno-stack-protector -Ofast -mtune=native
 LDFLAGS:= -T $(LDS) -static -Bsymbolic -nostdlib
 
 all: kernel

@@ -58,13 +58,14 @@ void tty_write(tty* tt,char* f){
 						case 'u':
 							move_cursor(tt->g,tt->saved_x,tt->saved_y);
 							break;
-						case 'm':
+						case 'm':{
 							int itt=second?2:1;//inlining this fails for some reason
 							for (int i = 0; i < itt; ++i){
 								uint32_t* target=(i?y:x)/10==3?&tt->g->foreground_color:&tt->g->background_color;
 								int col=(i?y:x)%10;
 								*target=0xff000000+(col&0b1)*0x00ff0000+(col>>1&0b1)*0x0000ff00+(col>>2&0b1)*0x000000ff;
 							}
+						}
 							break;
 						default:
 							break;

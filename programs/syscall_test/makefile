@@ -19,7 +19,8 @@ OBJ_FILES := $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRC_FILES_C))
 OBJ_FILES += $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRC_FILES_CPP))
 OBJ_FILES += $(patsubst $(SRC_DIR)/%.asm,$(OBJ_DIR)/%.o,$(SRC_FILES_ASM))
 
-CFLAGS := -ffreestanding -fshort-wchar -mno-red-zone -fno-omit-frame-pointer  -fno-stack-protector -Ofast -mtune=native
+CFLAGS := -Wall -std=gnu11 -ffreestanding -fno-builtin -mno-red-zone -fno-omit-frame-pointer -fno-stack-protector -Ofast -mtune=native
+
 LDFLAGS:= -T $(LDS) -static -Bsymbolic -nostdlib
 
 all: program
