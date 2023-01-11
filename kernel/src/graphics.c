@@ -66,6 +66,10 @@ void printchar(graphics_context* g, char chr){
 		}
 		return;
 	}
+	if(chr=='\t'){
+		g->cursor_x=(g->cursor_x+4)&~0x3;
+		return;
+	}
 	if(g->cursor_y>=g->console_height){
 		g->cursor_y=g->console_height;
 		scroll_console(g);       
