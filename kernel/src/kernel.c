@@ -109,7 +109,6 @@ int _start(bootinfo *info){
 	print_vfs_recursive(root,0);
 
 	//detect_cores((void*)(uint64_t)info->rsdp->RsdtAddress);
-	//loop();
 	#ifndef DISSABLE_FB_BUFFER
 		void* new_fb=(void*)0x7000000000;
 		request_mapped_pages(new_fb,info->buf->BufferSize);
@@ -133,7 +132,6 @@ int _start(bootinfo *info){
 
 	//kprintf("survived\n");
 
-	loop();
 	//swap_buffer(global_context->buf,current_context->buf);
 	
 	//uint8_t* file = read_file("/resources/startup.txt");
