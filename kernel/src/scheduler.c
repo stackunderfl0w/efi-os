@@ -7,6 +7,7 @@
 #include "fat.h"
 #include "graphics.h"
 #include "elf.h"
+#include "circular_buffer.h"
 thread *current;
 bool scheduler_inited=false;
 extern graphics_context* global_context;
@@ -64,33 +65,35 @@ void vsync(){
 		else{
 			draw_mouse(global_context->buf);
 		}
+		yield();
 	}
 }
 
-thread *new_threads[256];
 int num_threads=3;
 uint64_t cur_thread=0;
 
+circular_buffer* thread_pool;
 
-thread* int_thread;
+
+thread boot_thread;
 void start_scheduler(){
 	asm("cli");
 	kprintf("start_scheduler\n");
+	thread_pool=cb_init(256,8);
 	//new_threads[0] is base thread
 	//new_threads[1]=new_thread(thread_function);
 	//new_threads[2]=new_thread(thread_function);
 	//new_threads[3]=new_thread(thread_function);
-	new_threads[1]=new_thread(vsync);
-	new_threads[2]=new_thread(sacrificial);
+	thread* t=new_thread(vsync);
+	cb_push(thread_pool,&t,1);
+	t=new_thread(sacrificial);
+	cb_push(thread_pool,&t,1);
 
-	//new_process("/resources/scrclr.elf", k_context->buf->BaseAddress);
+	//new_process("/resources/scrclr.elf", current_context->buf->BaseAddress);
 
 	scheduler_inited=true;
 	asm("sti");
 	//loop();
-
-}
-void placeholder(){
 
 }
 
@@ -100,14 +103,16 @@ void* get_next_thread(void *stack_ptr){
 		return stack_ptr;
 	if (first){
 		first=false;
-		current=new_threads[0];
-		cur_thread=0;
+		current=&boot_thread;
+		//cur_thread=0;
 		return stack_ptr;
 	}
 	current->RSP=stack_ptr;
-	cur_thread++;
-	current=new_threads[cur_thread%num_threads];
-	cur_thread%=num_threads;
+	cb_push(thread_pool,&current,1);
+	//cur_thread++;
+	//current=new_threads[cur_thread%num_threads];
+	//cur_thread%=num_threads;
+	cb_pop(thread_pool,&current,1);
 
 	return current->RSP;
 }
@@ -168,7 +173,7 @@ void new_process(char* executable,void* ptr){
 	//kprintf("prog start %u \n",prog_entry);
 	//prog_entry(ptr);
 
-	new_threads[num_threads++]=new_thread(prog_entry);
-	((registers*)(new_threads[num_threads-1]->stack_ptr))->rdi=(uint64_t)ptr;
-
+	thread* t=new_thread(prog_entry);
+	cb_push(thread_pool,&t,1);
+	((registers*)(t->RSP))->rdi=(uint64_t)ptr;
 }

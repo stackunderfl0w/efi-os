@@ -7,6 +7,7 @@
 #include "memory.h"
 #include "ata-pio.h"
 #include "paging.h"
+#include "filesystem.h"
 
 void test_ascii_colors(){
 			kprintf("\033[30m black\n"
@@ -157,4 +158,48 @@ void test_kprintf(){
 
 	kprintf("double %f kk\nff",doub);
 	kprintf("\033[s\nhello1\033[uhello2\n");
+}
+void test_fat(){
+	uint8_t* file = read_file("/resources/TEST    TXT");
+	uint8_t* file1 = read_file("/resources/startup.txt");
+
+	uint8_t* font2 = read_file("/resources/zap-light16.psf");
+
+	write_file("/resources/WRTTEST TXT",file1,1024);
+
+	bitmap_font loaded_font=load_font(font2);
+
+}
+void test_posix_file_ops(){
+	int f=open("/resources/resourcesresources/config.txt",0);
+
+
+
+	struct stat stat1;
+
+	fstat(f,&stat1);
+
+	kprintf("%u\n",stat1.st_size);
+
+
+	char* t= kcalloc(stat1.st_size+1);
+
+	read(f,(uint8_t*)t,stat1.st_size);
+
+	t[stat1.st_size]=0;
+
+	kprintf("Before modification: %s\n",t);
+
+	lseek(f,SEEK_CUR,-11);
+	write(f,"12345678901234567890",20);
+	lseek(f,SEEK_SET,0);
+	fstat(f,&stat1);
+	char* t2= kmalloc(stat1.st_size+1);
+	read(f,t2,stat1.st_size);
+
+	t2[stat1.st_size]=0;
+	kprintf("After modification: %s\n",t2);
+
+
+	close(f);
 }
