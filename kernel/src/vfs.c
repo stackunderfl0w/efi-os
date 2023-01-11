@@ -78,7 +78,7 @@ vfs_node* vfs_open(vfs_node *cur, const char* filepath){
     cur= vfs_get_entry_from_dir(cur,filepath);
     if(!cur->open_references){
         if(cur->flags&VFS_PIPE){
-            cur->data_cache=(uint8_t*)cb_init(4096);
+            cur->data_cache=(uint8_t*)cb_init(4096,1);
         }
         else{
             cur->data_cache=load_fat_cluster_chain(cur->location);
