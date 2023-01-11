@@ -38,11 +38,10 @@ graphics_context* current_context;
 
 process* current_process;
 tty tty0;
-int disable_double_buffer;
+//#define DISSABLE_FB_BUFFER 1
 
 int _start(bootinfo *info){
 	asm("cli");
-	disable_double_buffer=1;
 	//init_serial();
 	//print_serial("hello world");
 
@@ -111,7 +110,7 @@ int _start(bootinfo *info){
 
 	//detect_cores((void*)(uint64_t)info->rsdp->RsdtAddress);
 	//loop();
-	if (!disable_double_buffer){
+	#ifndef DISSABLE_FB_BUFFER
 		void* new_fb=(void*)0x7000000000;
 		request_mapped_pages(new_fb,info->buf->BufferSize);
 		Framebuffer fb=*info->buf;
@@ -121,7 +120,7 @@ int _start(bootinfo *info){
 		kernel_graphics.background_color=0x00000000;
 		current_context=&kernel_graphics;
 		tty0.g=&kernel_graphics;
-	}
+	#endif
 
 
 	kprintf("Enabling interupts\n");

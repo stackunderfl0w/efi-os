@@ -31,7 +31,6 @@ void t3(){
 	}
 }
 void sacrificial(){
-	asm volatile("cli");
 	kprintf("sac thread started");
 	return;
 }
@@ -41,7 +40,7 @@ void vsync(){
 	double fps;
 	int count=0;
 	while(1){
-		if(!disable_double_buffer){
+		if(global_context!=current_context){
 			for (int i = 59; i > 0; --i){
 				last_frame[i]=last_frame[i-1];
 			}
@@ -83,10 +82,8 @@ void start_scheduler(){
 	//new_threads[3]=new_thread(thread_function);
 	new_threads[1]=new_thread(vsync);
 	new_threads[2]=new_thread(sacrificial);
-	((registers*)new_threads[2]->RSP)->rax=0x8772;
-	//kprintf("sac thread return placed at %p",&((registers*)new_threads[2]->RSP)->err);
 
-	//ew_process("/resources/scrclr.elf", k_context->buf->BaseAddress);
+	//new_process("/resources/scrclr.elf", k_context->buf->BaseAddress);
 
 	scheduler_inited=true;
 	asm("sti");
@@ -111,9 +108,6 @@ void* get_next_thread(void *stack_ptr){
 	cur_thread++;
 	current=new_threads[cur_thread%num_threads];
 	cur_thread%=num_threads;
-		if(((registers*)current->RSP)->rax==0x8772){
-		placeholder();
-	}
 
 	return current->RSP;
 }
