@@ -86,9 +86,9 @@ void kb_callback(int keycode, int modifiers){
 }
 
 tty init_tty_0(graphics_context* g){
-	//set_keyboard_callback(kb_callback);
 	return (tty){g,0,0};
 }
-tty* init_tty(graphics_context* kg){
+tty* init_tty(){
+	//set_keyboard_callback(kb_callback);
 	return NULL;
 }

@@ -9,6 +9,7 @@
 #include "paging.h"
 #include "memory.h"
 #include "serial.h"
+#include "fat.h"
 #include "thread.h"
 #include "scheduler.h"
 #include "time.h"
@@ -69,7 +70,7 @@ int _start(bootinfo *info){
 	INIT_PS2_MOUSE();
 	kprintf("PS2 mouse initialized\n");
 
-	kprintf("Frambuffer base:%u\n",(uint64_t)info->buf->BaseAddress);
+	kprintf("Framebuffer base:%u\n",(uint64_t)info->buf->BaseAddress);
 
 	uint32_t numEntries=info->map_size/info->map_desc_size;
 	uint64_t memsize=getMemorySize(info->mem_map,numEntries,info->map_desc_size);
@@ -130,14 +131,7 @@ int _start(bootinfo *info){
 	//*test_loc=90194102;
 
 	//kprintf("survived\n");
-
-	//swap_buffer(global_context->buf,current_context->buf);
 	
-	//uint8_t* file = read_file("/resources/startup.txt");
-	//kprintf("%s\n",file);
-
-
-
 
 
 

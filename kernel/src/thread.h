@@ -2,14 +2,14 @@
 #include "typedef.h"
 #include "file_table.h"
 
-struct process;
-
 typedef struct{
 	uint64_t tid;
-	struct process* parent_process;
+	uint64_t parent_pid;
 	void* RSP;
 	uint64_t state;
 }thread;
+
+#define THREAD_DEAD 1<<0
 
 
 typedef struct {
@@ -39,3 +39,4 @@ typedef struct {
 }registers;
 
 thread* new_thread(void (*function)(void));
+void destroy_thread(thread* th);

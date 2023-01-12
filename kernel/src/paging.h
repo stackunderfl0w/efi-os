@@ -65,6 +65,7 @@ void PT_SET_ADR(Page_Table_Entry* PT, uint64_t adr);
 uint64_t PT_GET_ADR(Page_Table_Entry* PT);
 
 void map_mem(void* virtadr, void* physadr);
+void unmap_mem(void* virtadr);
 void map_pages(void* virtadr, void* physadr ,uint64_t pages);
 void map_allocated_mem(void* virtadr);
 

@@ -151,7 +151,7 @@ uint64_t get_used_memory(){
 uint64_t get_reserved_memory(){
 	return RESERVED_MEMORY;
 }
-void map_mem_with_flags(void* virtadr, void* physadr,uint64_t flags){
+Page_Table* navigate_to_PL1(void* virtadr){
 	//virtadr is 64 bits. 4 level page table only maps bottom 48 bits
 	//the bottom 12 bits are irelevant as they are inside the page we are mapping.
 	//the remaining 36 bits are split between the 4 levels.
@@ -180,13 +180,30 @@ void map_mem_with_flags(void* virtadr, void* physadr,uint64_t flags){
 		}
 		current_PL=(void*)PT_GET_ADR(current_entry);
 	}
+	return current_PL;
+}
+void map_mem_with_flags(void* virtadr, void* physadr,uint64_t flags){
+	uint64_t PT_ofset = (uint64_t)virtadr>>12 & 0x1ff;
 
-	Page_Table_Entry* PL1E=&current_PL->entries[PT_ofset];
+	Page_Table* PL1=navigate_to_PL1(virtadr);
+	Page_Table_Entry* PL1E=&PL1->entries[PT_ofset];
 
 	PT_SET_FLAG(PL1E,flags);
 	PT_SET_ADR(PL1E,(uint64_t)physadr);
 
 	//void* page=(void*)PT_GET_ADR(PL1E);
+}
+void unmap_mem(void* virtadr){
+	uint64_t PT_ofset = (uint64_t)virtadr>>12 & 0x1ff;
+
+	Page_Table* PL1=navigate_to_PL1(virtadr);
+	Page_Table_Entry* PL1E=&PL1->entries[PT_ofset];
+
+	FREE_PAGE((void*)PT_GET_ADR(PL1E));
+
+	PT_SET_FLAG(PL1E,0);
+	PT_SET_ADR(PL1E,(uint64_t)0);
+	///todo invalidate tlb
 }
 void map_mem(void* virtadr, void* physadr){
 	map_mem_with_flags(virtadr, physadr,PT_RW|PT_Present);

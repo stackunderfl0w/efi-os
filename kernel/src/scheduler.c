@@ -8,14 +8,14 @@
 #include "graphics.h"
 #include "elf.h"
 #include "circular_buffer.h"
-thread *current;
 bool scheduler_inited=false;
 extern graphics_context* global_context;
 extern graphics_context* current_context;
 extern int disable_double_buffer;
+extern thread *current_thread;
 
 void thread_function(){
-	int thread_id = current->tid;
+	int thread_id = current_thread->tid;
 	while(1){
 		kprintf("Thread %u %f\n",thread_id,TimeSinceBoot);
 		//sleep(10);
@@ -103,18 +103,21 @@ void* get_next_thread(void *stack_ptr){
 		return stack_ptr;
 	if (first){
 		first=false;
-		current=&boot_thread;
+		boot_thread.tid=0;
+		boot_thread.state=0;
+		current_thread=&boot_thread;
 		//cur_thread=0;
 		return stack_ptr;
 	}
-	current->RSP=stack_ptr;
-	cb_push(thread_pool,&current,1);
-	//cur_thread++;
-	//current=new_threads[cur_thread%num_threads];
-	//cur_thread%=num_threads;
-	cb_pop(thread_pool,&current,1);
+	current_thread->RSP=stack_ptr;
+	if(!current_thread->state&THREAD_DEAD)
+		cb_push(thread_pool,&current_thread,1);
+	else{
+		destroy_thread(current_thread);
+	}
+	cb_pop(thread_pool,&current_thread,1);
 
-	return current->RSP;
+	return current_thread->RSP;
 }
 
 void new_process(char* executable,void* ptr){
