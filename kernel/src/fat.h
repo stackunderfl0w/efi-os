@@ -76,14 +76,6 @@ typedef struct{
 	uint16_t last_2[2];
 }__attribute__((packed))FAT_LONG_NAME_ENTRY;
 
-typedef struct{
-	char name[256];
-	uint64_t location;
-	uint64_t size;
-	bool directory;
-	char flags;
-
-}FILE_ENTRY;
 
 
 #define FAT12 1

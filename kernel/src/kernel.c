@@ -104,6 +104,9 @@ int _start(bootinfo *info){
 	kprintf("Virtual file system populated\n");
 
 	print_vfs_recursive(root,0);
+	mkdir("TESTDIR",0);
+
+    print_vfs_recursive(root,0);
 
 	#ifndef DISSABLE_FB_BUFFER
 		void* new_fb=(void*)0x7000000000;

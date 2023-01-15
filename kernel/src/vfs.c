@@ -39,7 +39,18 @@ void vfs_mount_drive(uint64_t drive_id, char* path){
 
 }
 
-void vfs_create_file(char* filename){
+void vfs_insert_file(vfs_node* cur, char* filename, uint64_t flags, uint64_t size, uint64_t drive_id, uint64_t location, uint64_t block_size){
+    vfs_node* n=kmalloc(sizeof(vfs_node));
+    strcpy(n->name,filename);
+    n->flags=flags;
+    n->size=size;
+    n->drive_id=drive_id;
+    n->location=location;
+    n->block_size=block_size;
+
+    n->open_references=0;
+    n->parent=cur;
+    sorted_list_insert(cur->children,n);
 
 }
 
@@ -106,6 +117,17 @@ uint64_t vfs_create_pipe(vfs_node *cur, const char* filename){
 	n->open_references=0;
 	n->parent=cur;
 	sorted_list_insert(cur->children,n);
+	return 0;
+}
+uint64_t vfs_create_folder(vfs_node *cur, const char* dirname){
+	vfs_node* n=kmalloc(sizeof(vfs_node));
+	strncpy(n->name,dirname,256);
+	n->size=0;
+	n->flags=VFS_DIRECTORY;
+	n->open_references=0;
+	n->parent=cur;
+    n->children= create_sorted_list(cur->children->cmp,cur->children->search_cmp);
+    sorted_list_insert(cur->children,n);
 	return 0;
 }
 ///todo check for file boundaries and add error codes

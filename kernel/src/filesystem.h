@@ -8,7 +8,7 @@
 //get current working directory
 char *getcwd(char *buf, size_t size);
 //create a directory
-//int mkdir(const char *pathname, mode_t mode);
+int mkdir(const char *pathname, mode_t mode);
 //delete a directory
 //int rmdir(const char *pathname);
 //change working directory

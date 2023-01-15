@@ -14,6 +14,11 @@ char *getcwd(char *buf, size_t size){
 	}
 	return buf;
 }
+int mkdir(const char *pathname, mode_t mode){
+	vfs_node* cur=current_process->working_dir;
+    return (int)vfs_create_folder(cur,pathname);
+}
+
 int chdir(const char *path){
 	vfs_node* cur=current_process->working_dir;
 	vfs_node* to=vfs_get_entry_from_dir(cur, path);

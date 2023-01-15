@@ -380,22 +380,12 @@ void fat_populate_vfs_directory(vfs_node* dir, char* dir_path){
 			if((strcmp(tmp_name,".")==0)|(strcmp(tmp_name,"..")==0)){
 				continue;
 			}
-			vfs_node* n=kmalloc(sizeof(vfs_node));
-			strcpy(n->name,tmp_name);
-			n->size=entry->size;
-			n->drive_id=0;
-			n->location=entry->first_cluster_low_16;
-			n->flags=0;
-
-			//if it's not a directory lets just say it's a file.
-			n->flags|=entry->attributes&FAT12_DIRECTORY?VFS_DIRECTORY:VFS_FILE;
-			if(n->flags&VFS_DIRECTORY){
-				n->children= create_sorted_list(dir->children->cmp,dir->children->search_cmp);
-			}
-			n->open_references=0;
-			n->block_size=512;
-			n->parent=dir;
-			sorted_list_insert(dir->children,n);
+            if(entry->attributes&FAT12_DIRECTORY){
+                vfs_create_folder(dir,tmp_name);
+            }
+            else{
+                vfs_insert_file(dir,tmp_name, VFS_FILE,entry->size,0,entry->first_cluster_low_16,512);
+            }
 		}
 	}
 	if(start_entry!=root_directory){
