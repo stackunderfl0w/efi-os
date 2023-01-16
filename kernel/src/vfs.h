@@ -51,7 +51,7 @@ void vfs_create_file(char* filename);
 void vfs_insert_file(vfs_node* cur, char* filename, uint64_t flags, uint64_t size, uint64_t drive_id, uint64_t location, uint64_t block_size);
 
 vfs_node* vfs_get_single_entry_from_dir(vfs_node* dir, const char* filename);
-vfs_node* vfs_get_entry_from_dir(vfs_node* dir, const char* filename);
+vfs_node* vfs_navigate_to(vfs_node* dir, const char* filename, bool skip_final);
 
 
 vfs_node * vfs_open(vfs_node *cur, const char* filepath);
@@ -60,7 +60,7 @@ void vfs_close(vfs_node* file);
 uint64_t vfs_create_pipe(vfs_node *cur, const char* filename);
 uint64_t vfs_close_pipe(vfs_node *cur, const char* filename);
 
-uint64_t vfs_create_folder(vfs_node *cur, const char* dirname);
+uint64_t vfs_create_folder(vfs_node *cur, const char* dirname, uint64_t extra_flags);
 
 int64_t vfs_read(vfs_node* file, void *buf, size_t offset,size_t count);
 int64_t vfs_write(vfs_node* file, const void *buf, size_t offset, size_t count);

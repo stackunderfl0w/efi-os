@@ -380,17 +380,15 @@ void fat_populate_vfs_directory(vfs_node* dir, char* dir_path){
 			if((strcmp(tmp_name,".")==0)|(strcmp(tmp_name,"..")==0)){
 				continue;
 			}
-            if(entry->attributes&FAT12_DIRECTORY){
-                vfs_create_folder(dir,tmp_name);
-            }
-            else{
-                vfs_insert_file(dir,tmp_name, VFS_FILE,entry->size,0,entry->first_cluster_low_16,512);
-            }
+			if(entry->attributes&FAT12_DIRECTORY){
+				vfs_create_folder(dir,tmp_name,0);
+			}
+			else{
+				vfs_insert_file(dir,tmp_name, VFS_FILE,entry->size,0,entry->first_cluster_low_16,512);
+			}
 		}
 	}
 	if(start_entry!=root_directory){
 		free(start_entry);
 	}
 }
-
-

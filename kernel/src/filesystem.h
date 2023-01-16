@@ -3,8 +3,6 @@
 #include "file_table.h"
 
 
-
-
 //get current working directory
 char *getcwd(char *buf, size_t size);
 //create a directory
@@ -62,7 +60,7 @@ int dup2(int oldfd, int newfd);
 //create pipe
 int pipe(int filedes[2]);
 //make a FIFO special file (a named pipe)
-//int mkfifo ( const char *pathname, mode_t mode );
+int mkfifo ( const char *pathname, mode_t mode );
 //set file creation mask
 //mode_t umask(mode_t mask);
 //associate a stream with an existing file descriptor

@@ -1,7 +1,6 @@
 #include "vfs.h"
 #include "sorted_list.h"
 #include "ata-pio.h"
-#include "file_table.h"
 #include "fat.h"
 #include "stdio.h"
 #include "memory.h"
@@ -22,6 +21,8 @@ vfs_node* vfs_create_root(uint64_t root_drive){
 	root->drive_id=root_drive;
 	root->children= create_sorted_list((int (*)(void *, void *)) cmp_vfs_node_by_filename,(int (*)(void *, void *)) search_cmp_vfs_node);
 	root->parent=root;
+
+	vfs_create_folder(root,"proc",VFS_VOLATILE);
 	return root;
 }
 
@@ -69,7 +70,8 @@ vfs_node* vfs_get_single_entry_from_dir(vfs_node* dir, const char* filename){
 	}
 	return NULL;
 }
-vfs_node* vfs_get_entry_from_dir(vfs_node *cur, const char* filepath){
+
+vfs_node* vfs_navigate_to(vfs_node *cur, const char* filepath, bool skip_final){
 	char cur_file_name[256]={0};
 
 	const char* f=filepath;
@@ -77,6 +79,9 @@ vfs_node* vfs_get_entry_from_dir(vfs_node *cur, const char* filepath){
 		while(*f=='/')
 			f++;
 		char* tok_end =strchr(f,'/');
+		if(skip_final&!tok_end)
+			break;
+		memset(cur_file_name,0,256);
 		strncpy(cur_file_name,f,tok_end?tok_end-f:256);
 		f=tok_end;
 		cur = vfs_get_single_entry_from_dir(cur, cur_file_name);
@@ -86,7 +91,7 @@ vfs_node* vfs_get_entry_from_dir(vfs_node *cur, const char* filepath){
 	return cur;
 }
 vfs_node* vfs_open(vfs_node *cur, const char* filepath){
-    cur= vfs_get_entry_from_dir(cur,filepath);
+    cur= vfs_navigate_to(cur,filepath,false);
     if(!cur->open_references){
         if(cur->flags&VFS_PIPE){
             cur->data_cache=(uint8_t*)cb_init(4096,1);
@@ -110,8 +115,12 @@ void vfs_close(vfs_node* file){
 }
 
 uint64_t vfs_create_pipe(vfs_node *cur, const char* filename){
+	cur=vfs_navigate_to(cur,filename,true);
+	if(!cur)
+		return -1;
 	vfs_node* n=kmalloc(sizeof(vfs_node));
-	strncpy(n->name,filename,256);
+    char* ending=strrchr(filename,'/');
+    strncpy(n->name,ending?ending+1:filename,256);
 	n->size=0;
 	n->flags=VFS_FILE|VFS_PIPE|VFS_VOLATILE;
 	n->open_references=0;
@@ -119,11 +128,15 @@ uint64_t vfs_create_pipe(vfs_node *cur, const char* filename){
 	sorted_list_insert(cur->children,n);
 	return 0;
 }
-uint64_t vfs_create_folder(vfs_node *cur, const char* dirname){
+uint64_t vfs_create_folder(vfs_node *cur, const char* dirname, uint64_t extra_flags){
+	cur=vfs_navigate_to(cur,dirname,true);
+	if(!cur)
+		return -1;
 	vfs_node* n=kmalloc(sizeof(vfs_node));
-	strncpy(n->name,dirname,256);
+	char* ending=strrchr(dirname,'/');
+	strncpy(n->name,ending?ending+1:dirname,256);
 	n->size=0;
-	n->flags=VFS_DIRECTORY;
+	n->flags=VFS_DIRECTORY|extra_flags;
 	n->open_references=0;
 	n->parent=cur;
     n->children= create_sorted_list(cur->children->cmp,cur->children->search_cmp);
@@ -215,7 +228,6 @@ void print_vfs_recursive(vfs_node* dir, int level){
 }
 
 void vfs_recursive_populate(vfs_node* root, char* path, int max_level){
-
 	fat_populate_vfs_directory(root,path);
 	if(!max_level)
 		return;
@@ -223,7 +235,8 @@ void vfs_recursive_populate(vfs_node* root, char* path, int max_level){
 	char* dir=kmalloc(pathlen+257);
 	strcpy(dir,path);
 	for (int i = 0; i < root->children->size; ++i) {
-		if(((vfs_node*)root->children->data[i])->flags&VFS_DIRECTORY){
+        uint64_t fl=((vfs_node*)root->children->data[i])->flags;
+		if((fl&VFS_DIRECTORY)&&!(fl&VFS_VOLATILE)){
 			vfs_node* cur=root->children->data[i];
 			strncpy(dir+pathlen,cur->name,256);
 			strcpy(dir+ strlen(dir),"/");

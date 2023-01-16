@@ -106,7 +106,16 @@ int _start(bootinfo *info){
 	print_vfs_recursive(root,0);
 	mkdir("TESTDIR",0);
 
-    print_vfs_recursive(root,0);
+	print_vfs_recursive(root,0);
+	mkdir("/proc/0",0);
+	mkfifo("/proc/0/0",0);
+	print_vfs_recursive(root,0);
+	int fg=open("/proc/0/0",0);
+	write(fg,"hedp\n",6);
+	char fgf[6];
+	int r=read(fg,fgf,6);
+	kprintf("%d %s",r,fgf);
+	loop();
 
 	#ifndef DISSABLE_FB_BUFFER
 		void* new_fb=(void*)0x7000000000;

@@ -1,6 +1,5 @@
 #include "filesystem.h"
 #include "vfs.h"
-#include "thread.h"
 #include "process.h"
 
 //ANALOG FOR INTERRUPT SERVICE ROUTINES
@@ -16,12 +15,12 @@ char *getcwd(char *buf, size_t size){
 }
 int mkdir(const char *pathname, mode_t mode){
 	vfs_node* cur=current_process->working_dir;
-    return (int)vfs_create_folder(cur,pathname);
+    return (int)vfs_create_folder(cur,pathname,0);
 }
 
 int chdir(const char *path){
 	vfs_node* cur=current_process->working_dir;
-	vfs_node* to=vfs_get_entry_from_dir(cur, path);
+	vfs_node* to=vfs_navigate_to(cur, path, false);
 	if(to){
 		current_process->working_dir= to;
 		return 0;
@@ -58,4 +57,8 @@ int fstat(int fd, struct stat *buf){
 off_t lseek(int fd, off_t offset, int whence){
 	file_seek(current_process->process_file_table,fd,offset,whence);
 	return 0;
+}
+int mkfifo (const char *pathname, mode_t mode){
+    vfs_node* cur=current_process->working_dir;
+    return (int)vfs_create_pipe(cur,pathname);
 }

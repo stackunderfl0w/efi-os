@@ -8,6 +8,16 @@ char *strchr(const char *s, int c){
 	}
 	return NULL;
 }
+char* strrchr(const char *s, int c){
+	char* last=NULL;
+	char ch=(char)c;
+	while(*s){
+		if(*s==ch)
+			last=(char*)s;
+		s++;
+	}
+    return last;
+}
 char* strstr(char* string, char* substring){
 	char *a, *b;
 	b = substring;

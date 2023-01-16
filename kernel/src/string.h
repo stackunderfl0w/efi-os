@@ -3,6 +3,7 @@
 
 //char * strstr (const char *haystack, const char *needle);
 char *strchr(const char *s, int c);
+char* strrchr(const char *s, int c);
 char *strstr(char* string, char* substring);
 char* strrstr(char* haystack, char* needle);
 int strcmp(const char* str1, const char* str2);

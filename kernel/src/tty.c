@@ -5,6 +5,7 @@
 #include "scheduler.h"
 #include "keyboard.h"
 #include "ctype.h"
+#include "filesystem.h"
 //extern graphics_context* k_context;
 
 
@@ -90,5 +91,6 @@ tty init_tty_0(graphics_context* g){
 }
 tty* init_tty(){
 	//set_keyboard_callback(kb_callback);
+	//mkdir("/proc/1",0);
 	return NULL;
 }
