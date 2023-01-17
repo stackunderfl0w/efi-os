@@ -115,14 +115,11 @@ int _start(bootinfo *info){
 	char fgf[6];
 	int r=read(fg,fgf,6);
 	kprintf("%d %s",r,fgf);
-	loop();
+	//loop();
 
 	#ifndef DISSABLE_FB_BUFFER
-		void* new_fb=(void*)0x7000000000;
-		request_mapped_pages(new_fb,info->buf->BufferSize);
-		Framebuffer fb=*info->buf;
-		fb.BaseAddress=new_fb;
-		graphics_context kernel_graphics=init_text_overlay(&fb, info->font);
+		Framebuffer* fb=alloc_framebuffer(info->buf->Width,info->buf->Height,(void*)0x7000000000);
+		graphics_context kernel_graphics=init_text_overlay(fb, info->font);
 		kernel_graphics.foreground_color=0x00ffffff;
 		kernel_graphics.background_color=0x00000000;
 		current_context=&kernel_graphics;
@@ -133,6 +130,12 @@ int _start(bootinfo *info){
 	kprintf("Enabling interupts\n");
 
 	start_scheduler();
+	mkdir("/dev",VFS_VOLATILE);
+	tty* tty1=init_tty(1,info->font);
+	current_context=tty1->g;
+	tty_write(tty1,"HELLOTTY1\n");
+
+	//kprintf("hello\n");
 	while(1){
 		yield();
 	}

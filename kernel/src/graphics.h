@@ -19,10 +19,6 @@ typedef struct {
 	uint32_t background_color;
 }graphics_context;
 
-//void PlotPixel_32bpp(int x, int y, uint32_t pixel);
-
-
-
 void render_char(graphics_context* g, uint32_t x, uint32_t y, CHAR8 chr);
 void clearchar(graphics_context* g, uint32_t x, uint32_t y);
 void deletechar(graphics_context* g);
@@ -32,6 +28,7 @@ void print(graphics_context* g, const char* str);
 void clrscr(Framebuffer* f, uint32_t color);
 
 graphics_context init_text_overlay(Framebuffer* buf, bitmap_font* font);
+Framebuffer* alloc_framebuffer(uint32_t width, uint32_t height, void* addr);
 
 void move_cursor(graphics_context* g, uint32_t x, uint32_t y);
 void get_cursor_pos(graphics_context* g, uint32_t *x, uint32_t *y);

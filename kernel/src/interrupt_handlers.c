@@ -38,7 +38,7 @@ static inline void get_regs(){
 	kprintf("%p",cr2);
 	//loop();
 }*/
-/*__attribute__((interrupt)) void GeneralFault_Handler(struct interrupt_frame* frame){
+__attribute__((interrupt)) void GeneralFault_Handler(struct interrupt_frame* frame){
 	//move_cursor(global_context,29,0);
 	//for (int i = 0; i < 19; ++i){
 	//	deletechar(global_context);
@@ -46,14 +46,21 @@ static inline void get_regs(){
 	print(global_context,"GENERAL FAULT DETECTED");
 	//while(1);
 	loop();
-}*/
+}
+__attribute__((interrupt)) void Unhandled_Handler(struct interrupt_frame* frame){
+	move_cursor(global_context,29,0);
+	for (int i = 0; i < 19; ++i){
+		deletechar(global_context);
+	}
+	print(global_context,"Unhandled Fault detected");
+	loop();
+}
 __attribute__((interrupt)) void DoubleFault_Handler(struct interrupt_frame* frame){
 	move_cursor(global_context,29,0);
 	for (int i = 0; i < 19; ++i){
 		deletechar(global_context);
 	}
 	print(global_context,"Double FAULT DETECTED");
-	//while(1);
 	loop();
 }
 __attribute__((interrupt)) void Keyboard_Handler(struct interrupt_frame* frame){

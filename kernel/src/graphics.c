@@ -1,6 +1,8 @@
 #include "graphics.h"
 #include "stdlib.h"
 #include "serial.h"
+#include "paging.h"
+#include "memory.h"
 
 static inline void PlotPixel_32bpp(Framebuffer* f, int x, int y, uint32_t pixel){
 	*((uint32_t*)((char*)f->BaseAddress + 4 * f->PixelsPerScanLine * y + 4 * x)) = pixel;
@@ -8,24 +10,6 @@ static inline void PlotPixel_32bpp(Framebuffer* f, int x, int y, uint32_t pixel)
 static inline uint32_t ReadPixel_32bpp(Framebuffer* f,int x, int y){
 	return *(uint32_t*)(f->BaseAddress + 4 * f->PixelsPerScanLine * y + 4 * x);
 }
-
-static inline uint64_t enter_critical(){
-	uint64_t flags;
-	asm volatile("# __raw_save_flags\n\t"
-		"pushf ; pop %0"
-		: "=rm" (flags)
-		: /* no input */
-		: "memory");
-	asm volatile("cli");
-	return flags;
-}
-
-static inline void exit_critical(uint64_t flags){
-	if (flags&0x200){
-		asm volatile("sti");
-	}
-}
-
 
 void render_char(graphics_context* g, UINT32 x, UINT32 y, CHAR8 chr){
 	uint32_t x_vis=MIN(g->font->width,g->buf->Width-x);
@@ -92,22 +76,12 @@ void print(graphics_context* g, const char* str){
 }
 
 void clrscr(Framebuffer* f, uint32_t color){
-	uint64_t flags;
-	asm volatile("# __raw_save_flags\n\t"
-		"pushf ; pop %0"
-		: "=rm" (flags)
-		: /* no input */
-		: "memory");
-	if (flags&0x200){
-		asm volatile("cli");
-	}
+	uint64_t flags=enter_critical();
 	uint64_t end=f->BufferSize/4;
 	for (int i = 0; i < end; ++i){
 		((uint32_t*)f->BaseAddress)[i]=color;
 	}
-	if (flags&0x200){
-		asm volatile("sti");
-	}
+	exit_critical(flags);
 }
 
 graphics_context init_text_overlay(Framebuffer* buf, bitmap_font* font){
@@ -115,6 +89,14 @@ graphics_context init_text_overlay(Framebuffer* buf, bitmap_font* font){
 	clrscr((&g)->buf,0x12121212);
 	return g;
 }
+Framebuffer* alloc_framebuffer(uint32_t width, uint32_t height, void* addr){
+	request_mapped_pages(addr,width*height*4);
+
+	Framebuffer* fb=kmalloc(sizeof(Framebuffer));
+	*fb=(Framebuffer){.BaseAddress=addr,.BufferSize=width*height*4,.Width=width,.Height=height,.PixelsPerScanLine=width};
+	return fb;
+}
+
 void move_cursor(graphics_context* g, UINT32 x, UINT32 y){
 	g->cursor_x=x;
 	g->cursor_y=y;

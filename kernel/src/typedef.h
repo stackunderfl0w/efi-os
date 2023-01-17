@@ -45,3 +45,20 @@ uint32_t crc32b(const void* data, size_t length);
 
 int memcmp (const void* str1, const void* str2, size_t count);
 void* memmove (void *dest, const void *src, size_t n);
+
+static inline uint64_t enter_critical(){
+	uint64_t flags;
+	asm volatile("# __raw_save_flags\n\t"
+		"pushf ; pop %0"
+		: "=rm" (flags)
+		: /* no input */
+		: "memory");
+	asm volatile("cli");
+	return flags;
+}
+
+static inline void exit_critical(uint64_t flags){
+	if (flags&0x200){
+		asm volatile("sti");
+	}
+}

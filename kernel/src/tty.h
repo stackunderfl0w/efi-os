@@ -7,5 +7,5 @@ typedef struct {
 
 void tty_write(tty* tt, char* f);
 
-tty* init_tty();
+tty* init_tty(int id, bitmap_font* font);
 tty init_tty_0(graphics_context* g);

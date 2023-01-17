@@ -120,17 +120,17 @@ PageFault_Handler:
 
 global PageFault_Handler
 
-GeneralFault_Handler:
-	pushall64
-	mov	rdi,gf_fmt
-	mov	rsi,rsp
-	xor	rax,rax
-	call	kprintf		; Call C function
-	call loop
-	popall64
-	iretq
+; GeneralFault_Handler:
+; 	pushall64
+; 	mov	rdi,gf_fmt
+; 	mov	rsi,rsp
+; 	xor	rax,rax
+; 	call	kprintf		; Call C function
+; 	call loop
+; 	popall64
+; 	iretq
 
-global GeneralFault_Handler
+; global GeneralFault_Handler
 
 
 interupt3:
