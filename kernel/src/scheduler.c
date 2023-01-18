@@ -79,7 +79,7 @@ void start_scheduler(){
 	//new_threads[1]=new_thread(thread_function);
 	//new_threads[2]=new_thread(thread_function);
 	//new_threads[3]=new_thread(thread_function);
-	thread* t=new_thread(vsync);
+	thread* t=new_thread(vsync,NULL);
 	cb_push(thread_pool,&t,1);
 	// t=new_thread(sacrificial);
 	// cb_push(thread_pool,&t,1);

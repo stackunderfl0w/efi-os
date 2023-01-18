@@ -63,7 +63,7 @@ void new_process(char* executable,void* ptr){
 
 	void (*prog_entry)() = ((__attribute__((sysv_abi)) void (*)() ) program_space+header->e_entry);
 
-	thread* t=new_thread(prog_entry);
+	thread* t=new_thread(prog_entry,NULL);
 	cb_push(thread_pool,&t,1);
 	((registers*)(t->RSP))->rdi=(uint64_t)ptr;
 }
