@@ -38,5 +38,5 @@ typedef struct {
 	uint64_t ret;
 }registers;
 
-thread* new_thread(void (*function)(void));
+thread* new_thread(void (*function)(void*), void* arg);
 void destroy_thread(thread* th);

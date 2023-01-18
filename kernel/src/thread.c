@@ -18,7 +18,7 @@ void thread_exit(){
 	while(1)yield();
 }
 
-thread* new_thread(void (*function)(void)){
+thread* new_thread(void (*function)(void*),void* arg){
 	//todo map memory to new adress space
 	thread *th = REQUEST_PAGE();
 	th->tid = next_tid++;

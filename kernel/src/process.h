@@ -9,3 +9,5 @@ typedef struct{
 	vfs_node* working_dir;
 	file_table* process_file_table;
 }process;
+
+void new_process(char* executable,void* ptr);

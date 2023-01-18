@@ -103,13 +103,13 @@ int _start(bootinfo *info){
 	vfs_recursive_populate(root,"/",5);
 	kprintf("Virtual file system populated\n");
 
-	print_vfs_recursive(root,0);
-	mkdir("TESTDIR",0);
+	//print_vfs_recursive(root,0);
+	//mkdir("TESTDIR",0);
 
-	print_vfs_recursive(root,0);
+	//print_vfs_recursive(root,0);
 	mkdir("/proc/0",0);
 	mkfifo("/proc/0/0",0);
-	print_vfs_recursive(root,0);
+	//print_vfs_recursive(root,0);
 	int fg=open("/proc/0/0",0);
 	write(fg,"hedp\n",6);
 	char fgf[6];
@@ -129,14 +129,21 @@ int _start(bootinfo *info){
 
 	kprintf("Enabling interupts\n");
 
-	start_scheduler();
 	mkdir("/dev",VFS_VOLATILE);
 	tty* tty1=init_tty(1,info->font);
 	current_context=tty1->g;
-	tty_write(tty1,"HELLOTTY1\n");
 
-	//kprintf("hello\n");
+	//tty_write(tty1,"HELLOTTY1\n");
+	//int tout=open("/dev/tty1/tty_out",0);
+	start_scheduler();
+
+
+	kprintf("hello\n");
 	while(1){
+		//current_context=tty0.g;
+		//sleep(1);
+		//current_context=tty1->g;
+		//sleep(1);
 		yield();
 	}
 	//kprintf("test page allocation\n");
@@ -152,10 +159,6 @@ int _start(bootinfo *info){
 
 
 	//new_process("/resources/syscall_test.elf", current_context->buf->BaseAddress);
-
-	while(1){
-		yield();
-	}
 
 	
 	//kprintf("%x\n",info->rsdp);

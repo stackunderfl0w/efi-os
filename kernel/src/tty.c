@@ -79,6 +79,7 @@ void tty_write(tty* tt,char* f){
 	}
 }
 
+
 void kb_callback(int keycode, int modifiers){
 	if(modifiers&MODCODE_KEYDOWN){
 		if(isprint(keycode)||keycode=='\n'){
@@ -94,24 +95,24 @@ tty init_tty_0(graphics_context* g){
 tty* init_tty(int id, bitmap_font* font){
 	//set_keyboard_callback(kb_callback);
 	//create stdio files
-	//char fn[64];
-	//ksprintf(fn,"/dev/tty%d",id);
-	//mkdir(fn,0);
-	//chdir(fn);
-	//mkfifo("tty_in",0);
-	//mkfifo("tty_out",0);
-	//chdir("../..");
+	uint64_t flags=enter_critical();
+	char fn[64];
+	ksprintf(fn,"/dev/tty%d",id);
+	mkdir(fn,0);
+	chdir(fn);
+	mkfifo("tty_in",0);
+	mkfifo("tty_out",0);
+	chdir("../..");
 	//create new fb
 
 	Framebuffer* fb=alloc_framebuffer(global_context->buf->Width,global_context->buf->Height,(void*)0x6000000000);
 	//create a new graphics context with that framebuffer
 
 	graphics_context *g=kmalloc(sizeof(graphics_context)); 
-	uint64_t flags=enter_critical();
 	*g=init_text_overlay(fb, font);
-	exit_critical(flags);
 	tty* ty=kmalloc(sizeof(tty));
 	*ty=(tty){.g=g,.saved_x=0,.saved_y=0};
+	exit_critical(flags);
 
 
 	return ty;
