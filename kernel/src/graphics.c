@@ -69,8 +69,7 @@ void printchar(graphics_context* g, char chr){
 }
 void print(graphics_context* g, const char* str){
 	//print_serial(str);
-	for (int i = 0; str[i]!=0; ++i)
-	{
+	for (int i = 0; str[i]!=0; ++i){
 		printchar(g, str[i]);
 	}
 }
@@ -120,23 +119,23 @@ void cursor_down(graphics_context* g, uint64_t distance){
 	g->cursor_y=MIN(g->cursor_y+1,g->console_height);
 }
 
-uint8_t cursor[32]={
-	0b10000000,0b00000000,
-	0b11000000,0b00000000,
-	0b11100000,0b00000000,
-	0b11110000,0b00000000,
-	0b11111000,0b00000000,
-	0b11111100,0b00000000,
-	0b11111110,0b00000000,
-	0b11111111,0b00000000,
-	0b11111111,0b10000000,
-	0b11111111,0b11000000,
-	0b11111111,0b11100000,
-	0b11111100,0b00000000,
-	0b11111110,0b00000000,
-	0b11101111,0b00000000,
-	0b11000111,0b10000000,
-	0b10000011,0b00000000
+uint16_t cursor[16]={
+	0b1000000000000000,
+	0b1100000000000000,
+	0b1110000000000000,
+	0b1111000000000000,
+	0b1111100000000000,
+	0b1111110000000000,
+	0b1111111000000000,
+	0b1111111100000000,
+	0b1111111110000000,
+	0b1111111111000000,
+	0b1111111111100000,
+	0b1111110000000000,
+	0b1111111000000000,
+	0b1110111100000000,
+	0b1100011110000000,
+	0b1000001100000000
 };
 
 int mouse_cursor_x=0, mouse_cursor_y=0;
@@ -146,18 +145,14 @@ void move_mouse(int x, int y){
 }
 
 void draw_mouse(Framebuffer* f){
-	uint8_t x_vis=MIN(16,f->Width-mouse_cursor_x);
-	uint8_t y_vis=MIN(16,f->Height-mouse_cursor_y);
+	int mx=mouse_cursor_x,my=mouse_cursor_y;
+	uint8_t x_vis=MIN(16,f->Width-mx);
+	uint8_t y_vis=MIN(16,f->Height-my);
 
 	for (int y = 0; y < y_vis; ++y){
-		for (int i = 0; i < MIN(x_vis,8); ++i){
-			if(cursor[y*2]>>(7-(i%8))&0x1){
-				PlotPixel_32bpp(f,mouse_cursor_x+i,mouse_cursor_y+y,0xffffffff);
-			}
-		}
-		for (int i = 0; i < x_vis-8; ++i){
-			if(cursor[y*2+1]>>(7-(i%8))&0x1){
-				PlotPixel_32bpp(f,mouse_cursor_x+8+i,mouse_cursor_y+y,0xffffffff);
+		for (int i = 0; i < x_vis; ++i){
+			if(cursor[y]>>(15-i)&0x1){
+				PlotPixel_32bpp(f,mx+i,my+y,0xffffffff);
 			}
 		}
 	}
