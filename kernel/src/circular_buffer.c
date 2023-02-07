@@ -10,7 +10,7 @@ circular_buffer* cb_init(size_t size, size_t element_size){
 	cb->element_size=element_size;
 	cb->max_size=size;
 	cb->size=0;
-	cb->data=(void*)(cb+sizeof(circular_buffer));
+	cb->data=(void*)(((void*)cb)+sizeof(circular_buffer));
 	_Atomic size_t a_zero=0;
 	__atomic_store(&cb->head, &a_zero, __ATOMIC_RELAXED);
 	__atomic_store(&cb->tail, &a_zero, __ATOMIC_RELAXED);
