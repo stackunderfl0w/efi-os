@@ -5,10 +5,10 @@ uint8_t lapic_ids[256]={0}; // CPU core Local APIC IDs
 uint8_t numcore=0;          // number of cores detected
 uint64_t lapic_ptr=0;       // pointer to the Local APIC MMIO registers
 uint64_t ioapic_ptr=0;      // pointer to the IO APIC MMIO registers
-extern void core_wakeup();
+//extern void core_wakeup();
 
 void detect_cores(uint8_t *rsdt){
-	kprintf("core wakeup %x\n",core_wakeup);
+	//kprintf("core wakeup %x\n",core_wakeup);
 	uint8_t *ptr, *ptr2;
 	uint32_t len;
 

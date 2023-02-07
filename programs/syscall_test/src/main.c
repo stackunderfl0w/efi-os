@@ -35,10 +35,16 @@ int _start(char* buf){
 		len=255;
 	}
 	int x=read(f,txt,len);
-	kprintf("sup read %d chars: %s\n",x,txt);
+	//kprintf("sup read %d chars: %s\n",x,txt);
+
+	int tout=open("/dev/tty1/tty_out",0);
+
+	write(tout,txt,x);
+
 
 
 	while(1){
+		//write(tout,"hello",6);
 		asm volatile("int $3");
 	}
 	return 0;

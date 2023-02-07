@@ -2,10 +2,11 @@
 #include "typedef.h"
 #include "vfs.h"
 #include "file_table.h"
+#include "dynarray.h"
 
 typedef struct{
 	uint64_t pid;
-	uint64_t child_threads[256];
+	dynarray* child_threads;
 	vfs_node* working_dir;
 	file_table* process_file_table;
 }process;

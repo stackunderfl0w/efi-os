@@ -99,7 +99,6 @@ int kprintf(const char* format, ... ){
 	va_start (args, format);
 	int i = kvsprintf(kprintf_buf, format, args);
 	va_end (args);
-	//fputs(kprintf_buf,stdout);
 	tty_write(&tty0,kprintf_buf);
 	return i;
 }

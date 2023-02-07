@@ -46,7 +46,7 @@ void INIT_PAGING(EFI_MEMORY_DESCRIPTOR* memMap, uint64_t Entries, uint64_t DescS
 		}
 	}
 
-	uint64_t kernel_size=((uint64_t)&_KernelEnd-(uint64_t)&_KernelStart)/4096;
+	uint64_t kernel_size=(ROUND_4K((uint64_t)&_KernelEnd-(uint64_t)&_KernelStart))/4096;
 	kprintf("kernel_size: %u\n",kernel_size);
 
 

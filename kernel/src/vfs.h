@@ -34,8 +34,6 @@ struct vfs_node{
 	//keep track of which chunks have been cached into memory
 	//includes flags for, not cached, cached, modified.
 	uint8_t* segment_table;//todo
-	//what part of the file is currently being writen to/read from
-	uint8_t* seek_head;
 
 	uint64_t open_references;
 

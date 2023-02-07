@@ -243,41 +243,39 @@ efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 
 
 	Elf64_Ehdr* header=(Elf64_Ehdr*)kern;
-	Print(L"Arch: %u ",header->e_machine);
-	Print(L"entry: %u ",header->e_entry);
-	Print(L"ofset: %u ",header->e_phoff);
-
+	Print(L"Arch: %lx\n",header->e_machine);
+	Print(L"entry: %lx\n",header->e_entry);
+	Print(L"ofset: %lx\n",header->e_phoff);
 	Elf64_Phdr* phdrs=(Elf64_Phdr*)(kern+header->e_phoff);
-
 	for (
 		Elf64_Phdr* phdr = phdrs;
 		(char*)phdr < (char*)phdrs + header->e_phnum * header->e_phentsize;
 		phdr = (Elf64_Phdr*)((char*)phdr + header->e_phentsize)
-	)
-	{//load each program segment at the memory location indicated by its header in p_addr
+	){//load each program segment at the memory location indicated by its header in p_addr
 		switch (phdr->p_type){
-			case PT_LOAD:
-			{
+			case PT_LOAD:{
 				int pages = (phdr->p_memsz + 0x1000 - 1) / 0x1000;
-				Elf64_Addr segment = phdr->p_paddr;
-				Print(L"Kernel p_paddr %u \n",phdr->p_paddr);
+				Elf64_Addr vaddr = phdr->p_vaddr;
+				Print(L"Kernel p_vaddr %lx \n",vaddr);
 
-				SystemTable->BootServices->AllocatePages(AllocateAddress, EfiLoaderData, pages, &segment);
+				SystemTable->BootServices->AllocatePages(AllocateAddress, EfiLoaderData, pages, &vaddr);
+				Print(L"allocated %lx \n",vaddr);
 
 				UINTN size = phdr->p_filesz;
-				for (UINTN i = 0; i < size; ++i)
-				{
-					((char*)segment)[i]=kern[phdr->p_offset+i];
+				for (UINTN i = 0; i < size; ++i){
+					((uint8_t*)vaddr)[i]=kern[phdr->p_offset+i];
 				}
+				Print(L"finished %lx \n",vaddr);
 				break;
 			}
 		}
 	}
-	Print(L"Kernel e_entry point at 0x%x \n",header->e_entry);
 
-	void (*KernelStart)() = ((__attribute__((sysv_abi)) void (*)() ) header->e_entry);
+	Print(L"Kernel e_entry point at 0x%lx \n",header->e_entry);
+	//evidently the uefi will not map virtual memmory, so uh...
+	void (*KernelStart)() = ((__attribute__((sysv_abi)) void (*)() )header->e_entry);
 
-	Print(L"Set Kernel start to 0x%x \n",KernelStart);
+	Print(L"Set Kernel start to 0x%lx \n",KernelStart);
 
 
 	UINTN EfiMemoryMapSize = 0;
@@ -334,11 +332,10 @@ efi_main (EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable){
 	bitmap_font bmf=load_font(font);
 
 	init_text_overlay(newBuffer, &bmf);
-
+	Print(L"overlay loaded",mem_size);
 	for (uint32_t i = 0; i < 256; ++i){
 		printchar(i);
 	}
-
 
 
 	CHAR8 x[]="Exiting boot services";

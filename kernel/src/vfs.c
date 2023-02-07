@@ -22,7 +22,6 @@ vfs_node* vfs_create_root(uint64_t root_drive){
 	root->children= create_sorted_list((int (*)(void *, void *)) cmp_vfs_node_by_filename,(int (*)(void *, void *)) search_cmp_vfs_node);
 	root->parent=root;
 
-	vfs_create_folder(root,"proc",VFS_VOLATILE);
 	return root;
 }
 

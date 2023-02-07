@@ -103,20 +103,16 @@ int _start(bootinfo *info){
 	vfs_recursive_populate(root,"/",5);
 	kprintf("Virtual file system populated\n");
 
-	//print_vfs_recursive(root,0);
-	//mkdir("TESTDIR",0);
-
-	//print_vfs_recursive(root,0);
+	vfs_create_folder(root,"proc",VFS_VOLATILE);
 	mkdir("/proc/0",0);
 	mkfifo("/proc/0/0",0);
-	//print_vfs_recursive(root,0);
+	print_vfs_recursive(root,0);
 	int fg=open("/proc/0/0",0);
 	write(fg,"hedp\n",6);
 	char fgf[6];
 	int r=read(fg,fgf,6);
 	kprintf("%d %s",r,fgf);
 	//loop();
-
 	#ifndef DISSABLE_FB_BUFFER
 		Framebuffer* fb=alloc_framebuffer(info->buf->Width,info->buf->Height,(void*)0x7000000000);
 		graphics_context kernel_graphics=init_text_overlay(fb, info->font);
@@ -126,20 +122,31 @@ int _start(bootinfo *info){
 		tty0.g=&kernel_graphics;
 	#endif
 
-
-	kprintf("Enabling interupts\n");
-
 	mkdir("/dev",VFS_VOLATILE);
 	tty* tty1=init_tty(1,info->font);
-	current_context=tty1->g;
+	//current_context=tty1->g;
 
 	//tty_write(tty1,"HELLOTTY1\n");
-	//int tout=open("/dev/tty1/tty_out",0);
+	int tout=open("/dev/tty1/tty_out",0);
+
 	start_scheduler();
 
+	//current_context=tty1->g;
 
-	kprintf("hello\n");
+	//new_process("/resources/syscall_test.elf", NULL);
+
+
+	char buf[64]={0};
 	while(1){
+		//memset(buf,0,64);
+		//write(tout,"hello",6);
+		//read(tout,buf,63);
+		//if(*buf){
+		//	tty_write(tty1,buf);
+		//}
+		kprintf("hello");
+
+		//tty_write(tty1,"hello");
 		//current_context=tty0.g;
 		//sleep(1);
 		//current_context=tty1->g;

@@ -55,7 +55,7 @@ void printchar(graphics_context* g, char chr){
 		return;
 	}
 	if(g->cursor_y>=g->console_height){
-		g->cursor_y=g->console_height;
+		g->cursor_y=g->console_height-1;
 		scroll_console(g);       
 	}
 	//save and calculate new position before printing char for multithreading
