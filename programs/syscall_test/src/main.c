@@ -47,5 +47,11 @@ int _start(char* buf){
 		write(tout,"hello",5);
 		asm volatile("int $3");
 	}
+	//write(tout,"\033[31m red\n",10);
+	write(tout,"\033[\n",2);
+	asm volatile("int $3");
+	write(tout,"31m red\n",8);
+
+
 	return 0;
 }
