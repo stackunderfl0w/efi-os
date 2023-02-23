@@ -96,7 +96,7 @@ tty* init_tty(int id, bitmap_font* font){
 	//set_keyboard_callback(kb_callback);
 	//create stdio files
 	uint64_t flags=enter_critical();
-	char fn[64];
+	char fn[256];
 	ksprintf(fn,"/dev/tty%d",id);
 	mkdir(fn,0);
 	chdir(fn);
@@ -105,7 +105,7 @@ tty* init_tty(int id, bitmap_font* font){
 	chdir("../..");
 	//create new fb
 
-	Framebuffer* fb=alloc_framebuffer(global_context->buf->Width,global_context->buf->Height,(void*)0x6000000000);
+	Framebuffer* fb=alloc_framebuffer(global_context->buf->Width,global_context->buf->Height,(void*)0x6000000000+0x100000000*id);
 	//create a new graphics context with that framebuffer
 
 	graphics_context *g=kmalloc(sizeof(graphics_context)); 

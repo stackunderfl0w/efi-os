@@ -81,8 +81,8 @@ void new_process(char* executable,void* ptr){
 
 	process* p=kmalloc(sizeof(process));
 	p->pid=next_pid++;
-	p->child_threads=dynarray_init();
+	//p->child_threads=dynarray_init();
 	//p->working_dir=root
 	//p->process_file_table
-	dynarray_add(active_processes,p);
+	//dynarray_add(active_processes,p);
 }

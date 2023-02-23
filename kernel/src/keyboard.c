@@ -2,8 +2,12 @@
 #include "graphics.h"
 #include "ctype.h"
 #include "stdio.h"
+#include "tty.h"
 int modifiers=0;
 uint8_t previous_key=0;
+extern volatile graphics_context* current_context;
+extern volatile tty* kernel_ttys[10];
+
 const char ASCIITable[] = {
 		 0 ,  0 , '1', '2',
 		'3', '4', '5', '6',
@@ -33,13 +37,15 @@ bool callbacks_enabled=false;
 void (*callback)(int, int)=NULL; 
 
 void handle_key(uint8_t keycode){
+	//kprintf("0x%x   ",keycode);
+	//return;
 	//kprintf("%u\n",(uint64_t)keycode);
 	int final_keycode=0;
 	if (keycode==0xE0 && previous_key==0){
 		previous_key=keycode;
 		return;
 	}
-
+	//clear keyup/down flag, then set
 	modifiers&=~(MODCODE_KEYUP|MODCODE_KEYDOWN);
 	modifiers|=(keycode&0x80)?MODCODE_KEYUP:MODCODE_KEYDOWN;
 	if (previous_key==0xE0){
@@ -86,45 +92,44 @@ void handle_key(uint8_t keycode){
 			case BackSpace:
 				final_keycode=KEYCODE_BACKSPACE;
 				break;
+			case Alt:
+				final_keycode=KEYCODE_LALT;
+				modifiers|=MODCODE_LALT;
+				break;
+			case Alt+0x80:
+				final_keycode=KEYCODE_LALT;
+				modifiers&= ~MODCODE_LALT;
+				break;
+			case Ctrl:
+				final_keycode=KEYCODE_LCTRL;
+				modifiers|=MODCODE_LCTRL;
+				break;
+			case Ctrl+0x80:
+				final_keycode=KEYCODE_LCTRL;
+				modifiers&= ~MODCODE_LCTRL;
+				break;
 			default:
 				final_keycode=Translate(keycode&~0x80,false);
 				break;
 		}
 	}
+	char ascii = Translate(keycode, modifiers&MODCODE_SHIFT);
+	if(isdigit(ascii)&&modifiers&MODCODE_CTRL){
+		current_context=kernel_ttys[ascii-'0']->g;
+	}
 
+	//ctrl press 0x1d lift 0x9d
+	//alt press 0x38 lift 0xb8
+	//right versions prefixed with 0xe0
 	if(callbacks_enabled){
 		//kprintf("\nKEY%u MOD%u\n",final_keycode,modifiers);
 		(*callback)(final_keycode,modifiers);
 		return;
 	}
-	/*switch(final_keycode){
-		case KEYCODE_LEFT:
-			cursor_left(k_context,1);
-			return;
-		case KEYCODE_RIGHT:
-			cursor_right(k_context,1);
-			return;
-		case KEYCODE_UP:
-			cursor_up(k_context,1);
-			return;
-		case KEYCODE_DOWN:
-			cursor_down(k_context,1);
-			return;
-		case KEYCODE_RETURN:
-			printchar(k_context,'\n');
-			return;
-		case KEYCODE_SPACE:
-			printchar(k_context,' ');
-			return;
-		case KEYCODE_BACKSPACE:
-			deletechar(k_context);
-			return;
-	}
 
-	char ascii = Translate(keycode, modifiers&MODCODE_SHIFT);
 	if (isprint(ascii)){
-		printchar(k_context,ascii);
-	}*/
+		kprintf("%c",ascii);
+	}
 }
 
 void set_keyboard_callback(void (*cb)(int,int)){

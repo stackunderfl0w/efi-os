@@ -42,9 +42,9 @@ int _start(char* buf){
 	write(tout,txt,x);
 
 
-
-	while(1){
-		//write(tout,"hello",6);
+	int it=10;
+	while(it--){
+		write(tout,"hello",5);
 		asm volatile("int $3");
 	}
 	return 0;

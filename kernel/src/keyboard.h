@@ -11,7 +11,8 @@
 #define Left_Arrow	0x4B
 #define Right_Arrow	0x4D
 #define Down_Arrow	0x50
-
+#define Alt 		0x38
+#define Ctrl 		0x1d
 //matches ascii charset when possible.
 enum actions{
 	PRESS,
@@ -104,6 +105,12 @@ enum keycodes{
 
 	KEYCODE_LSHIFT=0x1010,
 	KEYCODE_RSHIFT=0x1011,
+	KEYCODE_LALT=0x1012,
+	KEYCODE_RALT=0x1013,
+	KEYCODE_LCTRL=0x1014,
+	KEYCODE_RCTRL=0x1015,
+
+
 };
 
 enum modifiers{
@@ -112,6 +119,12 @@ enum modifiers{
 	MODCODE_SHIFT=MODCODE_RSHIFT|MODCODE_LSHIFT,
 	MODCODE_KEYDOWN=1<<2,
 	MODCODE_KEYUP=1<<3,
+	MODCODE_LALT=1<<4,
+	MODCODE_RALT=1<<5,
+	MODCODE_ALT=MODCODE_LALT|MODCODE_RALT,
+	MODCODE_LCTRL=1<<6,
+	MODCODE_RCTRL=1<<7,
+	MODCODE_CTRL=MODCODE_LCTRL|MODCODE_RCTRL,
 
 };
 

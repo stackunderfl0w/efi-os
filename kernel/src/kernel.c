@@ -36,11 +36,12 @@ graphics_context* current_context;
 
 process* current_process;
 tty tty0;
+tty* kernel_ttys[10];
 //#define DISSABLE_FB_BUFFER 1
 
 int _start(bootinfo *info){
 	asm("cli");
-	//init_serial();
+	init_serial();
 	//print_serial("hello world");
 
 	graphics_context global_graphics=init_text_overlay(info->buf, info->font);
@@ -123,34 +124,33 @@ int _start(bootinfo *info){
 	#endif
 
 	mkdir("/dev",VFS_VOLATILE);
-	tty* tty1=init_tty(1,info->font);
-	//current_context=tty1->g;
+	kernel_ttys[0]=&tty0;
+	for (int i = 1; i <= 9; ++i){
+		kernel_ttys[i]=init_tty(i,info->font);
+	}
 
-	//tty_write(tty1,"HELLOTTY1\n");
+	tty_write(kernel_ttys[1],"HELLOTTY1\n");
 	int tout=open("/dev/tty1/tty_out",0);
 
+	current_context=kernel_ttys[1]->g;
+
 	start_scheduler();
+	//loop();
 
-	//current_context=tty1->g;
-
-	//new_process("/resources/syscall_test.elf", NULL);
-
-
+	new_process("/resources/syscall_test.elf", NULL);
+	int t=0;
 	char buf[64]={0};
 	while(1){
-		//memset(buf,0,64);
-		//write(tout,"hello",6);
-		//read(tout,buf,63);
-		//if(*buf){
-		//	tty_write(tty1,buf);
-		//}
-		kprintf("hello");
-
+		memset(buf,0,64);
+		//write(tout,"hello",1);
+		read(tout,buf,63);
+		if(*buf){
+			tty_write(kernel_ttys[1],buf);
+		}
 		//tty_write(tty1,"hello");
-		//current_context=tty0.g;
-		//sleep(1);
-		//current_context=tty1->g;
-		//sleep(1);
+		//current_context=kernel_ttys[t++]->g;
+		//t%=10;
+		//sleep(200);
 		yield();
 	}
 	//kprintf("test page allocation\n");
