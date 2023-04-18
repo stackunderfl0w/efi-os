@@ -7,6 +7,7 @@
 #include "graphics.h"
 #include "loop.h"
 #include "stdio.h"
+#include "serial.h"
 extern graphics_context* global_context;
 uint64_t cr0, cr2, cr3, err;
 static inline void get_regs(){
@@ -38,11 +39,15 @@ static inline void get_regs(){
 	kprintf("%p",cr2);
 	//loop();
 }*/
+char err_buf[64]={0};
 __attribute__((interrupt)) void GeneralFault_Handler(struct interrupt_frame* frame){
 	//move_cursor(global_context,29,0);
 	//for (int i = 0; i < 19; ++i){
 	//	deletechar(global_context);
 	//}
+	print_serial("GENERAL FAULT DETECTED");
+	ksprintf(err_buf,"%x",frame);
+	print_serial(err_buf);
 	print(global_context,"GENERAL FAULT DETECTED");
 	//while(1);
 	loop();

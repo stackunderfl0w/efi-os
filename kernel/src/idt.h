@@ -2,6 +2,8 @@
 #include "typedef.h"
 #define INTERRUPT_GATE 0x8E
 #define TRAP_GATE 0x8F
+#define USER_SYSCALL_GATE 0xEE
+
 //64-bit Interrupt Gate: 0x8E (p=1, dpl=0b00, type=0b1110 => type_attributes=0b1000_1110=0x8E)
 //64-bit Trap Gate: 0x8F (p=1, dpl=0b00, type=0b1111 => type_attributes=1000_1111b=0x8F) 
 typedef struct  {

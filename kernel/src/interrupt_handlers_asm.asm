@@ -4,10 +4,13 @@ pf_fmt: db "PAGE FAULT DETECTED%p",10,0
 gf_fmt: db "GENERAL FAULT DETECTED%p",10,0
 
 extern kprintf
+extern print
 extern loop
 extern PIT_TICK
 extern PIC_EndMaster
 extern get_next_thread
+
+extern global_context
 
 extern request_mapped_pages
 

@@ -174,8 +174,7 @@ Page_Table* navigate_to_PL1(void* virtadr){
 		if (!PT_GET_FLAG(current_entry,PT_Present)){
 			void* temp=REQUEST_PAGE();
 			memset(temp,0,4096);
-			PT_SET_FLAG(current_entry,PT_Present);
-			PT_SET_FLAG(current_entry,PT_RW);
+			PT_SET_FLAG(current_entry,PT_Present|PT_RW|PT_UserSuper);
 			PT_SET_ADR(current_entry,(uint64_t)temp);
 		}
 		current_PL=(void*)PT_GET_ADR(current_entry);
@@ -206,7 +205,7 @@ void unmap_mem(void* virtadr){
 	///todo invalidate tlb
 }
 void map_mem(void* virtadr, void* physadr){
-	map_mem_with_flags(virtadr, physadr,PT_RW|PT_Present);
+	map_mem_with_flags(virtadr, physadr,PT_RW|PT_Present|PT_UserSuper);
 }
 void map_pages(void* virtadr, void* physadr ,uint64_t pages){
 	for (int i = 0; i < pages; i++){

@@ -24,6 +24,7 @@ extern long int kprintf(const char* s, ...);
 
 
 int _start(char* buf){
+	while(1);
 
 	int f=open("/resources/resourcesresources/config.txt",0);
 	struct stat stat1;

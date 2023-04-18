@@ -112,6 +112,10 @@ void* get_next_thread(void *stack_ptr){
 		destroy_thread(current_thread);
 	}
 	cb_pop(thread_pool,&current_thread,1);
+	if(((registers*)current_thread->RSP)->cs!=8){
+		print_serial("Attempting to enter user mode");
+		asm volatile("cli");
+	}
 
 	return current_thread->RSP;
 }

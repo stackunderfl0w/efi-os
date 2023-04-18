@@ -48,7 +48,7 @@ void create_interrupts(){
 	create_idt_entry((void*)Pit_Handler_Asm, 0x20, INTERRUPT_GATE, 0x08);
 
 	//filesystem interupts
-	create_idt_entry((void*)int80, 0x80, INTERRUPT_GATE, 0x08);
+	create_idt_entry((void*)int80, 0x80, USER_SYSCALL_GATE, 0x08);
 
 	//create_idt_entry((void*)getcwd, 0x81, INTERRUPT_GATE, 0x08);
 

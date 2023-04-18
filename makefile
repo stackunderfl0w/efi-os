@@ -37,6 +37,8 @@ boot: kernel bootloader $(PROGRAMS)
 qemu: boot
 	qemu-system-x86_64 -drive file=fat.img -m 256M -cpu qemu64 -smp 2 -drive if=pflash,format=raw,unit=0,file=OVMFbin/OVMF_CODE-pure-efi.fd,readonly=on -drive if=pflash,format=raw,unit=1,file=OVMFbin/OVMF_VARS-pure-efi.fd -net none #-no-reboot #-d int,cpu_reset
 qemu-debug: boot
+	qemu-system-x86_64 -drive file=fat.img -m 256M -cpu qemu64 -smp 2 -drive if=pflash,format=raw,unit=0,file=OVMFbin/OVMF_CODE-pure-efi.fd,readonly=on -drive if=pflash,format=raw,unit=1,file=OVMFbin/OVMF_VARS-pure-efi.fd -net none -no-reboot -d int,cpu_reset
+qemu-gdb: boot
 	qemu-system-x86_64 -s -S -drive file=fat.img -m 256M -cpu qemu64 -smp 2 -drive if=pflash,format=raw,unit=0,file=OVMFbin/OVMF_CODE-pure-efi.fd,readonly=on -drive if=pflash,format=raw,unit=1,file=OVMFbin/OVMF_VARS-pure-efi.fd -net none -no-reboot -d int,cpu_reset
 
 	#-machine q35
