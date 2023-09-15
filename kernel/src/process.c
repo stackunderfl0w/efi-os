@@ -77,8 +77,8 @@ void new_process(char* executable,void* ptr){
 
 	thread* t=new_thread(prog_entry,NULL);
 	//user mode selectors
-	((registers*)(t->RSP))->cs=0x23;
-	((registers*)(t->RSP))->ss=0x2b;
+	((registers*)(t->RSP))->cs=0x20|3;
+	((registers*)(t->RSP))->ss=0x28|3;
 	((registers*)(t->RSP))->flags=0x2;
 
 	//reg->cs=0x8;
